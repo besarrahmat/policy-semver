@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "1",
+  "prodBranch": "main",
+  "developBranch": "dev",
+  "majorEnv": "APP_VERSION_MAJOR"
+}

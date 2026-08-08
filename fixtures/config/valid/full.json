@@ -1,0 +1,23 @@
+{
+    "schemaVersion": "1",
+    "prodBranch": "main",
+    "developBranch": "dev",
+    "majorEnv": "APP_VERSION_MAJOR",
+    "versionFiles": [
+        "VERSION",
+        "package.json"
+    ],
+    "changelogPath": "CHANGELOG.md",
+    "tagPrefix": "v",
+    "skipLabels": [
+        "skip-version"
+    ],
+    "skipTrailers": [
+        "skip version"
+    ],
+    "hooks": {
+        "beforeBump": null,
+        "afterTag": null,
+        "afterRelease": null
+    }
+}

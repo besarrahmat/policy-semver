@@ -31,6 +31,10 @@ pnpm lint
 
 (When typecheck is wired: also run `pnpm typecheck`.)
 
+## Config
+
+`versioning.config.json` is fail-closed: **unknown keys fail validation** (and will fail CI once config checks are wired). Extend `schemas/versioning.config.schema.json` (then sync the package embed) before adding new keys. Never “warn and continue” on unknown policy fields.
+
 ## Secrets
 
 Never commit `.env`, npm tokens, PATs, or `_authToken` lines in `.npmrc`. Prefer `~/.npmrc` or CI secrets / Trusted Publishing.

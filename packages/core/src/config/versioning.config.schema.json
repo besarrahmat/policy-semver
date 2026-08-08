@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://policy-semver.dev/schemas/versioning.config.schema.json",
+  "title": "PolicySemVer versioning.config",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion"],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1",
+      "description": "Config schema major; bump only with a coordinated migration."
+    },
+    "prodBranch": {
+      "type": "string",
+      "minLength": 1,
+      "default": "main"
+    },
+    "developBranch": {
+      "type": "string",
+      "minLength": 1,
+      "default": "dev"
+    },
+    "majorEnv": {
+      "type": "string",
+      "minLength": 1,
+      "default": "APP_VERSION_MAJOR"
+    },
+    "versionFiles": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "default": ["VERSION", "package.json"]
+    },
+    "changelogPath": {
+      "type": "string",
+      "minLength": 1,
+      "default": "CHANGELOG.md"
+    },
+    "tagPrefix": {
+      "type": "string",
+      "default": "v"
+    },
+    "skipLabels": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "default": ["skip-version"]
+    },
+    "skipTrailers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "default": ["skip version"]
+    },
+    "hooks": {
+      "type": "object",
+      "additionalProperties": false,
+      "default": {},
+      "properties": {
+        "beforeBump": {
+          "type": ["string", "null"],
+          "default": null
+        },
+        "afterTag": {
+          "type": ["string", "null"],
+          "default": null
+        },
+        "afterRelease": {
+          "type": ["string", "null"],
+          "default": null
+        }
+      }
+    },
+    "workspaces": {
+      "description": "Optional; Phase 12. Omit or null in v1.",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {}
+    }
+  }
+}

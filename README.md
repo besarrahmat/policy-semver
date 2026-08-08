@@ -6,6 +6,18 @@ Policy-first SemVer automation for deployed apps (major via env, `feat & fix:`, 
 
 Spec/docs first. Implementation follows Phases 0–12 on branch `dev`; `main` for releases.
 
+## Configuration
+
+Policy lives in **`versioning.config.json`** at the repo root (JSON Schema fail-closed).
+
+| Item | Default / notes |
+|------|-----------------|
+| Config path | `versioning.config.json` |
+| Major bumps | Manual only via env named by `majorEnv` (default **`APP_VERSION_MAJOR`**) — set to the next major integer (e.g. `2`) to reset to `N.0.0`; never auto-major from `BREAKING` / `feat!:` |
+| Branches | `prodBranch` = `main`, `developBranch` = `dev` (this repo’s dogfood topology) |
+
+Unknown keys in the config file are **rejected**. See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## Community
 
 - [Contributing](./CONTRIBUTING.md)
