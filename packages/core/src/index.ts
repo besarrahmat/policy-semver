@@ -26,6 +26,19 @@ export {
   readVersion,
   writeVersion,
 } from "./bump/index.js";
+export {
+  BUCKET_TO_SECTION,
+  CHANGELOG_FORMAT,
+  CHANGELOG_SECTIONS,
+  type ChangelogCommit,
+  type ChangelogSection,
+  mapCommitsToSections,
+  renderReleaseSection,
+  type SectionBuckets,
+  type WriteChangelogInput,
+  type WriteChangelogResult,
+  writeChangelog,
+} from "./changelog/index.js";
 export type {
   ClassifyCommit,
   ClassifyInput,
@@ -44,3 +57,31 @@ export {
   CONFIG_VALIDATOR,
   loadConfig,
 } from "./config/index.js";
+export {
+  assertDualSourceMatch,
+  DUAL_SOURCE,
+  readBothConfigured,
+  tryReadPackageJsonVersion,
+  tryReadVersionFile,
+  type WriteBothInput,
+  writeBothAtomically,
+} from "./dual-source/index.js";
+export type { CommitBumpInput, PushInput, TagInput } from "./git/index.js";
+export {
+  commitBumpFiles,
+  createAnnotatedTag,
+  defaultGitExec,
+  pushRefs,
+  tagExists,
+} from "./git/index.js";
+export type { CreateReleaseInput } from "./github/index.js";
+export {
+  createGitHubRelease,
+  GITHUB_RELEASE_CLIENT,
+  redactSecrets,
+  SECRET_REDACT_PATTERNS,
+  SECRET_REDACT_REPLACEMENT,
+  TAG_EXISTS_FAILS,
+} from "./github/index.js";
+export type { RunReleaseInput, RunReleaseResult } from "./release/index.js";
+export { runRelease } from "./release/index.js";

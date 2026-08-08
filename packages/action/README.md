@@ -21,3 +21,19 @@ concurrency:
 
 - Keep **lint / typecheck / unit tests** in a separate job (and a separate concurrency group, or no cancel on the write job).
 - Never use one group with `cancel-in-progress: true` that includes both flaky lint and the bump write job — a new push must not cancel an in-flight write.
+
+## Release write path
+
+After VERSION / `package.json` / CHANGELOG are written, the Action calls `runWriteRelease` → core `runRelease`:
+
+1. `kind === "none"` → **stop** (no commit, tag, push, or Release)
+2. Else: commit with `[skip version]` → annotated tag `{tagPrefix}{version}` → push branch + tag → `repos.createRelease`
+
+### Token / permissions
+
+| Need | Why |
+| --- | --- |
+| `contents: write` | Create commit, annotated tag, GitHub Release |
+| Push to **protected** branch | Token/actor must be allowed (ruleset bypass, or a bot that can push) — otherwise push fails loud |
+
+Wire Octokit via `@actions/github` `getOctokit(token)` (locked in core `GITHUB_RELEASE_CLIENT.action`). Prefer `github.token` or a PAT stored as a secret — never log the token or pre-redact release bodies.

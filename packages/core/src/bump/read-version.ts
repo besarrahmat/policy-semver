@@ -1,27 +1,45 @@
-import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { formatSemVer, isSemVerString, parseSemVer } from "./parse-version.js";
+import {
+  readBothConfigured,
+  tryReadPackageJsonVersion,
+  tryReadVersionFile,
+} from "../dual-source/index.js";
 import type { ReadVersionInput } from "./types.js";
 
 export async function readVersion(input: ReadVersionInput): Promise<string> {
   const { cwd, files } = input;
+  const hasVf = Boolean(files.versionFile);
+  const hasPkg = Boolean(files.packageJson);
 
-  if (files.versionFile) {
-    const p = path.join(cwd, files.versionFile);
-    const raw = (await readFile(p, "utf8")).trim();
-    if (!isSemVerString(raw)) {
-      throw new Error(`malformed VERSION at ${p}: ${JSON.stringify(raw)}`);
-    }
-    return formatSemVer(parseSemVer(raw));
+  if (hasVf && hasPkg) {
+    return readBothConfigured(
+      cwd,
+      files.versionFile as string,
+      files.packageJson as string,
+    );
   }
 
-  if (files.packageJson) {
-    const p = path.join(cwd, files.packageJson);
-    const pkg = JSON.parse(await readFile(p, "utf8")) as { version?: unknown };
-    if (typeof pkg.version !== "string" || !isSemVerString(pkg.version)) {
-      throw new Error(`malformed package.json version at ${p}`);
+  if (hasVf) {
+    const vf = await tryReadVersionFile(cwd, files.versionFile as string);
+    if (vf === null) {
+      throw new Error(
+        `readVersion: VERSION not found at ${path.join(cwd, files.versionFile as string)}`,
+      );
     }
-    return formatSemVer(parseSemVer(pkg.version));
+    return vf;
+  }
+
+  if (hasPkg) {
+    const pkg = await tryReadPackageJsonVersion(
+      cwd,
+      files.packageJson as string,
+    );
+    if (pkg === null) {
+      throw new Error(
+        `readVersion: package.json not found at ${path.join(cwd, files.packageJson as string)}`,
+      );
+    }
+    return pkg;
   }
 
   throw new Error("readVersion: no versionFiles configured");

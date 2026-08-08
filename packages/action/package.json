@@ -8,6 +8,7 @@
     "test": "vitest run --config ../../vitest.config.ts"
   },
   "dependencies": {
+    "@actions/github": "^6.0.1",
     "@policy-semver/core": "workspace:*"
   }
 }

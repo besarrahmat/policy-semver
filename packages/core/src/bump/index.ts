@@ -1,3 +1,4 @@
+export { assertDualSourceMatch } from "../dual-source/index.js";
 export { applyBump } from "./apply-bump.js";
 export { formatBotBumpCommitMessage } from "./bot-message.js";
 export { assertBotCommitMessageSafe, decideBumpGuards } from "./guards.js";
