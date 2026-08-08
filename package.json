@@ -13,7 +13,7 @@
     "typecheck": "pnpm -r run typecheck",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "build": "pnpm -r run build"
+    "build": "pnpm -r --if-present run build"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.0.0",

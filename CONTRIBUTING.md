@@ -26,10 +26,9 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) subject lines, 
 
 ```bash
 pnpm test
+pnpm typecheck
 pnpm lint
 ```
-
-(When typecheck is wired: also run `pnpm typecheck`.)
 
 ## Config
 

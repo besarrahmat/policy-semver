@@ -32,6 +32,27 @@ describe("loadConfig", () => {
     });
   });
 
+  it("loads full fixture config", async () => {
+    const config = await loadConfig(fixture("valid", "full.json"));
+
+    expect(config).toEqual({
+      schemaVersion: "1",
+      prodBranch: "main",
+      developBranch: "dev",
+      majorEnv: "APP_VERSION_MAJOR",
+      versionFiles: ["VERSION", "package.json"],
+      changelogPath: "CHANGELOG.md",
+      tagPrefix: "v",
+      skipLabels: ["skip-version"],
+      skipTrailers: ["skip version"],
+      hooks: {
+        beforeBump: null,
+        afterTag: null,
+        afterRelease: null,
+      },
+    });
+  });
+
   it("fails when schemaVersion is missing", async () => {
     await expect(
       loadConfig(fixture("invalid", "missing-schema-version.json")),

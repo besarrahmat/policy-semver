@@ -4,6 +4,12 @@ import { Ajv } from "ajv";
 import type { VersioningConfig } from "./types.js";
 import schema from "./versioning.config.schema.json" with { type: "json" };
 
+/**
+ * Schema shipping:
+ * Embed `versioning.config.schema.json` beside this module and import it as JSON.
+ * Runtime never reads monorepo-root `schemas/` (that copy is canonical — keep
+ * both files in sync with `cp` + empty `diff` after every schema edit).
+ */
 const ajv = new Ajv({
   allErrors: true,
   useDefaults: true,
