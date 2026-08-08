@@ -1,1 +1,14 @@
-docs
+coverage/
+docs/
+dist/
+node_modules/
+*.tgz
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+.pnpm-store/
+
+# Phase 6: Action bundle MUST be committed (runners do not npm-install Action deps)
+!packages/action/dist/
+!packages/action/dist/**

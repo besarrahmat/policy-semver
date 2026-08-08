@@ -1,0 +1,5 @@
+name: PolicySemVer
+description: Policy-first SemVer automation for deployed apps
+runs:
+  using: node24
+  main: dist/index.js

@@ -1,0 +1,16 @@
+{
+  "name": "policy-semver",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "policy-semver": "./src/bin.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@policy-semver/core": "workspace:*"
+  }
+}
