@@ -4,14 +4,25 @@
   "private": true,
   "type": "module",
   "bin": {
-    "policy-semver": "./src/bin.ts"
+    "policy-semver": "./dist/bin.js"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --config ../../vitest.config.ts"
+    "test": "vitest run --config ../../vitest.config.ts",
+    "policy-semver": "node ./dist/bin.js",
+    "prebuild": "pnpm -w run sync:schema",
+    "build": "tsup",
+    "pack:dry": "pnpm build && npm pack --dry-run"
   },
   "dependencies": {
     "@octokit/rest": "^21.1.1",
     "@policy-semver/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1"
   }
 }

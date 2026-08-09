@@ -10,6 +10,7 @@ export type {
   BumpGuardDecision,
   ReadVersionInput,
   SemVerParts,
+  VersionFiles,
   WriteVersionInput,
   WriteVersionResult,
 } from "./bump/index.js";

@@ -15,6 +15,7 @@ export type {
   BumpGuardContext,
   BumpGuardDecision,
   ReadVersionInput,
+  VersionFiles,
   WriteVersionInput,
   WriteVersionResult,
 } from "./types.js";
