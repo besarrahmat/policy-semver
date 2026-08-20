@@ -48271,13 +48271,18 @@ var defaultGitExec = async (args, opts) => {
 };
 
 // ../core/src/git/commit.ts
+var BOT_NAME = "github-actions[bot]";
+var BOT_EMAIL = "41898282+github-actions[bot]@users.noreply.github.com";
 async function commitBumpFiles(input) {
   if (!input.message.includes(BOT_SKIP_TRAILER)) {
     throw new Error(`commit message missing ${BOT_SKIP_TRAILER}`);
   }
   const exec = input.exec ?? defaultGitExec;
-  await exec(["add", "--", ...input.paths], { cwd: input.cwd });
-  await exec(["commit", "-m", input.message], { cwd: input.cwd });
+  const cwd = { cwd: input.cwd };
+  await exec(["config", "user.name", BOT_NAME], cwd);
+  await exec(["config", "user.email", BOT_EMAIL], cwd);
+  await exec(["add", "--", ...input.paths], cwd);
+  await exec(["commit", "-m", input.message], cwd);
 }
 
 // ../core/src/git/push.ts
