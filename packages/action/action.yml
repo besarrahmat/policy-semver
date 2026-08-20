@@ -1,5 +1,12 @@
+# Dogfood / path-based uses only (`uses: ./packages/action`).
+# Canonical Marketplace metadata is repo-root action.yml (layout A — Phase 6.A).
+# main points at the same committed root bundle as root action.yml.
 name: PolicySemVer
-description: Policy-first SemVer automation for deployed apps
+description: Policy-first SemVer automation for deployed apps (path-based dogfood)
+author: Besar Rahmat
+branding:
+  icon: tag
+  color: blue
 runs:
   using: node24
-  main: dist/index.js
+  main: ../../dist/index.js

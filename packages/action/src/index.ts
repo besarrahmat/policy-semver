@@ -1,40 +1,29 @@
-import { getOctokit } from "@actions/github";
-import {
-  type CreateReleaseInput,
-  type RunReleaseInput,
-  type RunReleaseResult,
-  runRelease,
-} from "@policy-semver/core";
+import * as core from "@actions/core";
+import { runAction } from "./run-action.js";
 
-export type ActionWriteReleaseInput = Omit<RunReleaseInput, "octokit"> & {
-  /** `GITHUB_TOKEN` or PAT with contents:write (and push to protected branch) */
-  token: string;
-};
+export {
+  ACTION_ADAPTER,
+  ACTION_BUNDLE,
+  ACTION_COMMENT,
+  ACTION_EVENT,
+  ACTION_LAYOUT,
+  ACTION_RUNTIME,
+  ACTION_VERSIONING,
+} from "./locks.js";
+export { runAction } from "./run-action.js";
+export {
+  type ActionWriteReleaseInput,
+  runWriteRelease,
+} from "./write-release.js";
 
-function toReposOctokit(token: string): CreateReleaseInput["octokit"] {
-  const octokit = getOctokit(token);
-  return {
-    repos: {
-      getReleaseByTag: (p) => octokit.rest.repos.getReleaseByTag(p),
-      createRelease: (p) => octokit.rest.repos.createRelease(p),
-    },
-  };
+/** @deprecated use runAction */
+export async function run(): Promise<void> {
+  await runAction();
 }
 
-/**
- * Action write-path: commit → tag → push → GitHub Release.
- * Call only after VERSION / package.json / CHANGELOG are already written.
- * kind `none` is short-circuited inside `runRelease`.
- */
-export async function runWriteRelease(
-  input: ActionWriteReleaseInput,
-): Promise<RunReleaseResult> {
-  const { token, ...rest } = input;
-  return runRelease({
-    ...rest,
-    octokit: toReposOctokit(token),
+// ncc entry: only when GitHub Actions executes the bundle
+if (process.env.GITHUB_ACTIONS === "true") {
+  runAction().catch((err) => {
+    core.setFailed(err instanceof Error ? err.message : String(err));
   });
 }
-
-/** Full Action entry (inputs / dry-run / guards) lands in a later phase. */
-export function run(): void {}

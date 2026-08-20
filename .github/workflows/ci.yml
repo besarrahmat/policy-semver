@@ -24,3 +24,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - name: Action dist up to date
+        run: |
+          pnpm --filter @policy-semver/action run build
+          git diff --exit-code dist/

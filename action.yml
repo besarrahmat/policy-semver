@@ -1,0 +1,33 @@
+# PolicySemVer — GitHub Action metadata (layout A)
+#
+# Canonical entry for `uses: org/policy-semver@ref` and Marketplace.
+# Sources: packages/action/ · bundle: dist/index.js (committed in 6.C)
+# Locks: packages/action/src/locks.ts (Phase 6.A)
+name: PolicySemVer
+description: Policy-first SemVer automation for deployed apps
+author: Besar Rahmat
+branding:
+  icon: tag
+  color: blue
+inputs:
+  config-path:
+    description: Path to versioning.config.json
+    default: versioning.config.json
+  dry-run:
+    description: Force dry-run even on merge
+    required: false
+    default: "false"
+  token:
+    description: GitHub token (PAT/App) when GITHUB_TOKEN cannot push
+    required: false
+    default: ${{ github.token }}
+outputs:
+  kind:
+    description: Classification kind
+  next-version:
+    description: Computed next version if any
+  skipped-reason:
+    description: Why write was skipped if any
+runs:
+  using: node24
+  main: dist/index.js
