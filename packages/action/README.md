@@ -1,15 +1,15 @@
 # PolicySemVer GitHub Action
 
-Thin adapter over [`@policy-semver/core`](../core). Runtime wiring lands in Phase 6.B+; this README locks **docs-gate** decisions (6.A) plus earlier concurrency/release notes.
+Thin adapter over [`@policy-semver/core`](../core).
 
-## 6.A Docs locks
+## Docs locks
 
 | Lock | Decision |
 | --- | --- |
 | Layout | **A** — root [`action.yml`](../../action.yml) + committed root [`dist/index.js`](../../dist/index.js) (Marketplace requires root metadata) |
 | Runtime | `runs.using: node24` — do **not** regress to `node20` |
 | Bundle | Runners never `npm install` Action deps → **commit** the bundle |
-| Bundler | Try **`@vercel/ncc` first**; fallback rollup / esbuild if Node 24/ESM breaks ncc ([ncc#1297](https://github.com/vercel/ncc/issues/1297)) — document any switch here |
+| Bundler | **tsup** (esbuild) CJS → root `dist/index.js`. ncc failed (`TS6059` / [ncc#1297](https://github.com/vercel/ncc/issues/1297)) |
 | Versioning | Consumers pin **commit SHA** (preferred) or a moving major tag (`v0` / `v1`); avoid `@main` / `@dev` in prod |
 
 Code locks: [`src/locks.ts`](./src/locks.ts).
@@ -74,7 +74,7 @@ permissions:
   pull-requests: write # sticky dry-run comment
 ```
 
-## Token when `GITHUB_TOKEN` cannot push (VE-42)
+## Token when `GITHUB_TOKEN` cannot push
 
 Branch rulesets / required reviews often block `github-actions[bot]`.
 
@@ -88,7 +88,15 @@ Branch rulesets / required reviews often block `github-actions[bot]`.
 | --- | --- |
 | Fork PR | Sticky comment OK · `allowWrite: false` |
 | `base !== prodBranch` | Skip write |
-| Sync `develop ← prod` | `kind: none` · no write (VF-03) |
+| Sync `develop ← prod` | `kind: none` · no write |
 | `opened` / `synchronize` / `reopened` on prod | Dry-run + sticky comment |
 | `closed` + `merged` on prod (or `merge_group`) | Write → tag → release |
-| `push` to prod | **Skip** (hindari double bump VE-13) |
+| `push` to prod | **Skip** (hindari double bump) |
+
+## Consumer workflow stub
+
+Copy [`examples/consumer.yml`](./examples/consumer.yml) into the **app** repo as `.github/workflows/policy-semver.yml`. Pin a SHA in production. This file is documentation — it is not a workflow of *this* monorepo.
+
+Until this Action is public (or org-internal with Access enabled), `uses: besarrahmat/policy-semver@ref` 404s from another private repo. The stub **checkouts** this repo with `secrets.POLICY_SEMVER_TOKEN` (fine-grained **Contents: read** on `policy-semver`) then `uses: ./.github/actions/policy-semver`. Set `persist-credentials: false` on that checkout so the PAT is not used to push the app repo.
+
+That checkout secret is **not** VE-42. VE-42 is a **write** token on the **consumer** (`contents: write` / ruleset bypass) passed as Action input `token` if `github-actions[bot]` cannot push `main`.

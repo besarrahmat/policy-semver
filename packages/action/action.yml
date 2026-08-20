@@ -1,12 +1,31 @@
 # Dogfood / path-based uses only (`uses: ./packages/action`).
-# Canonical Marketplace metadata is repo-root action.yml (layout A — Phase 6.A).
-# main points at the same committed root bundle as root action.yml.
+# Canonical Marketplace metadata is repo-root action.yml (layout A).
+# Inputs/outputs must match root action.yml; main is the committed root bundle.
 name: PolicySemVer
 description: Policy-first SemVer automation for deployed apps (path-based dogfood)
 author: Besar Rahmat
 branding:
   icon: tag
   color: blue
+inputs:
+  config-path:
+    description: Path to versioning.config.json
+    default: versioning.config.json
+  dry-run:
+    description: Force dry-run even on merge
+    required: false
+    default: "false"
+  token:
+    description: GitHub token (PAT/App) when GITHUB_TOKEN cannot push
+    required: false
+    default: ${{ github.token }}
+outputs:
+  kind:
+    description: Classification kind
+  next-version:
+    description: Computed next version if any
+  skipped-reason:
+    description: Why write was skipped if any
 runs:
   using: node24
   main: ../../dist/index.js

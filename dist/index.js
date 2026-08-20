@@ -10987,7 +10987,7 @@ var require_mock_interceptor = __commonJS({
 var require_mock_client = __commonJS({
   "../../node_modules/.pnpm/undici@6.28.0/node_modules/undici/lib/mock/mock-client.js"(exports2, module2) {
     "use strict";
-    var { promisify: promisify2 } = require("util");
+    var { promisify: promisify3 } = require("util");
     var Client = require_client();
     var { buildMockDispatch } = require_mock_utils();
     var {
@@ -11027,7 +11027,7 @@ var require_mock_client = __commonJS({
         return new MockInterceptor(opts, this[kDispatches]);
       }
       async [kClose]() {
-        await promisify2(this[kOriginalClose])();
+        await promisify3(this[kOriginalClose])();
         this[kConnected] = 0;
         this[kMockAgent][Symbols.kClients].delete(this[kOrigin]);
       }
@@ -11040,7 +11040,7 @@ var require_mock_client = __commonJS({
 var require_mock_pool = __commonJS({
   "../../node_modules/.pnpm/undici@6.28.0/node_modules/undici/lib/mock/mock-pool.js"(exports2, module2) {
     "use strict";
-    var { promisify: promisify2 } = require("util");
+    var { promisify: promisify3 } = require("util");
     var Pool = require_pool();
     var { buildMockDispatch } = require_mock_utils();
     var {
@@ -11080,7 +11080,7 @@ var require_mock_pool = __commonJS({
         return new MockInterceptor(opts, this[kDispatches]);
       }
       async [kClose]() {
-        await promisify2(this[kOriginalClose])();
+        await promisify3(this[kOriginalClose])();
         this[kConnected] = 0;
         this[kMockAgent][Symbols.kClients].delete(this[kOrigin]);
       }
@@ -29203,7 +29203,7 @@ var require_mock_interceptor2 = __commonJS({
 var require_mock_client2 = __commonJS({
   "../../node_modules/.pnpm/undici@5.29.0/node_modules/undici/lib/mock/mock-client.js"(exports2, module2) {
     "use strict";
-    var { promisify: promisify2 } = require("util");
+    var { promisify: promisify3 } = require("util");
     var Client = require_client2();
     var { buildMockDispatch } = require_mock_utils2();
     var {
@@ -29243,7 +29243,7 @@ var require_mock_client2 = __commonJS({
         return new MockInterceptor(opts, this[kDispatches]);
       }
       async [kClose]() {
-        await promisify2(this[kOriginalClose])();
+        await promisify3(this[kOriginalClose])();
         this[kConnected] = 0;
         this[kMockAgent][Symbols.kClients].delete(this[kOrigin]);
       }
@@ -29256,7 +29256,7 @@ var require_mock_client2 = __commonJS({
 var require_mock_pool2 = __commonJS({
   "../../node_modules/.pnpm/undici@5.29.0/node_modules/undici/lib/mock/mock-pool.js"(exports2, module2) {
     "use strict";
-    var { promisify: promisify2 } = require("util");
+    var { promisify: promisify3 } = require("util");
     var Pool = require_pool2();
     var { buildMockDispatch } = require_mock_utils2();
     var {
@@ -29296,7 +29296,7 @@ var require_mock_pool2 = __commonJS({
         return new MockInterceptor(opts, this[kDispatches]);
       }
       async [kClose]() {
-        await promisify2(this[kOriginalClose])();
+        await promisify3(this[kOriginalClose])();
         this[kConnected] = 0;
         this[kMockAgent][Symbols.kClients].delete(this[kOrigin]);
       }
@@ -47497,6 +47497,7 @@ function info(message) {
 }
 
 // src/run-action.ts
+var import_node_path6 = __toESM(require("path"), 1);
 var import_github3 = __toESM(require_github(), 1);
 
 // ../core/src/dual-source/assert-match.ts
@@ -48005,16 +48006,16 @@ async function writeChangelog(input) {
   const next = previous === null ? DEFAULT_HEADER + sectionMarkdown : insertAfterUnreleasedOrHeader(previous, sectionMarkdown);
   try {
     if (attempt > 2) {
-      throw new Error(`VE-38 CHANGELOG conflict after retry: ${abs}`);
+      throw new Error(`CHANGELOG conflict after retry: ${abs}`);
     }
     await (0, import_promises4.writeFile)(abs, next, "utf8");
   } catch (err) {
-    if (err instanceof Error && /VE-38/.test(err.message)) throw err;
+    if (err instanceof Error) throw err;
     if (attempt === 1) {
       return writeChangelog({ ...input, attempt: 2 });
     }
     throw new Error(
-      `VE-38 CHANGELOG write failed: ${abs}: ${err instanceof Error ? err.message : String(err)}`
+      `CHANGELOG write failed: ${abs}: ${err instanceof Error ? err.message : String(err)}`
     );
   }
   return {
@@ -48100,7 +48101,7 @@ function classify(input) {
   const envMajor = input.envMajor;
   if (envMajor != null && envMajor < currentMajor) {
     throw new Error(
-      `envMajor ${envMajor} is below current major ${currentMajor} (VE-22)`
+      `envMajor ${envMajor} is below current major ${currentMajor}`
     );
   }
   if (envMajor != null && envMajor > currentMajor) {
@@ -48389,9 +48390,6 @@ async function runRelease(input) {
   };
 }
 
-// src/run-action.ts
-var import_node_path6 = __toESM(require("path"), 1);
-
 // src/locks.ts
 var ACTION_LAYOUT = {
   id: "A",
@@ -48409,10 +48407,12 @@ var ACTION_RUNTIME = {
 var ACTION_BUNDLE = {
   commitDist: true,
   reason: "GitHub checks out the action ref and runs main; it does not install Action package.json deps",
+  /** Plan tried ncc first; TS6059 rootDir vs core .ts exports — switched to tsup (esbuild). */
   bundlerPreference: "ncc",
-  bundlerPackage: "@vercel/ncc",
+  bundlerActual: "tsup",
+  bundlerPackage: "tsup",
   bundlerFallbacks: ["rollup", "esbuild"],
-  /** Track if ncc fails on Node 24/ESM: https://github.com/vercel/ncc/issues/1297 */
+  /** Track if retrying ncc: https://github.com/vercel/ncc/issues/1297 */
   nccIssueTracker: "https://github.com/vercel/ncc/issues/1297"
 };
 var ACTION_VERSIONING = {
@@ -48425,7 +48425,7 @@ var ACTION_EVENT = {
   writeOn: "pull_request_closed_merged",
   mergeGroupIsWrite: true,
   dryRunActions: ["opened", "synchronize", "reopened"],
-  /** Sync check BEFORE prod-base (VF-03); mermaid nests Sync under prod — unreachable for real sync PRs */
+  /** Sync check BEFORE prod-base; mermaid nests Sync under prod — unreachable for real sync PRs */
   syncBeforeProdBaseCheck: true
 };
 var ACTION_COMMENT = {
@@ -48478,6 +48478,31 @@ function decideActionMode(input) {
     return { mode: "write", allowWrite: true, reason: "merge_group" };
   }
   return { mode: "skip", allowWrite: false, reason: "other event" };
+}
+
+// src/load-commits.ts
+var import_node_child_process2 = require("child_process");
+var import_node_util2 = require("util");
+var execFileAsync2 = (0, import_node_util2.promisify)(import_node_child_process2.execFile);
+async function loadCommitsFromGit(cwd) {
+  try {
+    const { stdout } = await execFileAsync2(
+      "git",
+      ["log", "-n", "50", "--pretty=format:%s%x00%b%x1e"],
+      { cwd, encoding: "utf8" }
+    );
+    return stdout.split("").map((chunk) => chunk.replace(/^\n+/, "").trimEnd()).filter(Boolean).map((chunk) => {
+      const [subjectRaw, bodyRaw = ""] = chunk.split("\0");
+      const subject = (subjectRaw ?? "").trim();
+      const body = bodyRaw.trim();
+      return {
+        subject,
+        ...body.length > 0 ? { body } : {}
+      };
+    }).filter((c) => c.subject.length > 0);
+  } catch {
+    return [];
+  }
 }
 
 // src/sticky-comment.ts
@@ -48544,8 +48569,17 @@ async function runWriteRelease(input) {
 function today() {
   return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
 }
+function shortRef(ref) {
+  return ref.replace(/^refs\/heads\//, "");
+}
+function failWrite(err) {
+  const msg = err instanceof Error ? err.message : String(err);
+  const pushDenied = /protected branch|GH006|not allowed to push|permission.*denied/i.test(msg);
+  const hint = pushDenied ? " If branch protection blocks github-actions, use POLICY_SEMVER_TOKEN (PAT) or a GitHub App with contents:write bypass." : "";
+  setFailed(`Write/push/release failed: ${msg}.${hint}`);
+}
 async function afterWriteAudit(_info) {
-  info("audit/hooks deferred to Phase 7");
+  info("audit/hooks deferred to next phase");
 }
 async function runAction() {
   const configPath = getInput("config-path") || "versioning.config.json";
@@ -48556,9 +48590,10 @@ async function runAction() {
   const files = toVersionFiles(config.versionFiles);
   const payload = import_github3.context.payload;
   const pr = payload.pull_request;
+  const mergeGroup = payload.merge_group;
   const isFork = Boolean(pr?.head?.repo?.fork);
-  const baseBranch = pr?.base?.ref ?? import_github3.context.ref.replace(/^refs\/heads\//, "");
-  const headBranch = pr?.head?.ref ?? "";
+  const baseBranch = pr?.base?.ref ?? (mergeGroup?.base_ref !== void 0 ? shortRef(mergeGroup.base_ref) : shortRef(import_github3.context.ref));
+  const headBranch = pr?.head?.ref ?? (mergeGroup?.head_ref !== void 0 ? shortRef(mergeGroup.head_ref) : "");
   const labels = (pr?.labels ?? []).map((l) => l.name);
   const payloadAction = typeof import_github3.context.payload.action === "string" ? import_github3.context.payload.action : void 0;
   const decision = decideActionMode({
@@ -48575,7 +48610,7 @@ async function runAction() {
   let commits = [];
   const octokit = token ? (0, import_github3.getOctokit)(token) : null;
   if (octokit && pr?.number) {
-    const { data } = await octokit.rest.pulls.listCommits({
+    const data = await octokit.paginate(octokit.rest.pulls.listCommits, {
       owner: import_github3.context.repo.owner,
       repo: import_github3.context.repo.repo,
       pull_number: pr.number,
@@ -48587,6 +48622,9 @@ async function runAction() {
       const body = rest.join("\n").trim();
       return { subject, ...body ? { body } : {} };
     });
+  }
+  if (commits.length === 0) {
+    commits = await loadCommitsFromGit(cwd);
   }
   const currentVersion = await readVersion({ cwd, files });
   const envRaw = process.env[config.majorEnv];
@@ -48658,7 +48696,7 @@ ${summary2}
   }
   if (!token || !octokit) {
     setFailed(
-      "Write path needs a token with contents:write (and pull-requests:write for comments). Set input `token`, or secret POLICY_SEMVER_TOKEN / GitHub App installation token when branch protection blocks GITHUB_TOKEN (VE-42)."
+      "Write path needs a token with contents:write (and pull-requests:write for comments). Set input `token`, or secret POLICY_SEMVER_TOKEN / GitHub App installation token when branch protection blocks GITHUB_TOKEN."
     );
     return;
   }
@@ -48678,10 +48716,9 @@ ${summary2}
       kind,
       commits
     });
-    const paths = [
-      ...config.versionFiles,
-      config.changelogPath
-    ].filter((p, i, a) => a.indexOf(p) === i);
+    const paths = [...config.versionFiles, config.changelogPath].filter(
+      (p, i, a) => a.indexOf(p) === i
+    );
     if (kind !== "none" && (wrote.wrote || changelog.wrote)) {
       await runWriteRelease({
         kind,
@@ -48698,10 +48735,7 @@ ${summary2}
       await afterWriteAudit({ version: nextVersion, kind });
     }
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    setFailed(
-      `Write/push/release failed: ${msg}. If branch protection blocks github-actions, use POLICY_SEMVER_TOKEN (PAT) or a GitHub App with contents:write bypass (VE-42).`
-    );
+    failWrite(err);
   }
 }
 

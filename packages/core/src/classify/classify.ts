@@ -101,9 +101,9 @@ export function classify(input: ClassifyInput): ClassifyResult {
 
   // 2) envMajor vs current
   if (envMajor != null && envMajor < currentMajor) {
-    // VE-22: prefer fail in bump (Phase 3); classify throws to surface the contract early.
+    // prefer fail in bump; classify throws to surface the contract early.
     throw new Error(
-      `envMajor ${envMajor} is below current major ${currentMajor} (VE-22)`,
+      `envMajor ${envMajor} is below current major ${currentMajor}`,
     );
   }
   if (envMajor != null && envMajor > currentMajor) {

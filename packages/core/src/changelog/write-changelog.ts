@@ -91,17 +91,17 @@ export async function writeChangelog(
 
   try {
     if (attempt > 2) {
-      throw new Error(`VE-38 CHANGELOG conflict after retry: ${abs}`);
+      throw new Error(`CHANGELOG conflict after retry: ${abs}`);
     }
     await writeFile(abs, next, "utf8");
   } catch (err) {
-    if (err instanceof Error && /VE-38/.test(err.message)) throw err;
+    if (err instanceof Error) throw err;
     if (attempt === 1) {
       // Stub retry (same content). Real flock / dirty-merge detection later.
       return writeChangelog({ ...input, attempt: 2 });
     }
     throw new Error(
-      `VE-38 CHANGELOG write failed: ${abs}: ${err instanceof Error ? err.message : String(err)}`,
+      `CHANGELOG write failed: ${abs}: ${err instanceof Error ? err.message : String(err)}`,
     );
   }
 

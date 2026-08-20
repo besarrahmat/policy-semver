@@ -1,12 +1,10 @@
 /**
- * Phase 6.A — Action docs locks (PS-08 / VF-10,11 · VE-35,43)
+ * Action docs locks
  *
  * Official refs (read before changing locks):
  * - https://docs.github.com/en/actions/creating-actions/creating-a-javascript-action
  * - https://github.com/actions/toolkit/blob/main/docs/action-versioning.md
  * - https://docs.github.com/en/actions/how-tos/create-and-publish-actions/publish-in-github-marketplace
- *
- * Implement runtime in 6.B; ncc bundle + commit in 6.C — this file locks decisions only.
  *
  * ## JavaScript Action (GitHub docs)
  * | Concern | Lock |
@@ -31,7 +29,7 @@
  * | Also OK | Moving major tag (`v0`, `v1`) after release tags exist |
  * | Not | Floating `@main` / `@dev` in production consumer workflows |
  *
- * ## Marketplace / layout (Phase 12 in scope → lock A **now**)
+ * ## Marketplace / layout
  * | Layout | Meaning |
  * | --- | --- |
  * | **A (locked)** | Root `action.yml` + committed root `dist/` — required for Marketplace listing |
@@ -60,10 +58,12 @@ export const ACTION_BUNDLE = {
   commitDist: true,
   reason:
     "GitHub checks out the action ref and runs main; it does not install Action package.json deps",
+  /** Plan tried ncc first; TS6059 rootDir vs core .ts exports — switched to tsup (esbuild). */
   bundlerPreference: "ncc",
-  bundlerPackage: "@vercel/ncc",
+  bundlerActual: "tsup",
+  bundlerPackage: "tsup",
   bundlerFallbacks: ["rollup", "esbuild"] as const,
-  /** Track if ncc fails on Node 24/ESM: https://github.com/vercel/ncc/issues/1297 */
+  /** Track if retrying ncc: https://github.com/vercel/ncc/issues/1297 */
   nccIssueTracker: "https://github.com/vercel/ncc/issues/1297",
 } as const;
 
@@ -75,12 +75,12 @@ export const ACTION_VERSIONING = {
 
 export const ACTION_ADAPTER = { thinOnly: true } as const;
 
-/** Write trigger: merged PR only — not `push` to prod (hindari VE-13 double bump). */
+/** Write trigger: merged PR only — not `push` to prod. */
 export const ACTION_EVENT = {
   writeOn: "pull_request_closed_merged",
   mergeGroupIsWrite: true,
   dryRunActions: ["opened", "synchronize", "reopened"] as const,
-  /** Sync check BEFORE prod-base (VF-03); mermaid nests Sync under prod — unreachable for real sync PRs */
+  /** Sync check BEFORE prod-base; mermaid nests Sync under prod — unreachable for real sync PRs */
   syncBeforeProdBaseCheck: true,
 } as const;
 

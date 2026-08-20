@@ -1,8 +1,8 @@
 # PolicySemVer — GitHub Action metadata (layout A)
 #
 # Canonical entry for `uses: org/policy-semver@ref` and Marketplace.
-# Sources: packages/action/ · bundle: dist/index.js (committed in 6.C)
-# Locks: packages/action/src/locks.ts (Phase 6.A)
+# Sources: packages/action/ · bundle: dist/index.js
+# Locks: packages/action/src/locks.ts
 name: PolicySemVer
 description: Policy-first SemVer automation for deployed apps
 author: Besar Rahmat
