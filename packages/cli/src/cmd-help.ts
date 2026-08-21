@@ -5,7 +5,7 @@ Commands:
   classify   Print classify kind (JSON)
   bump       --dry-run | --write [--force]
   verify     Config schema + dual-source match
-  test       Golden fixtures (skeleton)
+  test       Run fixtures/classifier goldens
   --help     This message
 
 Flags:

@@ -82,4 +82,19 @@ describe("loadConfig", () => {
       loadConfig(fixture("valid", "does-not-exist.json")),
     ).rejects.toThrow(/not found/i);
   });
+
+  it("loads hook command strings", async () => {
+    const config = await loadConfig(fixture("valid", "hooks-commands.json"));
+    expect(config.hooks).toEqual({
+      beforeBump: "pnpm run preversion",
+      afterTag: null,
+      afterRelease: "echo released",
+    });
+  });
+
+  it("fails on unknown hook key", async () => {
+    await expect(
+      loadConfig(fixture("invalid", "unknown-hook.json")),
+    ).rejects.toThrow(/additional properties/i);
+  });
 });

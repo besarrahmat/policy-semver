@@ -57,6 +57,36 @@ After VERSION / `package.json` / CHANGELOG are written, the Action calls `runWri
 1. `kind === "none"` → **stop** (no commit, tag, push, or Release)
 2. Else: commit with `[skip version]` → annotated tag `{tagPrefix}{version}` → push branch + tag → `repos.createRelease`
 
+## Hooks
+
+Config `hooks.*` are POSIX `sh -c` strings (`null` skips). Write path only (`kind !== "none"`).
+
+| Hook | Timing | On non-zero |
+| --- | --- | --- |
+| `beforeBump` | Before VERSION / changelog write | Abort: files unchanged, no tag, no release |
+| `afterTag` | After local annotated tag, before push | Abort remaining: local tag may exist; no push/release |
+| `afterRelease` | After GitHub Release | Release already exists; remaining audit skipped |
+
+Env: `POLICY_SEMVER_VERSION`, `POLICY_SEMVER_KIND`, `POLICY_SEMVER_DRY_RUN` (`true`/`false`). We do not delete tags or Releases on later hook failure.
+
+## Audit trail
+
+After a successful GitHub Release (and `hooks.afterRelease`), the Action writes `.policy-semver/last-release.json`:
+
+```json
+{
+  "version": "0.1.0",
+  "kind": "minor",
+  "gitSha": "...",
+  "tag": "v0.1.0",
+  "at": "2026-08-08T00:00:00.000Z"
+}
+```
+
+Then it commits that path with `[skip version]` and pushes the branch (no second tag).
+
+**Default: commit this file** in the consumer repo. Do not gitignore `.policy-semver/` unless you explicitly want a local-only trail. This monorepo dogfood-commits the file later.
+
 ### Token / permissions
 
 | Need | Why |

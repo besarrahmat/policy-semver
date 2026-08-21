@@ -1,0 +1,17 @@
+{
+  "name": "docs-only",
+  "input": {
+    "commits": [
+      {
+        "subject": "docs: x"
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "none",
+    "warnings": []
+  }
+}

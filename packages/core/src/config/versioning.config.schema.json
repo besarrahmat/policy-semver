@@ -64,18 +64,25 @@
       "type": "object",
       "additionalProperties": false,
       "default": {},
+      "description": "POSIX sh -c command strings. null = skip. Non-zero exit aborts the remaining release steps.",
       "properties": {
         "beforeBump": {
           "type": ["string", "null"],
-          "default": null
+          "minLength": 1,
+          "default": null,
+          "description": "Run before any version/changelog write or tag. Failure → never write, no tag, no release."
         },
         "afterTag": {
           "type": ["string", "null"],
-          "default": null
+          "minLength": 1,
+          "default": null,
+          "description": "Run after the local annotated tag exists, before push + GitHub Release."
         },
         "afterRelease": {
           "type": ["string", "null"],
-          "default": null
+          "minLength": 1,
+          "default": null,
+          "description": "Run after GitHub Release is created."
         }
       }
     },

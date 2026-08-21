@@ -35,7 +35,7 @@ node packages/cli/dist/bin.js --help
 | `bump --dry-run` | Compute next version; no write |
 | `bump --write` | Write version files (clean tree unless `--force`) |
 | `verify` | Load config + dual-source match |
-| `test` | Golden fixtures skeleton (Phase 7+) |
+| `test` | Load `fixtures/classifier/*.json`; assert `expected.kind` (+ `warnings` if present) |
 
 Common flags: `--config`, `--cwd`, `--title`, `--json`, `--force`.
 
@@ -46,6 +46,8 @@ Exit codes: `0` ok · `1` policy/validation · `2` usage.
 - `--write` requires a **clean** git working tree.
 - Dirty without `--force` → exit `1`, no write.
 - `--force` allows dirty (dangerous — document in help).
+
+`--write` runs `hooks.beforeBump` (if set) **before** writing VERSION / package.json. Non-zero → throw (exit `1` from bin); files unchanged. Tag/release hooks are not part of `bump` (Action / `runRelease` only).
 
 ## Dependency
 

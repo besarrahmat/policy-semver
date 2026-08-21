@@ -5,6 +5,19 @@ import { describe, expect, it, vi } from "vitest";
 import { writeChangelog } from "../changelog/write-changelog.js";
 import { runRelease } from "./run-release.js";
 
+function auditSeams() {
+  return {
+    gitSha: "deadbeef",
+    writeAudit: vi.fn(async () => ({
+      version: "0.0.0",
+      kind: "patch" as const,
+      gitSha: "deadbeef",
+      tag: "v0.0.0",
+      at: "2026-08-08T00:00:00.000Z",
+    })),
+  };
+}
+
 function mockOctokit() {
   return {
     repos: {
@@ -111,6 +124,7 @@ describe("runRelease", () => {
       calls.push("release");
     });
 
+    const seams = auditSeams();
     const result = await runRelease({
       kind: "minor",
       cwd: "/tmp",
@@ -126,6 +140,7 @@ describe("runRelease", () => {
       tag,
       push,
       release,
+      ...seams,
     });
 
     expect(result).toEqual({
@@ -135,12 +150,28 @@ describe("runRelease", () => {
       pushed: true,
       released: true,
     });
-    expect(calls).toEqual(["commit", "tag", "push", "release"]);
+    expect(calls).toEqual([
+      "commit",
+      "tag",
+      "push",
+      "release",
+      "commit",
+      "push",
+    ]);
     expect(commit).toHaveBeenCalledWith(
       expect.objectContaining({
         message: expect.stringContaining("[skip version]"),
         paths: ["VERSION", "package.json", "CHANGELOG.md"],
       }),
+    );
+    expect(commit).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        paths: [".policy-semver/last-release.json"],
+        message: expect.stringContaining("[skip version]"),
+      }),
+    );
+    expect(push).toHaveBeenLastCalledWith(
+      expect.objectContaining({ refs: ["main"] }),
     );
     expect(tag).toHaveBeenCalledWith(
       expect.objectContaining({ tag: "v1.2.3" }),
@@ -156,5 +187,149 @@ describe("runRelease", () => {
         body: expect.stringContaining("## [1.2.3]"),
       }),
     );
+    expect(seams.writeAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        version: "1.2.3",
+        kind: "minor",
+        gitSha: "deadbeef",
+        tag: "v1.2.3",
+      }),
+    );
+  });
+
+  it("afterTag then afterRelease; afterTag failure skips push+release", async () => {
+    const calls: string[] = [];
+    const hookExec = vi.fn(async (command: string) => {
+      if (command === "afterTag-cmd") {
+        calls.push("afterTag");
+        throw Object.assign(new Error("boom"), { code: 1 });
+      }
+      calls.push("afterRelease");
+      return { stdout: "", stderr: "" };
+    });
+    const commit = vi.fn(async () => {
+      calls.push("commit");
+    });
+    const tag = vi.fn(async () => {
+      calls.push("tag");
+    });
+    const push = vi.fn(async () => {
+      calls.push("push");
+    });
+    const release = vi.fn(async () => {
+      calls.push("release");
+    });
+
+    await expect(
+      runRelease({
+        kind: "minor",
+        cwd: "/tmp",
+        version: "1.2.3",
+        paths: ["VERSION"],
+        branch: "main",
+        sectionMarkdown: "## [1.2.3]\n",
+        owner: "o",
+        repo: "r",
+        octokit: mockOctokit(),
+        commit,
+        tag,
+        push,
+        release,
+        hooks: { afterTag: "afterTag-cmd", afterRelease: "afterRelease-cmd" },
+        hookExec,
+      }),
+    ).rejects.toThrow(/hook afterTag failed/);
+
+    expect(calls).toEqual(["commit", "tag", "afterTag"]);
+    expect(push).not.toHaveBeenCalled();
+    expect(release).not.toHaveBeenCalled();
+  });
+
+  it("happy path: commit, tag, afterTag, push, release, afterRelease", async () => {
+    const calls: string[] = [];
+    const hookExec = vi.fn(async (command: string) => {
+      calls.push(command);
+      return { stdout: "", stderr: "" };
+    });
+    const commit = vi.fn(async () => {
+      calls.push("commit");
+    });
+    const tag = vi.fn(async () => {
+      calls.push("tag");
+    });
+    const push = vi.fn(async () => {
+      calls.push("push");
+    });
+    const release = vi.fn(async () => {
+      calls.push("release");
+    });
+
+    const seams = auditSeams();
+    await runRelease({
+      kind: "patch",
+      cwd: "/tmp",
+      version: "1.0.1",
+      paths: ["VERSION"],
+      branch: "main",
+      sectionMarkdown: "## [1.0.1]\n",
+      owner: "o",
+      repo: "r",
+      octokit: mockOctokit(),
+      commit,
+      tag,
+      push,
+      release,
+      hooks: { afterTag: "afterTag-cmd", afterRelease: "afterRelease-cmd" },
+      hookExec,
+      ...seams,
+    });
+
+    expect(calls).toEqual([
+      "commit",
+      "tag",
+      "afterTag-cmd",
+      "push",
+      "release",
+      "afterRelease-cmd",
+      "commit",
+      "push",
+    ]);
+    expect(seams.writeAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        version: "1.0.1",
+        kind: "patch",
+        gitSha: "deadbeef",
+        tag: "v1.0.1",
+      }),
+    );
+  });
+
+  it("afterRelease failure skips last-release.json", async () => {
+    const writeAudit = vi.fn();
+    const hookExec = vi.fn(async () => {
+      throw Object.assign(new Error("boom"), { code: 1 });
+    });
+    await expect(
+      runRelease({
+        kind: "minor",
+        cwd: "/tmp",
+        version: "1.2.3",
+        paths: ["VERSION"],
+        branch: "main",
+        sectionMarkdown: "## [1.2.3]\n",
+        owner: "o",
+        repo: "r",
+        octokit: mockOctokit(),
+        commit: vi.fn(),
+        tag: vi.fn(),
+        push: vi.fn(),
+        release: vi.fn(),
+        hooks: { afterTag: null, afterRelease: "fail" },
+        hookExec,
+        gitSha: "deadbeef",
+        writeAudit,
+      }),
+    ).rejects.toThrow(/hook afterRelease failed/);
+    expect(writeAudit).not.toHaveBeenCalled();
   });
 });

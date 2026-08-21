@@ -1074,14 +1074,14 @@ var require_util = __commonJS({
         }
         const port = url.port != null ? url.port : url.protocol === "https:" ? 443 : 80;
         let origin = url.origin != null ? url.origin : `${url.protocol || ""}//${url.hostname || ""}:${port}`;
-        let path7 = url.path != null ? url.path : `${url.pathname || ""}${url.search || ""}`;
+        let path8 = url.path != null ? url.path : `${url.pathname || ""}${url.search || ""}`;
         if (origin[origin.length - 1] === "/") {
           origin = origin.slice(0, origin.length - 1);
         }
-        if (path7 && path7[0] !== "/") {
-          path7 = `/${path7}`;
+        if (path8 && path8[0] !== "/") {
+          path8 = `/${path8}`;
         }
-        return new URL(`${origin}${path7}`);
+        return new URL(`${origin}${path8}`);
       }
       if (!isHttpOrHttpsPrefixed(url.origin || url.protocol)) {
         throw new InvalidArgumentError("Invalid URL protocol: the URL must start with `http:` or `https:`.");
@@ -1532,39 +1532,39 @@ var require_diagnostics = __commonJS({
       });
       diagnosticsChannel.channel("undici:client:sendHeaders").subscribe((evt) => {
         const {
-          request: { method, path: path7, origin }
+          request: { method, path: path8, origin }
         } = evt;
-        debuglog("sending request to %s %s/%s", method, origin, path7);
+        debuglog("sending request to %s %s/%s", method, origin, path8);
       });
       diagnosticsChannel.channel("undici:request:headers").subscribe((evt) => {
         const {
-          request: { method, path: path7, origin },
+          request: { method, path: path8, origin },
           response: { statusCode }
         } = evt;
         debuglog(
           "received response to %s %s/%s - HTTP %d",
           method,
           origin,
-          path7,
+          path8,
           statusCode
         );
       });
       diagnosticsChannel.channel("undici:request:trailers").subscribe((evt) => {
         const {
-          request: { method, path: path7, origin }
+          request: { method, path: path8, origin }
         } = evt;
-        debuglog("trailers received from %s %s/%s", method, origin, path7);
+        debuglog("trailers received from %s %s/%s", method, origin, path8);
       });
       diagnosticsChannel.channel("undici:request:error").subscribe((evt) => {
         const {
-          request: { method, path: path7, origin },
+          request: { method, path: path8, origin },
           error: error2
         } = evt;
         debuglog(
           "request to %s %s/%s errored - %s",
           method,
           origin,
-          path7,
+          path8,
           error2.message
         );
       });
@@ -1613,9 +1613,9 @@ var require_diagnostics = __commonJS({
         });
         diagnosticsChannel.channel("undici:client:sendHeaders").subscribe((evt) => {
           const {
-            request: { method, path: path7, origin }
+            request: { method, path: path8, origin }
           } = evt;
-          debuglog("sending request to %s %s/%s", method, origin, path7);
+          debuglog("sending request to %s %s/%s", method, origin, path8);
         });
       }
       diagnosticsChannel.channel("undici:websocket:open").subscribe((evt) => {
@@ -1678,7 +1678,7 @@ var require_request = __commonJS({
     var kHandler = /* @__PURE__ */ Symbol("handler");
     var Request = class {
       constructor(origin, {
-        path: path7,
+        path: path8,
         method,
         body,
         headers,
@@ -1693,11 +1693,11 @@ var require_request = __commonJS({
         expectContinue,
         servername
       }, handler2) {
-        if (typeof path7 !== "string") {
+        if (typeof path8 !== "string") {
           throw new InvalidArgumentError("path must be a string");
-        } else if (path7[0] !== "/" && !(path7.startsWith("http://") || path7.startsWith("https://")) && method !== "CONNECT") {
+        } else if (path8[0] !== "/" && !(path8.startsWith("http://") || path8.startsWith("https://")) && method !== "CONNECT") {
           throw new InvalidArgumentError("path must be an absolute URL or start with a slash");
-        } else if (invalidPathRegex.test(path7)) {
+        } else if (invalidPathRegex.test(path8)) {
           throw new InvalidArgumentError("invalid request path");
         }
         if (typeof method !== "string") {
@@ -1763,7 +1763,7 @@ var require_request = __commonJS({
         this.completed = false;
         this.aborted = false;
         this.upgrade = upgrade || null;
-        this.path = query ? buildURL(path7, query) : path7;
+        this.path = query ? buildURL(path8, query) : path8;
         this.origin = origin;
         this.idempotent = idempotent == null ? method === "HEAD" || method === "GET" : idempotent;
         this.blocking = blocking == null ? false : blocking;
@@ -6393,7 +6393,7 @@ var require_client_h1 = __commonJS({
       return method !== "GET" && method !== "HEAD" && method !== "OPTIONS" && method !== "TRACE" && method !== "CONNECT";
     }
     function writeH1(client, request2) {
-      const { method, path: path7, host, upgrade, blocking, reset } = request2;
+      const { method, path: path8, host, upgrade, blocking, reset } = request2;
       let { body, headers, contentLength } = request2;
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH" || method === "QUERY" || method === "PROPFIND" || method === "PROPPATCH";
       if (util.isFormDataLike(body)) {
@@ -6468,7 +6468,7 @@ var require_client_h1 = __commonJS({
       if (blocking) {
         socket[kBlocking] = true;
       }
-      let header = `${method} ${path7} HTTP/1.1\r
+      let header = `${method} ${path8} HTTP/1.1\r
 `;
       if (typeof host === "string") {
         header += `host: ${host}\r
@@ -6994,7 +6994,7 @@ var require_client_h2 = __commonJS({
     }
     function writeH2(client, request2) {
       const session = client[kHTTP2Session];
-      const { method, path: path7, host, upgrade, expectContinue, signal, headers: reqHeaders } = request2;
+      const { method, path: path8, host, upgrade, expectContinue, signal, headers: reqHeaders } = request2;
       let { body } = request2;
       if (upgrade) {
         util.errorRequest(client, request2, new Error("Upgrade not supported for H2"));
@@ -7061,7 +7061,7 @@ var require_client_h2 = __commonJS({
         });
         return true;
       }
-      headers[HTTP2_HEADER_PATH] = path7;
+      headers[HTTP2_HEADER_PATH] = path8;
       headers[HTTP2_HEADER_SCHEME] = "https";
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH";
       if (body && typeof body.read === "function") {
@@ -7414,9 +7414,9 @@ var require_redirect_handler = __commonJS({
           return this.handler.onHeaders(statusCode, headers, resume, statusText);
         }
         const { origin, pathname, search } = util.parseURL(new URL(this.location, this.opts.origin && new URL(this.opts.path, this.opts.origin)));
-        const path7 = search ? `${pathname}${search}` : pathname;
+        const path8 = search ? `${pathname}${search}` : pathname;
         this.opts.headers = cleanRequestHeaders(this.opts.headers, statusCode === 303, this.opts.origin !== origin);
-        this.opts.path = path7;
+        this.opts.path = path8;
         this.opts.origin = origin;
         this.opts.maxRedirections = 0;
         this.opts.query = null;
@@ -8652,10 +8652,10 @@ var require_proxy_agent = __commonJS({
         };
         const {
           origin,
-          path: path7 = "/",
+          path: path8 = "/",
           headers = {}
         } = opts;
-        opts.path = origin + path7;
+        opts.path = origin + path8;
         if (!("host" in headers) && !("Host" in headers)) {
           const { host } = new URL2(origin);
           headers.host = host;
@@ -10606,20 +10606,20 @@ var require_mock_utils = __commonJS({
       }
       return true;
     }
-    function safeUrl(path7) {
-      if (typeof path7 !== "string") {
-        return path7;
+    function safeUrl(path8) {
+      if (typeof path8 !== "string") {
+        return path8;
       }
-      const pathSegments = path7.split("?");
+      const pathSegments = path8.split("?");
       if (pathSegments.length !== 2) {
-        return path7;
+        return path8;
       }
       const qp = new URLSearchParams(pathSegments.pop());
       qp.sort();
       return [...pathSegments, qp.toString()].join("?");
     }
-    function matchKey(mockDispatch2, { path: path7, method, body, headers }) {
-      const pathMatch = matchValue(mockDispatch2.path, path7);
+    function matchKey(mockDispatch2, { path: path8, method, body, headers }) {
+      const pathMatch = matchValue(mockDispatch2.path, path8);
       const methodMatch = matchValue(mockDispatch2.method, method);
       const bodyMatch = typeof mockDispatch2.body !== "undefined" ? matchValue(mockDispatch2.body, body) : true;
       const headersMatch = matchHeaders(mockDispatch2, headers);
@@ -10641,7 +10641,7 @@ var require_mock_utils = __commonJS({
     function getMockDispatch(mockDispatches, key) {
       const basePath = key.query ? buildURL(key.path, key.query) : key.path;
       const resolvedPath = typeof basePath === "string" ? safeUrl(basePath) : basePath;
-      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path7 }) => matchValue(safeUrl(path7), resolvedPath));
+      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path8 }) => matchValue(safeUrl(path8), resolvedPath));
       if (matchedMockDispatches.length === 0) {
         throw new MockNotMatchedError(`Mock dispatch not matched for path '${resolvedPath}'`);
       }
@@ -10679,9 +10679,9 @@ var require_mock_utils = __commonJS({
       }
     }
     function buildKey(opts) {
-      const { path: path7, method, body, headers, query } = opts;
+      const { path: path8, method, body, headers, query } = opts;
       return {
-        path: path7,
+        path: path8,
         method,
         body,
         headers,
@@ -10987,7 +10987,7 @@ var require_mock_interceptor = __commonJS({
 var require_mock_client = __commonJS({
   "../../node_modules/.pnpm/undici@6.28.0/node_modules/undici/lib/mock/mock-client.js"(exports2, module2) {
     "use strict";
-    var { promisify: promisify3 } = require("util");
+    var { promisify: promisify4 } = require("util");
     var Client = require_client();
     var { buildMockDispatch } = require_mock_utils();
     var {
@@ -11027,7 +11027,7 @@ var require_mock_client = __commonJS({
         return new MockInterceptor(opts, this[kDispatches]);
       }
       async [kClose]() {
-        await promisify3(this[kOriginalClose])();
+        await promisify4(this[kOriginalClose])();
         this[kConnected] = 0;
         this[kMockAgent][Symbols.kClients].delete(this[kOrigin]);
       }
@@ -11040,7 +11040,7 @@ var require_mock_client = __commonJS({
 var require_mock_pool = __commonJS({
   "../../node_modules/.pnpm/undici@6.28.0/node_modules/undici/lib/mock/mock-pool.js"(exports2, module2) {
     "use strict";
-    var { promisify: promisify3 } = require("util");
+    var { promisify: promisify4 } = require("util");
     var Pool = require_pool();
     var { buildMockDispatch } = require_mock_utils();
     var {
@@ -11080,7 +11080,7 @@ var require_mock_pool = __commonJS({
         return new MockInterceptor(opts, this[kDispatches]);
       }
       async [kClose]() {
-        await promisify3(this[kOriginalClose])();
+        await promisify4(this[kOriginalClose])();
         this[kConnected] = 0;
         this[kMockAgent][Symbols.kClients].delete(this[kOrigin]);
       }
@@ -11144,10 +11144,10 @@ var require_pending_interceptors_formatter = __commonJS({
       }
       format(pendingInterceptors) {
         const withPrettyHeaders = pendingInterceptors.map(
-          ({ method, path: path7, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
+          ({ method, path: path8, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
             Method: method,
             Origin: origin,
-            Path: path7,
+            Path: path8,
             "Status code": statusCode,
             Persistent: persist ? PERSISTENT : NOT_PERSISTENT,
             Invocations: timesInvoked,
@@ -16028,9 +16028,9 @@ var require_util6 = __commonJS({
         }
       }
     }
-    function validateCookiePath(path7) {
-      for (let i = 0; i < path7.length; ++i) {
-        const code = path7.charCodeAt(i);
+    function validateCookiePath(path8) {
+      for (let i = 0; i < path8.length; ++i) {
+        const code = path8.charCodeAt(i);
         if (code < 32 || // exclude CTLs (0-31)
         code > 126 || // exclude DEL and non-ascii
         code === 59) {
@@ -18761,11 +18761,11 @@ var require_undici = __commonJS({
           if (typeof opts.path !== "string") {
             throw new InvalidArgumentError("invalid opts.path");
           }
-          let path7 = opts.path;
+          let path8 = opts.path;
           if (!opts.path.startsWith("/")) {
-            path7 = `/${path7}`;
+            path8 = `/${path8}`;
           }
-          url = new URL(util.parseOrigin(url).origin + path7);
+          url = new URL(util.parseOrigin(url).origin + path8);
         } else {
           if (!opts) {
             opts = typeof url === "object" ? url : {};
@@ -18855,8 +18855,8 @@ var require_context = __commonJS({
           if ((0, fs_1.existsSync)(process.env.GITHUB_EVENT_PATH)) {
             this.payload = JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH, { encoding: "utf8" }));
           } else {
-            const path7 = process.env.GITHUB_EVENT_PATH;
-            process.stdout.write(`GITHUB_EVENT_PATH ${path7} does not exist${os_1.EOL}`);
+            const path8 = process.env.GITHUB_EVENT_PATH;
+            process.stdout.write(`GITHUB_EVENT_PATH ${path8} does not exist${os_1.EOL}`);
           }
         }
         this.eventName = process.env.GITHUB_EVENT_NAME;
@@ -19442,14 +19442,14 @@ var require_util9 = __commonJS({
         }
         const port = url.port != null ? url.port : url.protocol === "https:" ? 443 : 80;
         let origin = url.origin != null ? url.origin : `${url.protocol}//${url.hostname}:${port}`;
-        let path7 = url.path != null ? url.path : `${url.pathname || ""}${url.search || ""}`;
+        let path8 = url.path != null ? url.path : `${url.pathname || ""}${url.search || ""}`;
         if (origin.endsWith("/")) {
           origin = origin.substring(0, origin.length - 1);
         }
-        if (path7 && !path7.startsWith("/")) {
-          path7 = `/${path7}`;
+        if (path8 && !path8.startsWith("/")) {
+          path8 = `/${path8}`;
         }
-        url = new URL(origin + path7);
+        url = new URL(origin + path8);
       }
       return url;
     }
@@ -21063,20 +21063,20 @@ var require_parseParams = __commonJS({
 var require_basename = __commonJS({
   "../../node_modules/.pnpm/@fastify+busboy@2.1.1/node_modules/@fastify/busboy/lib/utils/basename.js"(exports2, module2) {
     "use strict";
-    module2.exports = function basename(path7) {
-      if (typeof path7 !== "string") {
+    module2.exports = function basename(path8) {
+      if (typeof path8 !== "string") {
         return "";
       }
-      for (var i = path7.length - 1; i >= 0; --i) {
-        switch (path7.charCodeAt(i)) {
+      for (var i = path8.length - 1; i >= 0; --i) {
+        switch (path8.charCodeAt(i)) {
           case 47:
           // '/'
           case 92:
-            path7 = path7.slice(i + 1);
-            return path7 === ".." || path7 === "." ? "" : path7;
+            path8 = path8.slice(i + 1);
+            return path8 === ".." || path8 === "." ? "" : path8;
         }
       }
-      return path7 === ".." || path7 === "." ? "" : path7;
+      return path8 === ".." || path8 === "." ? "" : path8;
     };
   }
 });
@@ -24107,7 +24107,7 @@ var require_request3 = __commonJS({
     }
     var Request = class _Request {
       constructor(origin, {
-        path: path7,
+        path: path8,
         method,
         body,
         headers,
@@ -24121,11 +24121,11 @@ var require_request3 = __commonJS({
         throwOnError,
         expectContinue
       }, handler2) {
-        if (typeof path7 !== "string") {
+        if (typeof path8 !== "string") {
           throw new InvalidArgumentError("path must be a string");
-        } else if (path7[0] !== "/" && !(path7.startsWith("http://") || path7.startsWith("https://")) && method !== "CONNECT") {
+        } else if (path8[0] !== "/" && !(path8.startsWith("http://") || path8.startsWith("https://")) && method !== "CONNECT") {
           throw new InvalidArgumentError("path must be an absolute URL or start with a slash");
-        } else if (invalidPathRegex.exec(path7) !== null) {
+        } else if (invalidPathRegex.exec(path8) !== null) {
           throw new InvalidArgumentError("invalid request path");
         }
         if (typeof method !== "string") {
@@ -24188,7 +24188,7 @@ var require_request3 = __commonJS({
         this.completed = false;
         this.aborted = false;
         this.upgrade = upgrade || null;
-        this.path = query ? util.buildURL(path7, query) : path7;
+        this.path = query ? util.buildURL(path8, query) : path8;
         this.origin = origin;
         this.idempotent = idempotent == null ? method === "HEAD" || method === "GET" : idempotent;
         this.blocking = blocking == null ? false : blocking;
@@ -25196,9 +25196,9 @@ var require_RedirectHandler = __commonJS({
           return this.handler.onHeaders(statusCode, headers, resume, statusText);
         }
         const { origin, pathname, search } = util.parseURL(new URL(this.location, this.opts.origin && new URL(this.opts.path, this.opts.origin)));
-        const path7 = search ? `${pathname}${search}` : pathname;
+        const path8 = search ? `${pathname}${search}` : pathname;
         this.opts.headers = cleanRequestHeaders(this.opts.headers, statusCode === 303, this.opts.origin !== origin);
-        this.opts.path = path7;
+        this.opts.path = path8;
         this.opts.origin = origin;
         this.opts.maxRedirections = 0;
         this.opts.query = null;
@@ -26440,7 +26440,7 @@ var require_client2 = __commonJS({
         writeH2(client, client[kHTTP2Session], request2);
         return;
       }
-      const { body, method, path: path7, host, upgrade, headers, blocking, reset } = request2;
+      const { body, method, path: path8, host, upgrade, headers, blocking, reset } = request2;
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH";
       if (body && typeof body.read === "function") {
         body.read(0);
@@ -26490,7 +26490,7 @@ var require_client2 = __commonJS({
       if (blocking) {
         socket[kBlocking] = true;
       }
-      let header = `${method} ${path7} HTTP/1.1\r
+      let header = `${method} ${path8} HTTP/1.1\r
 `;
       if (typeof host === "string") {
         header += `host: ${host}\r
@@ -26553,7 +26553,7 @@ upgrade: ${upgrade}\r
       return true;
     }
     function writeH2(client, session, request2) {
-      const { body, method, path: path7, host, upgrade, expectContinue, signal, headers: reqHeaders } = request2;
+      const { body, method, path: path8, host, upgrade, expectContinue, signal, headers: reqHeaders } = request2;
       let headers;
       if (typeof reqHeaders === "string") headers = Request[kHTTP2CopyHeaders](reqHeaders.trim());
       else headers = reqHeaders;
@@ -26596,7 +26596,7 @@ upgrade: ${upgrade}\r
         });
         return true;
       }
-      headers[HTTP2_HEADER_PATH] = path7;
+      headers[HTTP2_HEADER_PATH] = path8;
       headers[HTTP2_HEADER_SCHEME] = "https";
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH";
       if (body && typeof body.read === "function") {
@@ -28839,20 +28839,20 @@ var require_mock_utils2 = __commonJS({
       }
       return true;
     }
-    function safeUrl(path7) {
-      if (typeof path7 !== "string") {
-        return path7;
+    function safeUrl(path8) {
+      if (typeof path8 !== "string") {
+        return path8;
       }
-      const pathSegments = path7.split("?");
+      const pathSegments = path8.split("?");
       if (pathSegments.length !== 2) {
-        return path7;
+        return path8;
       }
       const qp = new URLSearchParams(pathSegments.pop());
       qp.sort();
       return [...pathSegments, qp.toString()].join("?");
     }
-    function matchKey(mockDispatch2, { path: path7, method, body, headers }) {
-      const pathMatch = matchValue(mockDispatch2.path, path7);
+    function matchKey(mockDispatch2, { path: path8, method, body, headers }) {
+      const pathMatch = matchValue(mockDispatch2.path, path8);
       const methodMatch = matchValue(mockDispatch2.method, method);
       const bodyMatch = typeof mockDispatch2.body !== "undefined" ? matchValue(mockDispatch2.body, body) : true;
       const headersMatch = matchHeaders(mockDispatch2, headers);
@@ -28870,7 +28870,7 @@ var require_mock_utils2 = __commonJS({
     function getMockDispatch(mockDispatches, key) {
       const basePath = key.query ? buildURL(key.path, key.query) : key.path;
       const resolvedPath = typeof basePath === "string" ? safeUrl(basePath) : basePath;
-      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path7 }) => matchValue(safeUrl(path7), resolvedPath));
+      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path8 }) => matchValue(safeUrl(path8), resolvedPath));
       if (matchedMockDispatches.length === 0) {
         throw new MockNotMatchedError(`Mock dispatch not matched for path '${resolvedPath}'`);
       }
@@ -28907,9 +28907,9 @@ var require_mock_utils2 = __commonJS({
       }
     }
     function buildKey(opts) {
-      const { path: path7, method, body, headers, query } = opts;
+      const { path: path8, method, body, headers, query } = opts;
       return {
-        path: path7,
+        path: path8,
         method,
         body,
         headers,
@@ -29203,7 +29203,7 @@ var require_mock_interceptor2 = __commonJS({
 var require_mock_client2 = __commonJS({
   "../../node_modules/.pnpm/undici@5.29.0/node_modules/undici/lib/mock/mock-client.js"(exports2, module2) {
     "use strict";
-    var { promisify: promisify3 } = require("util");
+    var { promisify: promisify4 } = require("util");
     var Client = require_client2();
     var { buildMockDispatch } = require_mock_utils2();
     var {
@@ -29243,7 +29243,7 @@ var require_mock_client2 = __commonJS({
         return new MockInterceptor(opts, this[kDispatches]);
       }
       async [kClose]() {
-        await promisify3(this[kOriginalClose])();
+        await promisify4(this[kOriginalClose])();
         this[kConnected] = 0;
         this[kMockAgent][Symbols.kClients].delete(this[kOrigin]);
       }
@@ -29256,7 +29256,7 @@ var require_mock_client2 = __commonJS({
 var require_mock_pool2 = __commonJS({
   "../../node_modules/.pnpm/undici@5.29.0/node_modules/undici/lib/mock/mock-pool.js"(exports2, module2) {
     "use strict";
-    var { promisify: promisify3 } = require("util");
+    var { promisify: promisify4 } = require("util");
     var Pool = require_pool2();
     var { buildMockDispatch } = require_mock_utils2();
     var {
@@ -29296,7 +29296,7 @@ var require_mock_pool2 = __commonJS({
         return new MockInterceptor(opts, this[kDispatches]);
       }
       async [kClose]() {
-        await promisify3(this[kOriginalClose])();
+        await promisify4(this[kOriginalClose])();
         this[kConnected] = 0;
         this[kMockAgent][Symbols.kClients].delete(this[kOrigin]);
       }
@@ -29358,10 +29358,10 @@ var require_pending_interceptors_formatter2 = __commonJS({
       }
       format(pendingInterceptors) {
         const withPrettyHeaders = pendingInterceptors.map(
-          ({ method, path: path7, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
+          ({ method, path: path8, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
             Method: method,
             Origin: origin,
-            Path: path7,
+            Path: path8,
             "Status code": statusCode,
             Persistent: persist ? "\u2705" : "\u274C",
             Invocations: timesInvoked,
@@ -33982,8 +33982,8 @@ var require_util14 = __commonJS({
         }
       }
     }
-    function validateCookiePath(path7) {
-      for (const char of path7) {
+    function validateCookiePath(path8) {
+      for (const char of path8) {
         const code = char.charCodeAt(0);
         if (code < 33 || char === ";") {
           throw new Error("Invalid cookie path");
@@ -35663,11 +35663,11 @@ var require_undici2 = __commonJS({
           if (typeof opts.path !== "string") {
             throw new InvalidArgumentError("invalid opts.path");
           }
-          let path7 = opts.path;
+          let path8 = opts.path;
           if (!opts.path.startsWith("/")) {
-            path7 = `/${path7}`;
+            path8 = `/${path8}`;
           }
-          url = new URL(util.parseOrigin(url).origin + path7);
+          url = new URL(util.parseOrigin(url).origin + path8);
         } else {
           if (!opts) {
             opts = typeof url === "object" ? url : {};
@@ -43608,8 +43608,8 @@ var require_utils5 = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path7) {
-      let input = path7;
+    function removeDotSegments(path8) {
+      let input = path8;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -43861,8 +43861,8 @@ var require_schemes = __commonJS({
         wsComponent.secure = void 0;
       }
       if (wsComponent.resourceName) {
-        const [path7, query] = wsComponent.resourceName.split("?");
-        wsComponent.path = path7 && path7 !== "/" ? path7 : void 0;
+        const [path8, query] = wsComponent.resourceName.split("?");
+        wsComponent.path = path8 && path8 !== "/" ? path8 : void 0;
         wsComponent.query = query;
         wsComponent.resourceName = void 0;
       }
@@ -47497,8 +47497,39 @@ function info(message) {
 }
 
 // src/run-action.ts
-var import_node_path6 = __toESM(require("path"), 1);
+var import_node_path7 = __toESM(require("path"), 1);
 var import_github3 = __toESM(require_github(), 1);
+
+// ../core/src/audit/locks.ts
+var AUDIT_DIR = ".policy-semver";
+var AUDIT_FILE = "last-release.json";
+
+// ../core/src/audit/write-last-release.ts
+var import_promises = require("fs/promises");
+var import_node_path = __toESM(require("path"), 1);
+function lastReleaseRelPath() {
+  return `${AUDIT_DIR}/${AUDIT_FILE}`;
+}
+function lastReleasePath(cwd) {
+  return import_node_path.default.join(cwd, AUDIT_DIR, AUDIT_FILE);
+}
+async function writeLastRelease(input) {
+  const record = {
+    version: input.version,
+    kind: input.kind,
+    gitSha: input.gitSha,
+    tag: input.tag,
+    at: input.at ?? (/* @__PURE__ */ new Date()).toISOString()
+  };
+  await (0, import_promises.mkdir)(import_node_path.default.join(input.cwd, AUDIT_DIR), { recursive: true });
+  await (0, import_promises.writeFile)(
+    lastReleasePath(input.cwd),
+    `${JSON.stringify(record, null, 2)}
+`,
+    "utf8"
+  );
+  return record;
+}
 
 // ../core/src/dual-source/assert-match.ts
 function assertDualSourceMatch(versionFileVersion, packageJsonVersion) {
@@ -47510,8 +47541,8 @@ function assertDualSourceMatch(versionFileVersion, packageJsonVersion) {
 }
 
 // ../core/src/dual-source/read-sources.ts
-var import_promises = require("fs/promises");
-var import_node_path = __toESM(require("path"), 1);
+var import_promises2 = require("fs/promises");
+var import_node_path2 = __toESM(require("path"), 1);
 
 // ../core/src/bump/parse-version.ts
 var SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)$/;
@@ -47536,9 +47567,9 @@ function formatSemVer(parts) {
 
 // ../core/src/dual-source/read-sources.ts
 async function tryReadVersionFile(cwd, rel) {
-  const p = import_node_path.default.join(cwd, rel);
+  const p = import_node_path2.default.join(cwd, rel);
   try {
-    const raw = (await (0, import_promises.readFile)(p, "utf8")).trim();
+    const raw = (await (0, import_promises2.readFile)(p, "utf8")).trim();
     if (!isSemVerString(raw)) {
       throw new Error(`malformed VERSION at ${p}: ${JSON.stringify(raw)}`);
     }
@@ -47549,9 +47580,9 @@ async function tryReadVersionFile(cwd, rel) {
   }
 }
 async function tryReadPackageJsonVersion(cwd, rel) {
-  const p = import_node_path.default.join(cwd, rel);
+  const p = import_node_path2.default.join(cwd, rel);
   try {
-    const pkg = JSON.parse(await (0, import_promises.readFile)(p, "utf8"));
+    const pkg = JSON.parse(await (0, import_promises2.readFile)(p, "utf8"));
     if (typeof pkg.version !== "string" || !isSemVerString(pkg.version)) {
       throw new Error(`malformed package.json version at ${p}`);
     }
@@ -47574,25 +47605,25 @@ async function readBothConfigured(cwd, versionFile, packageJson) {
 }
 
 // ../core/src/dual-source/write-both.ts
-var import_promises2 = require("fs/promises");
-var import_node_path2 = __toESM(require("path"), 1);
+var import_promises3 = require("fs/promises");
+var import_node_path3 = __toESM(require("path"), 1);
 async function writeVersionFile(cwd, rel, nextVersion) {
-  await (0, import_promises2.writeFile)(import_node_path2.default.join(cwd, rel), `${nextVersion}
+  await (0, import_promises3.writeFile)(import_node_path3.default.join(cwd, rel), `${nextVersion}
 `, "utf8");
 }
 async function writePackageJsonVersion(cwd, rel, nextVersion) {
-  const p = import_node_path2.default.join(cwd, rel);
-  const raw = await (0, import_promises2.readFile)(p, "utf8");
+  const p = import_node_path3.default.join(cwd, rel);
+  const raw = await (0, import_promises3.readFile)(p, "utf8");
   const pkg = JSON.parse(raw);
   pkg.version = nextVersion;
-  await (0, import_promises2.writeFile)(p, `${JSON.stringify(pkg, null, 2)}
+  await (0, import_promises3.writeFile)(p, `${JSON.stringify(pkg, null, 2)}
 `, "utf8");
 }
 async function writeBothAtomically(input) {
-  const vfPath = import_node_path2.default.join(input.cwd, input.versionFile);
-  const pkgPath = import_node_path2.default.join(input.cwd, input.packageJson);
-  const vfPrev = await (0, import_promises2.readFile)(vfPath, "utf8");
-  const pkgPrev = await (0, import_promises2.readFile)(pkgPath, "utf8");
+  const vfPath = import_node_path3.default.join(input.cwd, input.versionFile);
+  const pkgPath = import_node_path3.default.join(input.cwd, input.packageJson);
+  const vfPrev = await (0, import_promises3.readFile)(vfPath, "utf8");
+  const pkgPrev = await (0, import_promises3.readFile)(pkgPath, "utf8");
   try {
     await writeVersionFile(input.cwd, input.versionFile, input.nextVersion);
     await writePackageJsonVersion(
@@ -47601,8 +47632,8 @@ async function writeBothAtomically(input) {
       input.nextVersion
     );
   } catch (err) {
-    await (0, import_promises2.writeFile)(vfPath, vfPrev, "utf8");
-    await (0, import_promises2.writeFile)(pkgPath, pkgPrev, "utf8");
+    await (0, import_promises3.writeFile)(vfPath, vfPrev, "utf8");
+    await (0, import_promises3.writeFile)(pkgPath, pkgPrev, "utf8");
     throw err;
   }
 }
@@ -47710,7 +47741,7 @@ function escapeRegExp(s) {
 }
 
 // ../core/src/bump/read-version.ts
-var import_node_path3 = __toESM(require("path"), 1);
+var import_node_path4 = __toESM(require("path"), 1);
 async function readVersion(input) {
   const { cwd, files } = input;
   const hasVf = Boolean(files.versionFile);
@@ -47726,7 +47757,7 @@ async function readVersion(input) {
     const vf = await tryReadVersionFile(cwd, files.versionFile);
     if (vf === null) {
       throw new Error(
-        `readVersion: VERSION not found at ${import_node_path3.default.join(cwd, files.versionFile)}`
+        `readVersion: VERSION not found at ${import_node_path4.default.join(cwd, files.versionFile)}`
       );
     }
     return vf;
@@ -47738,7 +47769,7 @@ async function readVersion(input) {
     );
     if (pkg === null) {
       throw new Error(
-        `readVersion: package.json not found at ${import_node_path3.default.join(cwd, files.packageJson)}`
+        `readVersion: package.json not found at ${import_node_path4.default.join(cwd, files.packageJson)}`
       );
     }
     return pkg;
@@ -47747,25 +47778,25 @@ async function readVersion(input) {
 }
 
 // ../core/src/bump/write-version.ts
-var import_promises3 = require("fs/promises");
-var import_node_path4 = __toESM(require("path"), 1);
+var import_promises4 = require("fs/promises");
+var import_node_path5 = __toESM(require("path"), 1);
 async function writeVersionFile2(cwd, rel, nextVersion) {
-  await (0, import_promises3.writeFile)(import_node_path4.default.join(cwd, rel), `${nextVersion}
+  await (0, import_promises4.writeFile)(import_node_path5.default.join(cwd, rel), `${nextVersion}
 `, "utf8");
 }
 async function writePackageJsonVersion2(cwd, rel, nextVersion) {
-  const p = import_node_path4.default.join(cwd, rel);
-  const raw = await (0, import_promises3.readFile)(p, "utf8");
+  const p = import_node_path5.default.join(cwd, rel);
+  const raw = await (0, import_promises4.readFile)(p, "utf8");
   const pkg = JSON.parse(raw);
   pkg.version = nextVersion;
-  await (0, import_promises3.writeFile)(p, `${JSON.stringify(pkg, null, 2)}
+  await (0, import_promises4.writeFile)(p, `${JSON.stringify(pkg, null, 2)}
 `, "utf8");
 }
 async function writeSingleSource(cwd, nextVersion, kind, rel) {
   if (kind === "versionFile") {
     let current = "";
     try {
-      current = (await (0, import_promises3.readFile)(import_node_path4.default.join(cwd, rel), "utf8")).trim();
+      current = (await (0, import_promises4.readFile)(import_node_path5.default.join(cwd, rel), "utf8")).trim();
     } catch (err) {
       if (err.code !== "ENOENT") throw err;
     }
@@ -47775,7 +47806,7 @@ async function writeSingleSource(cwd, nextVersion, kind, rel) {
     await writeVersionFile2(cwd, rel, nextVersion);
     return { nextVersion, wrote: true, reason: "written" };
   }
-  const raw = await (0, import_promises3.readFile)(import_node_path4.default.join(cwd, rel), "utf8");
+  const raw = await (0, import_promises4.readFile)(import_node_path5.default.join(cwd, rel), "utf8");
   const pkg = JSON.parse(raw);
   if (pkg.version === nextVersion) {
     return { nextVersion, wrote: false, reason: "already-current" };
@@ -47918,8 +47949,8 @@ function renderReleaseSection(input) {
 }
 
 // ../core/src/changelog/write-changelog.ts
-var import_promises4 = require("fs/promises");
-var import_node_path5 = __toESM(require("path"), 1);
+var import_promises5 = require("fs/promises");
+var import_node_path6 = __toESM(require("path"), 1);
 
 // ../core/src/github/locks.ts
 var SECRET_REDACT_PATTERNS = [
@@ -47974,7 +48005,7 @@ ${section}`;
 }
 async function writeChangelog(input) {
   const rel = input.changelogPath;
-  const abs = import_node_path5.default.join(input.cwd, rel);
+  const abs = import_node_path6.default.join(input.cwd, rel);
   const attempt = input.attempt ?? 1;
   if (input.kind === "none") {
     return { wrote: false, reason: "kind-none", path: abs };
@@ -47991,7 +48022,7 @@ async function writeChangelog(input) {
   );
   let previous = null;
   try {
-    previous = await (0, import_promises4.readFile)(abs, "utf8");
+    previous = await (0, import_promises5.readFile)(abs, "utf8");
   } catch (err) {
     if (err.code !== "ENOENT") throw err;
   }
@@ -48008,7 +48039,7 @@ async function writeChangelog(input) {
     if (attempt > 2) {
       throw new Error(`CHANGELOG conflict after retry: ${abs}`);
     }
-    await (0, import_promises4.writeFile)(abs, next, "utf8");
+    await (0, import_promises5.writeFile)(abs, next, "utf8");
   } catch (err) {
     if (err instanceof Error) throw err;
     if (attempt === 1) {
@@ -48133,7 +48164,7 @@ function classify(input) {
 }
 
 // ../core/src/config/load-config.ts
-var import_promises5 = require("fs/promises");
+var import_promises6 = require("fs/promises");
 var import_ajv = __toESM(require_ajv(), 1);
 
 // ../core/src/config/versioning.config.schema.json
@@ -48203,18 +48234,25 @@ var versioning_config_schema_default = {
       type: "object",
       additionalProperties: false,
       default: {},
+      description: "POSIX sh -c command strings. null = skip. Non-zero exit aborts the remaining release steps.",
       properties: {
         beforeBump: {
           type: ["string", "null"],
-          default: null
+          minLength: 1,
+          default: null,
+          description: "Run before any version/changelog write or tag. Failure \u2192 never write, no tag, no release."
         },
         afterTag: {
           type: ["string", "null"],
-          default: null
+          minLength: 1,
+          default: null,
+          description: "Run after the local annotated tag exists, before push + GitHub Release."
         },
         afterRelease: {
           type: ["string", "null"],
-          default: null
+          minLength: 1,
+          default: null,
+          description: "Run after GitHub Release is created."
         }
       }
     },
@@ -48233,14 +48271,14 @@ var ajv = new import_ajv.Ajv({
   useDefaults: true
 });
 var validate = ajv.compile(versioning_config_schema_default);
-async function loadConfig(path7) {
+async function loadConfig(path8) {
   let raw;
   try {
-    raw = await (0, import_promises5.readFile)(path7, "utf8");
+    raw = await (0, import_promises6.readFile)(path8, "utf8");
   } catch (err) {
     const code = err.code;
     if (code === "ENOENT") {
-      throw new Error(`versioning config not found: ${path7}`);
+      throw new Error(`versioning config not found: ${path8}`);
     }
     throw err;
   }
@@ -48248,11 +48286,11 @@ async function loadConfig(path7) {
   try {
     data = JSON.parse(raw);
   } catch {
-    throw new Error(`versioning config is not valid JSON: ${path7}`);
+    throw new Error(`versioning config is not valid JSON: ${path8}`);
   }
   if (!validate(data)) {
     throw new Error(
-      `invalid versioning config (${path7}): ${ajv.errorsText(validate.errors, { separator: "; " })}`
+      `invalid versioning config (${path8}): ${ajv.errorsText(validate.errors, { separator: "; " })}`
     );
   }
   return data;
@@ -48344,9 +48382,64 @@ async function createGitHubRelease(input) {
   });
 }
 
+// ../core/src/hooks/locks.ts
+var HOOK_ENV = {
+  version: "POLICY_SEMVER_VERSION",
+  kind: "POLICY_SEMVER_KIND",
+  dryRun: "POLICY_SEMVER_DRY_RUN"
+};
+var HOOK_SHELL = "sh";
+
+// ../core/src/hooks/run-hook.ts
+var import_node_child_process2 = require("child_process");
+var import_node_util2 = require("util");
+var execFileAsync2 = (0, import_node_util2.promisify)(import_node_child_process2.execFile);
+var defaultHookExec = async (command, opts) => {
+  const { stdout, stderr } = await execFileAsync2(HOOK_SHELL, ["-c", command], {
+    cwd: opts.cwd,
+    env: opts.env,
+    encoding: "utf8"
+  });
+  return { stdout: String(stdout), stderr: String(stderr) };
+};
+function hookEnvVars(input) {
+  return {
+    [HOOK_ENV.version]: input.version,
+    [HOOK_ENV.kind]: input.kind,
+    [HOOK_ENV.dryRun]: input.dryRun ? "true" : "false"
+  };
+}
+async function runHook(input) {
+  if (input.command == null || input.command.trim() === "") {
+    return;
+  }
+  const exec = input.exec ?? defaultHookExec;
+  const env = {
+    ...process.env,
+    ...hookEnvVars({
+      version: input.version,
+      kind: input.kind,
+      dryRun: input.dryRun
+    })
+  };
+  try {
+    const { stdout, stderr } = await exec(input.command, {
+      cwd: input.cwd,
+      env
+    });
+    if (stdout) process.stdout.write(stdout);
+    if (stderr) process.stderr.write(stderr);
+  } catch (err) {
+    const code = err.code ?? "unknown";
+    const detail = err instanceof Error ? err.message : String(err);
+    throw new Error(`hook ${input.name} failed (exit ${code}): ${detail}`);
+  }
+}
+
 // ../core/src/release/run-release.ts
 async function runRelease(input) {
-  if (input.kind === "none") {
+  const kind = input.kind;
+  if (kind === "none") {
     return { skipped: true, reason: "kind-none" };
   }
   const tagPrefix = input.tagPrefix ?? "v";
@@ -48368,6 +48461,17 @@ async function runRelease(input) {
     message: tag,
     ...input.exec !== void 0 ? { exec: input.exec } : {}
   });
+  if (input.hooks) {
+    await runHook({
+      name: "afterTag",
+      command: input.hooks.afterTag,
+      cwd: input.cwd,
+      version: input.version,
+      kind,
+      dryRun: false,
+      ...input.hookExec !== void 0 ? { exec: input.hookExec } : {}
+    });
+  }
   await push({
     cwd: input.cwd,
     refs: [input.branch, tag],
@@ -48380,6 +48484,46 @@ async function runRelease(input) {
     tag,
     body: input.sectionMarkdown,
     octokit: input.octokit
+  });
+  if (input.hooks) {
+    await runHook({
+      name: "afterRelease",
+      command: input.hooks.afterRelease,
+      cwd: input.cwd,
+      version: input.version,
+      kind,
+      dryRun: false,
+      ...input.hookExec !== void 0 ? { exec: input.hookExec } : {}
+    });
+  }
+  let gitSha = input.gitSha;
+  if (gitSha === void 0) {
+    const gitExec = input.exec ?? defaultGitExec;
+    const { stdout } = await gitExec(["rev-parse", "HEAD"], {
+      cwd: input.cwd
+    });
+    gitSha = stdout.trim();
+  }
+  const writeAudit = input.writeAudit ?? writeLastRelease;
+  await writeAudit({
+    cwd: input.cwd,
+    version: input.version,
+    kind,
+    gitSha,
+    tag,
+    at: (input.now ?? (() => /* @__PURE__ */ new Date()))().toISOString()
+  });
+  await commit({
+    cwd: input.cwd,
+    message: `chore(release): ${tag} last-release ${BOT_SKIP_TRAILER}`,
+    paths: [lastReleaseRelPath()],
+    ...input.exec !== void 0 ? { exec: input.exec } : {}
+  });
+  await push({
+    cwd: input.cwd,
+    refs: [input.branch],
+    ...input.remote !== void 0 ? { remote: input.remote } : {},
+    ...input.exec !== void 0 ? { exec: input.exec } : {}
   });
   return {
     skipped: false,
@@ -48481,12 +48625,12 @@ function decideActionMode(input) {
 }
 
 // src/load-commits.ts
-var import_node_child_process2 = require("child_process");
-var import_node_util2 = require("util");
-var execFileAsync2 = (0, import_node_util2.promisify)(import_node_child_process2.execFile);
+var import_node_child_process3 = require("child_process");
+var import_node_util3 = require("util");
+var execFileAsync3 = (0, import_node_util3.promisify)(import_node_child_process3.execFile);
 async function loadCommitsFromGit(cwd) {
   try {
-    const { stdout } = await execFileAsync2(
+    const { stdout } = await execFileAsync3(
       "git",
       ["log", "-n", "50", "--pretty=format:%s%x00%b%x1e"],
       { cwd, encoding: "utf8" }
@@ -48578,15 +48722,12 @@ function failWrite(err) {
   const hint = pushDenied ? " If branch protection blocks github-actions, use POLICY_SEMVER_TOKEN (PAT) or a GitHub App with contents:write bypass." : "";
   setFailed(`Write/push/release failed: ${msg}.${hint}`);
 }
-async function afterWriteAudit(_info) {
-  info("audit/hooks deferred to next phase");
-}
 async function runAction() {
   const configPath = getInput("config-path") || "versioning.config.json";
   const forceDryRun = getBooleanInput("dry-run");
   const token = process.env.POLICY_SEMVER_TOKEN?.trim() || getInput("token") || process.env.GITHUB_TOKEN || "";
   const cwd = process.env.GITHUB_WORKSPACE || process.cwd();
-  const config = await loadConfig(import_node_path6.default.join(cwd, configPath));
+  const config = await loadConfig(import_node_path7.default.join(cwd, configPath));
   const files = toVersionFiles(config.versionFiles);
   const payload = import_github3.context.payload;
   const pr = payload.pull_request;
@@ -48701,6 +48842,16 @@ ${summary2}
     return;
   }
   try {
+    if (kind !== "none") {
+      await runHook({
+        name: "beforeBump",
+        command: config.hooks.beforeBump,
+        cwd,
+        version: nextVersion,
+        kind,
+        dryRun: false
+      });
+    }
     const wrote = await writeVersion({
       cwd,
       nextVersion,
@@ -48730,9 +48881,12 @@ ${summary2}
         sectionMarkdown: changelog.sectionMarkdown ?? "",
         owner: import_github3.context.repo.owner,
         repo: import_github3.context.repo.repo,
-        token
+        token,
+        hooks: {
+          afterTag: config.hooks.afterTag,
+          afterRelease: config.hooks.afterRelease
+        }
       });
-      await afterWriteAudit({ version: nextVersion, kind });
     }
   } catch (err) {
     failWrite(err);

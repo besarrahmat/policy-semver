@@ -10,6 +10,7 @@
     "preinstall": "npx only-allow pnpm",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:fixtures": "node --import tsx packages/cli/src/bin.ts test",
     "typecheck": "pnpm -r run typecheck",
     "lint": "biome check .",
     "format": "biome check --write .",

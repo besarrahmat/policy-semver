@@ -1,12 +1,12 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { classify } from "@policy-semver/core";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { cmdBump } from "./cmd-bump.js";
 import { cmdClassify } from "./cmd-classify.js";
 import { cmdVerify } from "./cmd-verify.js";
 import { EXIT_POLICY } from "./exit.js";
-import { makeTempApp } from "./test-helpers.js";
+import { MIN_CONFIG, makeTempApp } from "./test-helpers.js";
 
 const cases = [
   { commits: [{ subject: "feat: x" }], kind: "minor" },
@@ -15,11 +15,17 @@ const cases = [
 ] as const;
 
 describe("parity classify", () => {
+  let cwd: string;
+
+  beforeAll(async () => {
+    cwd = await makeTempApp({ version: "1.2.3" });
+  });
+
   afterEach(() => vi.restoreAllMocks());
 
-  for (const c of cases) {
-    it(`${c.commits[0].subject} → ${c.kind}`, async () => {
-      const cwd = await makeTempApp({ version: "1.2.3" });
+  it("CLI classify matches core", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    for (const c of cases) {
       const coreKind = classify({
         commits: [...c.commits],
         currentVersion: "1.2.3",
@@ -27,7 +33,7 @@ describe("parity classify", () => {
       }).kind;
       expect(coreKind).toBe(c.kind);
 
-      const log = vi.spyOn(console, "log").mockImplementation(() => {});
+      log.mockClear();
       await cmdClassify({
         flags: { cwd, config: "versioning.config.json", json: true },
         commits: [...c.commits],
@@ -36,22 +42,15 @@ describe("parity classify", () => {
         kind: string;
       };
       expect(printed.kind).toBe(coreKind);
-    });
-  }
+    }
+  });
 });
 
 describe("verify failures", () => {
   it("unknown config key → throw (policy)", async () => {
-    const unknown = JSON.parse(
-      await readFile(
-        path.resolve(
-          __dirname,
-          "../../../fixtures/config/invalid/unknown-key.json",
-        ),
-        "utf8",
-      ),
-    ) as Record<string, unknown>;
-    const cwd = await makeTempApp({ config: unknown });
+    const cwd = await makeTempApp({
+      config: { schemaVersion: "1", nope: true },
+    });
     await expect(
       cmdVerify({
         flags: { cwd, config: "versioning.config.json", json: true },
@@ -98,5 +97,42 @@ describe("bump dirty write", () => {
     expect(await readFile(path.join(cwd, "package.json"), "utf8")).toBe(
       beforePkg,
     );
+  });
+});
+
+describe("bump beforeBump hook", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("failing beforeBump leaves VERSION unchanged", async () => {
+    const cwd = await makeTempApp({
+      version: "1.0.0",
+      config: {
+        ...MIN_CONFIG,
+        hooks: {
+          beforeBump: "exit 1",
+          afterTag: null,
+          afterRelease: null,
+        },
+      },
+    });
+    const beforeV = await readFile(path.join(cwd, "VERSION"), "utf8");
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const hookExec = vi.fn(async () => {
+      throw Object.assign(new Error("Command failed"), { code: 1 });
+    });
+
+    await expect(
+      cmdBump({
+        flags: { cwd, config: "versioning.config.json", json: true },
+        dryRun: false,
+        write: true,
+        force: true,
+        commits: [{ subject: "feat: x" }],
+        hookExec,
+      }),
+    ).rejects.toThrow(/hook beforeBump failed/);
+
+    expect(hookExec).toHaveBeenCalled();
+    expect(await readFile(path.join(cwd, "VERSION"), "utf8")).toBe(beforeV);
   });
 });

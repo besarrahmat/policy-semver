@@ -7,6 +7,7 @@ import {
   decideBumpGuards,
   loadConfig,
   readVersion,
+  runHook,
   writeChangelog,
   writeVersion,
 } from "@policy-semver/core";
@@ -32,14 +33,6 @@ function failWrite(err: unknown): void {
     ? " If branch protection blocks github-actions, use POLICY_SEMVER_TOKEN (PAT) or a GitHub App with contents:write bypass."
     : "";
   core.setFailed(`Write/push/release failed: ${msg}.${hint}`);
-}
-
-/** Next phase fills hooks + last-release.json — keep node so flowchart stays honest. */
-async function afterWriteAudit(_info: {
-  version: string;
-  kind: string;
-}): Promise<void> {
-  core.info("audit/hooks deferred to next phase");
 }
 
 export async function runAction(): Promise<void> {
@@ -209,6 +202,16 @@ export async function runAction(): Promise<void> {
   }
 
   try {
+    if (kind !== "none") {
+      await runHook({
+        name: "beforeBump",
+        command: config.hooks.beforeBump,
+        cwd,
+        version: nextVersion,
+        kind,
+        dryRun: false,
+      });
+    }
     const wrote = await writeVersion({
       cwd,
       nextVersion,
@@ -241,8 +244,11 @@ export async function runAction(): Promise<void> {
         owner: context.repo.owner,
         repo: context.repo.repo,
         token,
+        hooks: {
+          afterTag: config.hooks.afterTag,
+          afterRelease: config.hooks.afterRelease,
+        },
       });
-      await afterWriteAudit({ version: nextVersion, kind });
     }
   } catch (err) {
     failWrite(err);

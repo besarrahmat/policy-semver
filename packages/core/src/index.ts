@@ -5,6 +5,17 @@ export function ping(): string {
 }
 
 export type {
+  LastReleaseRecord,
+  WriteLastReleaseInput,
+} from "./audit/index.js";
+export {
+  AUDIT_DIR,
+  AUDIT_FILE,
+  lastReleasePath,
+  lastReleaseRelPath,
+  writeLastRelease,
+} from "./audit/index.js";
+export type {
   ApplyBumpInput,
   BumpGuardContext,
   BumpGuardDecision,
@@ -84,5 +95,14 @@ export {
   SECRET_REDACT_REPLACEMENT,
   TAG_EXISTS_FAILS,
 } from "./github/index.js";
+export type { HookExec, HookName, RunHookInput } from "./hooks/index.js";
+export {
+  defaultHookExec,
+  HOOK_ENV,
+  HOOK_NAMES,
+  HOOK_SHELL,
+  hookEnvVars,
+  runHook,
+} from "./hooks/index.js";
 export type { RunReleaseInput, RunReleaseResult } from "./release/index.js";
 export { runRelease } from "./release/index.js";

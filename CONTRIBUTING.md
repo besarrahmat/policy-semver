@@ -26,6 +26,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) subject lines, 
 
 ```bash
 pnpm test
+pnpm test:fixtures
 pnpm typecheck
 pnpm lint
 ```

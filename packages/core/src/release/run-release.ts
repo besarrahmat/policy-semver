@@ -1,6 +1,12 @@
+import {
+  lastReleaseRelPath,
+  writeLastRelease,
+} from "../audit/write-last-release.js";
 import { formatBotBumpCommitMessage } from "../bump/bot-message.js";
+import { BOT_SKIP_TRAILER } from "../bump/locks.js";
 import type { ClassifyKind } from "../classify/locks.js";
 import { commitBumpFiles } from "../git/commit.js";
+import { defaultGitExec } from "../git/exec.js";
 import { pushRefs } from "../git/push.js";
 import { createAnnotatedTag } from "../git/tag.js";
 import type { GitExec } from "../git/types.js";
@@ -8,6 +14,8 @@ import {
   type CreateReleaseInput,
   createGitHubRelease,
 } from "../github/create-release.js";
+import { runHook } from "../hooks/run-hook.js";
+import type { HookExec } from "../hooks/types.js";
 
 export type RunReleaseInput = {
   kind: ClassifyKind;
@@ -25,12 +33,23 @@ export type RunReleaseInput = {
   repo: string;
   octokit: CreateReleaseInput["octokit"];
   remote?: string;
+  /** `null` / omit hook keys → skip. `beforeBump` is owned by write callers, not here. */
+  hooks?: {
+    afterTag: string | null;
+    afterRelease: string | null;
+  };
+  /** Test seam; default `git rev-parse HEAD` after the bump commit. */
+  gitSha?: string;
   exec?: GitExec;
+  hookExec?: HookExec;
   /** Test seams */
   commit?: typeof commitBumpFiles;
   tag?: typeof createAnnotatedTag;
   push?: typeof pushRefs;
   release?: typeof createGitHubRelease;
+  /** Test seam; default writes `.policy-semver/last-release.json`. */
+  writeAudit?: typeof writeLastRelease;
+  now?: () => Date;
 };
 
 export type RunReleaseResult =
@@ -44,13 +63,16 @@ export type RunReleaseResult =
     };
 
 /**
- * After version + changelog files are written: commit → annotated tag → push → Release.
- * kind `none` → no commit, no tag, no push, no release.
+ * After version + changelog files are written:
+ * commit → annotated tag → afterTag → push → GitHub Release → afterRelease →
+ * last-release.json → `[skip version]` commit + push branch (no second tag).
+ * kind `none` → no commit, no tag, no push, no release, no audit.
  */
 export async function runRelease(
   input: RunReleaseInput,
 ): Promise<RunReleaseResult> {
-  if (input.kind === "none") {
+  const kind = input.kind;
+  if (kind === "none") {
     return { skipped: true, reason: "kind-none" };
   }
 
@@ -77,6 +99,18 @@ export async function runRelease(
     ...(input.exec !== undefined ? { exec: input.exec } : {}),
   });
 
+  if (input.hooks) {
+    await runHook({
+      name: "afterTag",
+      command: input.hooks.afterTag,
+      cwd: input.cwd,
+      version: input.version,
+      kind,
+      dryRun: false,
+      ...(input.hookExec !== undefined ? { exec: input.hookExec } : {}),
+    });
+  }
+
   await push({
     cwd: input.cwd,
     refs: [input.branch, tag],
@@ -90,6 +124,51 @@ export async function runRelease(
     tag,
     body: input.sectionMarkdown,
     octokit: input.octokit,
+  });
+
+  if (input.hooks) {
+    await runHook({
+      name: "afterRelease",
+      command: input.hooks.afterRelease,
+      cwd: input.cwd,
+      version: input.version,
+      kind,
+      dryRun: false,
+      ...(input.hookExec !== undefined ? { exec: input.hookExec } : {}),
+    });
+  }
+
+  let gitSha = input.gitSha;
+  if (gitSha === undefined) {
+    const gitExec = input.exec ?? defaultGitExec;
+    const { stdout } = await gitExec(["rev-parse", "HEAD"], {
+      cwd: input.cwd,
+    });
+    gitSha = stdout.trim();
+  }
+
+  const writeAudit = input.writeAudit ?? writeLastRelease;
+  await writeAudit({
+    cwd: input.cwd,
+    version: input.version,
+    kind,
+    gitSha,
+    tag,
+    at: (input.now ?? (() => new Date()))().toISOString(),
+  });
+
+  await commit({
+    cwd: input.cwd,
+    message: `chore(release): ${tag} last-release ${BOT_SKIP_TRAILER}`,
+    paths: [lastReleaseRelPath()],
+    ...(input.exec !== undefined ? { exec: input.exec } : {}),
+  });
+
+  await push({
+    cwd: input.cwd,
+    refs: [input.branch],
+    ...(input.remote !== undefined ? { remote: input.remote } : {}),
+    ...(input.exec !== undefined ? { exec: input.exec } : {}),
   });
 
   return {

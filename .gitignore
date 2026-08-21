@@ -14,3 +14,5 @@ node_modules/
 # (runners do not npm-install Action deps). See packages/action/src/locks.ts
 !/dist/
 !/dist/**
+
+# Do NOT ignore .policy-semver/ — commit last-release.json by default

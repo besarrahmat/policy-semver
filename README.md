@@ -15,6 +15,7 @@ Policy lives in **`versioning.config.json`** at the repo root (JSON Schema fail-
 | Config path | `versioning.config.json` |
 | Major bumps | Manual only via env named by `majorEnv` (default **`APP_VERSION_MAJOR`**) — set to the next major integer (e.g. `2`) to reset to `N.0.0`; never auto-major from `BREAKING` / `feat!:` |
 | Branches | `prodBranch` = `main`, `developBranch` = `dev` (this repo’s dogfood topology) |
+| Audit | `.policy-semver/last-release.json` after a successful release — **commit** by default |
 
 Unknown keys in the config file are **rejected**. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 

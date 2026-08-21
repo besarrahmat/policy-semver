@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { commitBumpFiles } from "./commit.js";
+import type { GitExec } from "./types.js";
 
 describe("commitBumpFiles", () => {
   it("sets local git identity before add/commit", async () => {
-    const exec = vi.fn(async () => ({ stdout: "", stderr: "" }));
+    const exec = vi.fn<GitExec>(async () => ({ stdout: "", stderr: "" }));
     await commitBumpFiles({
       cwd: "/tmp/repo",
       message: "chore(release): v1.0.0 [skip version]",

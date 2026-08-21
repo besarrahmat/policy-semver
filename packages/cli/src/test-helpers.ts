@@ -1,12 +1,12 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 
-const MIN_CONFIG = {
+export const MIN_CONFIG = {
   schemaVersion: "1",
   prodBranch: "main",
   developBranch: "dev",
@@ -25,17 +25,17 @@ export async function makeTempApp(opts?: {
   config?: Record<string, unknown>;
   initGit?: boolean;
 }): Promise<string> {
-  const cwd = await mkdtemp(path.join(tmpdir(), "ps-cli-"));
+  const cwd = mkdtempSync(path.join(tmpdir(), "ps-cli-"));
   const version = opts?.version ?? "1.0.0";
   const pkgVer = opts?.packageVersion ?? version;
-  await writeFile(
+  writeFileSync(
     path.join(cwd, "versioning.config.json"),
-    `${JSON.stringify(opts?.config ?? MIN_CONFIG, null, 2)}\n`,
+    `${JSON.stringify(opts?.config ?? MIN_CONFIG)}\n`,
   );
-  await writeFile(path.join(cwd, "VERSION"), `${version}\n`);
-  await writeFile(
+  writeFileSync(path.join(cwd, "VERSION"), `${version}\n`);
+  writeFileSync(
     path.join(cwd, "package.json"),
-    `${JSON.stringify({ name: "app", version: pkgVer }, null, 2)}\n`,
+    `${JSON.stringify({ name: "app", version: pkgVer })}\n`,
   );
   if (opts?.initGit) {
     await execFileAsync("git", ["init"], { cwd });

@@ -1,0 +1,17 @@
+{
+  "name": "major-env-reset",
+  "input": {
+    "commits": [
+      {
+        "subject": "docs: x"
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.0.0",
+    "envMajor": 2
+  },
+  "expected": {
+    "kind": "major-reset",
+    "warnings": []
+  }
+}

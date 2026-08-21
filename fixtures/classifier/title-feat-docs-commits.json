@@ -1,0 +1,17 @@
+{
+  "name": "title-feat-docs-commits",
+  "input": {
+    "commits": [
+      {
+        "subject": "docs: x"
+      }
+    ],
+    "prTitle": "feat: y",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "minor",
+    "warnings": []
+  }
+}

@@ -2,8 +2,10 @@ import path from "node:path";
 import {
   applyBump,
   classify,
+  type HookExec,
   loadConfig,
   readVersion,
+  runHook,
   writeVersion,
 } from "@policy-semver/core";
 import { EXIT_OK, EXIT_POLICY, EXIT_USAGE } from "./exit.js";
@@ -17,6 +19,8 @@ export async function cmdBump(input: {
   write: boolean;
   force: boolean;
   commits: { subject: string; body?: string }[];
+  /** Test seam — omit in production (uses `sh -c`). */
+  hookExec?: HookExec;
 }): Promise<number> {
   if (input.dryRun === input.write) {
     console.error("bump requires exactly one of --dry-run or --write");
@@ -62,6 +66,17 @@ export async function cmdBump(input: {
   };
 
   if (input.write) {
+    if (kind !== "none") {
+      await runHook({
+        name: "beforeBump",
+        command: config.hooks.beforeBump,
+        cwd: input.flags.cwd,
+        version: nextVersion,
+        kind,
+        dryRun: false,
+        ...(input.hookExec !== undefined ? { exec: input.hookExec } : {}),
+      });
+    }
     const result = await writeVersion({
       cwd: input.flags.cwd,
       nextVersion,

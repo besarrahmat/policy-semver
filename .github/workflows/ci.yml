@@ -24,6 +24,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - run: pnpm test:fixtures
       - name: Action dist up to date
         run: |
           pnpm --filter @policy-semver/action run build
