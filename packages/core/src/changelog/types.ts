@@ -16,6 +16,8 @@ export type WriteChangelogInput = {
   commits: ChangelogCommit[];
   /** attempt count; caller may retry once */
   attempt?: number;
+  /** Test seam; default `fs/promises.writeFile`. */
+  writeFile?: typeof import("node:fs/promises").writeFile;
 };
 
 export type WriteChangelogResult = {

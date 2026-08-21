@@ -1,12 +1,12 @@
 {
-  "name": "squash-pr-title",
+  "name": "feat-uppercase",
   "input": {
     "commits": [
       {
-        "subject": "Add route (#12)"
+        "subject": "FEAT: x"
       }
     ],
-    "prTitle": "feat: x",
+    "prTitle": "",
     "currentVersion": "1.2.3",
     "envMajor": null
   },

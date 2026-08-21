@@ -25,4 +25,5 @@ it("bump then build then deploy via needs", () => {
   expect(yaml).toMatch(
     /needs:\s*version[\s\S]*merged == true[\s\S]*needs:\s*build/m,
   );
+  expect(yaml).toMatch(/inject VERSION into the build/);
 });

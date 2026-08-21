@@ -22,8 +22,8 @@
  * | major-reset | ### Changed (note major via env) + include feat/fix bullets if any |
  *
  * Omit empty sections. kind `none` → do not touch CHANGELOG.
- * conflict: **stub** — retry write once on I/O failure, then fail loud
- * with `conflict`. Does not yet detect merge conflict markers / flock.
+ * conflict: retry write once on I/O failure, then fail loud. Conflict
+ * markers (`<<<<<<<` / `>>>>>>>`) fail immediately. No flock.
  * section markdown is redacted before disk write (and again for Release).
  */
 export const CHANGELOG_FORMAT = "keep-a-changelog@1.1.0" as const;

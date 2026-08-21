@@ -128,4 +128,12 @@ describe("dual-source module", () => {
       "1.1.0",
     );
   });
+
+  it("malformed VERSION fails closed", async () => {
+    const cwd = await makeTempCwd();
+    await writeFile(path.join(cwd, "VERSION"), "v1.2.3\n");
+    await expect(readVersion({ cwd, files: both })).rejects.toThrow(
+      /malformed VERSION/,
+    );
+  });
 });

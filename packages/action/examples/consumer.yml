@@ -47,7 +47,7 @@ jobs:
     if: github.event.action == 'closed' && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - run: echo "build after successful bump"
+      - run: echo "inject VERSION into the build; do not read version from CDN at runtime"
 
   deploy:
     needs: build

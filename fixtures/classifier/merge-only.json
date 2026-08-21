@@ -1,0 +1,20 @@
+{
+  "name": "merge-only",
+  "input": {
+    "commits": [
+      {
+        "subject": "Merge pull request #1 from a/b"
+      },
+      {
+        "subject": "Merge branch 'dev' into main"
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "none",
+    "warnings": []
+  }
+}

@@ -148,3 +148,7 @@ Keep **bump → build → deploy**. The stub’s `build` job `needs: version`; `
 Until this Action is public (or org-internal with Access enabled), `uses: besarrahmat/policy-semver@ref` 404s from another private repo. The stub **checkouts** this repo with `secrets.POLICY_SEMVER_TOKEN` (fine-grained **Contents: read** on `policy-semver`) then `uses: ./.github/actions/policy-semver`. Set `persist-credentials: false` on that checkout so the PAT is not used to push the app repo.
 
 That checkout secret is **not** VE-42. VE-42 is a **write** token on the **consumer** (`contents: write` / ruleset bypass) passed as Action input `token` if `github-actions[bot]` cannot push `main`.
+
+## App version at runtime
+
+Bake `VERSION` / `package.json` `version` into the **build** (define / `import.meta.env` / Next `env` at compile). Do not read the version from a CDN on each request — caches go stale while git already moved.

@@ -161,4 +161,21 @@ describe("decideActionMode", () => {
       }),
     ).toMatchObject({ mode: "dry-run-comment", allowWrite: false });
   });
+
+  it("sync-only merged still force-none", () => {
+    expect(
+      decideActionMode({
+        ...base,
+        isFork: false,
+        baseBranch: "dev",
+        headBranch: "main",
+        action: "closed",
+        merged: true,
+      }),
+    ).toMatchObject({
+      mode: "force-none",
+      allowWrite: false,
+      reason: "sync-from-prod",
+    });
+  });
 });

@@ -48035,19 +48035,19 @@ async function writeChangelog(input) {
     };
   }
   const next = previous === null ? DEFAULT_HEADER + sectionMarkdown : insertAfterUnreleasedOrHeader(previous, sectionMarkdown);
+  if (previous?.includes("<<<<<<<") || previous?.includes(">>>>>>>")) {
+    throw new Error(`CHANGELOG conflict markers in ${abs}`);
+  }
+  const write = input.writeFile ?? import_promises5.writeFile;
   try {
-    if (attempt > 2) {
-      throw new Error(`CHANGELOG conflict after retry: ${abs}`);
-    }
-    await (0, import_promises5.writeFile)(abs, next, "utf8");
+    await write(abs, next, "utf8");
   } catch (err) {
-    if (err instanceof Error) throw err;
-    if (attempt === 1) {
-      return writeChangelog({ ...input, attempt: 2 });
+    if (attempt >= 2) {
+      throw new Error(
+        `CHANGELOG conflict after retry: ${abs}: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
-    throw new Error(
-      `CHANGELOG write failed: ${abs}: ${err instanceof Error ? err.message : String(err)}`
-    );
+    return writeChangelog({ ...input, attempt: 2 });
   }
   return {
     wrote: true,

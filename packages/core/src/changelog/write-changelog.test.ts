@@ -1,7 +1,7 @@
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { writeChangelog } from "./write-changelog.js";
 
 async function tmp(): Promise<string> {
@@ -88,5 +88,62 @@ describe("writeChangelog", () => {
     const body = await readFile(path.join(cwd, "CHANGELOG.md"), "utf8");
     expect(body).toContain("[REDACTED]");
     expect(body).not.toMatch(/ghp_/);
+  });
+
+  it("conflict markers fail loud", async () => {
+    const cwd = await tmp();
+    await writeFile(
+      path.join(cwd, "CHANGELOG.md"),
+      "# Changelog\n<<<<<<< HEAD\n",
+    );
+    await expect(
+      writeChangelog({
+        cwd,
+        changelogPath: "CHANGELOG.md",
+        version: "1.0.1",
+        date: "2026-08-08",
+        kind: "patch",
+        commits: [{ subject: "fix: x" }],
+      }),
+    ).rejects.toThrow(/conflict markers/);
+  });
+
+  it("retries write once then fails", async () => {
+    const cwd = await tmp();
+    const writeFn = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("EACCES"))
+      .mockRejectedValueOnce(new Error("EACCES"));
+    await expect(
+      writeChangelog({
+        cwd,
+        changelogPath: "CHANGELOG.md",
+        version: "1.0.1",
+        date: "2026-08-08",
+        kind: "patch",
+        commits: [{ subject: "fix: x" }],
+        writeFile: writeFn as typeof writeFile,
+      }),
+    ).rejects.toThrow(/CHANGELOG conflict after retry/);
+    expect(writeFn).toHaveBeenCalledTimes(2);
+  });
+
+  it("retries write once then succeeds", async () => {
+    const cwd = await tmp();
+    const writeFn = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("EACCES"))
+      .mockResolvedValueOnce(undefined);
+    const r = await writeChangelog({
+      cwd,
+      changelogPath: "CHANGELOG.md",
+      version: "1.0.1",
+      date: "2026-08-08",
+      kind: "patch",
+      commits: [{ subject: "fix: x" }],
+      writeFile: writeFn as typeof writeFile,
+    });
+    expect(r.wrote).toBe(true);
+    expect(writeFn).toHaveBeenCalledTimes(2);
   });
 });

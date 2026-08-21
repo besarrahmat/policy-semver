@@ -28,6 +28,9 @@ const REQUIRED_CLASSIFIER_FIXTURES = [
   "breaking-warn-only.json",
   "major-env-reset.json",
   "squash-pr-title.json",
+  "feat-uppercase.json",
+  "merge-only.json",
+  "title-docs-feat-commit.json",
 ] as const;
 
 describe("golden fixtures", () => {
@@ -74,6 +77,8 @@ describe("golden fixtures", () => {
     const payload = JSON.parse(String(log.mock.calls[0]?.[0])) as {
       passed: number;
     };
-    expect(payload.passed).toBeGreaterThanOrEqual(11);
+    expect(payload.passed).toBeGreaterThanOrEqual(
+      REQUIRED_CLASSIFIER_FIXTURES.length,
+    );
   });
 });

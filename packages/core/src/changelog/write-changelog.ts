@@ -40,8 +40,8 @@ function insertAfterUnreleasedOrHeader(
  * Append a Keep a Changelog release section (or create the file).
  * Section body is redacted before write.
  *
- * conflict stub: on write failure, retry once with the same content; second
- * failure throws. Does not detect git merge conflict markers yet — fail loud.
+ * conflict: on write failure, retry once with the same content; second
+ * failure throws. Conflict markers in the existing file fail immediately.
  */
 export async function writeChangelog(
   input: WriteChangelogInput,
@@ -89,20 +89,20 @@ export async function writeChangelog(
       ? DEFAULT_HEADER + sectionMarkdown
       : insertAfterUnreleasedOrHeader(previous, sectionMarkdown);
 
+  if (previous?.includes("<<<<<<<") || previous?.includes(">>>>>>>")) {
+    throw new Error(`CHANGELOG conflict markers in ${abs}`);
+  }
+
+  const write = input.writeFile ?? writeFile;
   try {
-    if (attempt > 2) {
-      throw new Error(`CHANGELOG conflict after retry: ${abs}`);
-    }
-    await writeFile(abs, next, "utf8");
+    await write(abs, next, "utf8");
   } catch (err) {
-    if (err instanceof Error) throw err;
-    if (attempt === 1) {
-      // Stub retry (same content). Real flock / dirty-merge detection later.
-      return writeChangelog({ ...input, attempt: 2 });
+    if (attempt >= 2) {
+      throw new Error(
+        `CHANGELOG conflict after retry: ${abs}: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
-    throw new Error(
-      `CHANGELOG write failed: ${abs}: ${err instanceof Error ? err.message : String(err)}`,
-    );
+    return writeChangelog({ ...input, attempt: 2 });
   }
 
   return {
