@@ -3,8 +3,10 @@ on:
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, closed]
+# serialize writes on the same prod base (not github.ref — that is refs/pull/N/merge).
+# never cancel mid-bump. fetch-depth: 0 so classify/tag see prod HEAD.
 concurrency:
-  group: policy-semver-${{ github.repository }}-main
+  group: policy-semver-${{ github.repository }}-${{ github.event.pull_request.base.ref }}
   cancel-in-progress: false
 permissions:
   contents: write
@@ -17,6 +19,9 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          # git push uses this checkout token. If github-actions[bot] cannot
+          # push protected prod, set a contents:write PAT/App here (not the Action-repo read PAT).
+          # token: ${{ secrets.POLICY_SEMVER_WRITE_TOKEN }}
       # Private action repo: `uses: owner/policy-semver@ref` 404s from another repo
       # (personal-account private). Checkout with a PAT (Contents: read on the
       # Action repo), then run locally. persist-credentials: false so the PAT is
@@ -35,3 +40,18 @@ jobs:
         with:
           config-path: versioning.config.json
           # token: ${{ secrets.POLICY_SEMVER_TOKEN }}  # contents:write on THIS repo — not a read-only Action checkout PAT
+
+  # never build/deploy if the bump job failed or was skipped.
+  build:
+    needs: version
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "build after successful bump"
+
+  deploy:
+    needs: build
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "deploy after successful build"

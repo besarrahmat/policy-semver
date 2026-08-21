@@ -36,14 +36,14 @@ Consumer workflows that run a **version write** (merged bump / tag) must set:
 
 ```yaml
 concurrency:
-  group: policy-semver-${{ github.repository }}-${{ github.ref }}
+  group: policy-semver-${{ github.repository }}-${{ github.event.pull_request.base.ref }}
   cancel-in-progress: false   # never cancel mid-write
 ```
 
-| Rule                          | Why                                                        |
-|-------------------------------|------------------------------------------------------------|
-| Stable `group` per repo + ref | Serialize overlapping bump jobs on the same branch         |
-| `cancel-in-progress: false`   | Cancelling mid-write can leave VERSION / tags half-applied |
+| Rule | Why |
+| --- | --- |
+| Group per repo + **prod base** | Serialize overlapping merges into the same `prodBranch`. Do not use `github.ref` — on `pull_request` that is `refs/pull/N/merge`, so two PRs would not share a group |
+| `cancel-in-progress: false` | Cancelling mid-write can leave VERSION / tags half-applied |
 
 ### Do not share cancel-friendly groups with lint
 
@@ -55,7 +55,7 @@ concurrency:
 After VERSION / `package.json` / CHANGELOG are written, the Action calls `runWriteRelease` → core `runRelease`:
 
 1. `kind === "none"` → **stop** (no commit, tag, push, or Release)
-2. Else: commit with `[skip version]` → annotated tag `{tagPrefix}{version}` → push branch + tag → `repos.createRelease`
+2. Else: commit with `[skip version]` → annotated tag `{tagPrefix}{version}` → push `HEAD:{prodBranch}` + tag → `repos.createRelease`
 
 ## Hooks
 
@@ -104,13 +104,29 @@ permissions:
   pull-requests: write # sticky dry-run comment
 ```
 
+## Branch protection
+
+The Action **skips `push` events**, so a direct push to `prodBranch` does not bump. That is not enough: a human can still push VERSION / tags by hand.
+
+On the **consumer** repo, protect `prodBranch` (default `main`):
+
+1. GitHub → **Settings → Rules → Rulesets → New branch ruleset** (or classic **Settings → Branches**).
+2. Target `main` (or the branch named in `versioning.config.json` `prodBranch`).
+3. Enable **Require a pull request before merging**, **Block force pushes**, **Restrict deletions**.
+4. Enforcement: **Active**.
+
+Do the same on the **tool** repo (`policy-semver`) for `main`. Work stays on `dev`; only `dev` → `main` PRs land on production.
+
 ## Token when `GITHUB_TOKEN` cannot push
 
-Branch rulesets / required reviews often block `github-actions[bot]`.
+Branch rulesets / required reviews often block `github-actions[bot]`. The write path must **fail loud** (`core.setFailed`) — do not swallow a denied push.
 
 1. Prefer input `token` (defaults to `${{ github.token }}`).
 2. Or set repo/org secret **`POLICY_SEMVER_TOKEN`** (PAT or GitHub App installation token with `contents: write` and ruleset bypass). Action reads `POLICY_SEMVER_TOKEN` before the input token.
-3. On push failure the Action calls `core.setFailed` with an actionable message — do not swallow.
+3. On the **consumer** ruleset **Bypass list**, add that App (or the user that owns the PAT) so the bump commit can land on protected `main`. Do not add “everyone”. Prefer **Always allow** only for that dedicated bot — not for personal admin accounts.
+4. Pass the same write token to **app** `actions/checkout` (`token:`) so `git push` can update prod. Action input `token` is Octokit (Release + comments) only.
+
+That write token is **not** the checkout PAT used to `uses:` a private Action repo (Contents: **read** on `policy-semver` only).
 
 ## Fork / prod / sync (runtime)
 
@@ -126,6 +142,8 @@ Branch rulesets / required reviews often block `github-actions[bot]`.
 ## Consumer workflow stub
 
 Copy [`examples/consumer.yml`](./examples/consumer.yml) into the **app** repo as `.github/workflows/policy-semver.yml`. Pin a SHA in production. This file is documentation — it is not a workflow of *this* monorepo.
+
+Keep **bump → build → deploy**. The stub’s `build` job `needs: version`; `deploy` `needs: build`. Both run only after a merged PR. A failed or skipped bump never deploys. Do not put deploy steps in the version job.
 
 Until this Action is public (or org-internal with Access enabled), `uses: besarrahmat/policy-semver@ref` 404s from another private repo. The stub **checkouts** this repo with `secrets.POLICY_SEMVER_TOKEN` (fine-grained **Contents: read** on `policy-semver`) then `uses: ./.github/actions/policy-semver`. Set `persist-credentials: false` on that checkout so the PAT is not used to push the app repo.
 

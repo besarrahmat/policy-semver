@@ -45,6 +45,19 @@ describe("decideActionMode", () => {
     ).toBe("skip");
   });
 
+  it("never writes on feature base", () => {
+    expect(
+      decideActionMode({
+        ...base,
+        isFork: false,
+        baseBranch: "feat-b",
+        headBranch: "feat-a",
+        action: "closed",
+        merged: true,
+      }),
+    ).toMatchObject({ mode: "skip", allowWrite: false });
+  });
+
   it("prod PR synchronize → dry-run-comment", () => {
     expect(
       decideActionMode({
@@ -55,6 +68,18 @@ describe("decideActionMode", () => {
         action: "synchronize",
       }).mode,
     ).toBe("dry-run-comment");
+  });
+
+  it("synchronize → dry-run-comment and allowWrite false", () => {
+    expect(
+      decideActionMode({
+        ...base,
+        isFork: false,
+        baseBranch: "main",
+        headBranch: "feat",
+        action: "synchronize",
+      }),
+    ).toMatchObject({ mode: "dry-run-comment", allowWrite: false });
   });
 
   it("prod PR merged → write", () => {
@@ -92,5 +117,48 @@ describe("decideActionMode", () => {
         eventName: "push",
       }).mode,
     ).toBe("skip");
+  });
+
+  it("merged write and push skip are mutually exclusive", () => {
+    const merged = decideActionMode({
+      ...base,
+      isFork: false,
+      baseBranch: "main",
+      headBranch: "feat",
+      action: "closed",
+      merged: true,
+    });
+    const push = decideActionMode({
+      ...base,
+      isFork: false,
+      baseBranch: "main",
+      headBranch: "feat",
+      eventName: "push",
+    });
+    const closedUnmerged = decideActionMode({
+      ...base,
+      isFork: false,
+      baseBranch: "main",
+      headBranch: "feat",
+      action: "closed",
+      merged: false,
+    });
+    expect(merged).toMatchObject({ mode: "write", allowWrite: true });
+    expect(push).toMatchObject({ mode: "skip", allowWrite: false });
+    expect(closedUnmerged.mode).not.toBe("write");
+    expect(closedUnmerged.allowWrite).toBe(false);
+  });
+
+  it("fork merged still allowWrite false", () => {
+    expect(
+      decideActionMode({
+        ...base,
+        isFork: true,
+        baseBranch: "main",
+        headBranch: "feat",
+        action: "closed",
+        merged: true,
+      }),
+    ).toMatchObject({ mode: "dry-run-comment", allowWrite: false });
   });
 });

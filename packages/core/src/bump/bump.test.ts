@@ -199,4 +199,10 @@ describe("bump write integration", () => {
     expect(guards.forceKindNone).toBe(true);
     expect(guards.allowWrite).toBe(false);
   });
+
+  it("envMajor below current major throws", () => {
+    expect(() =>
+      applyBump({ kind: "patch", currentVersion: "1.2.3", envMajor: 0 }),
+    ).toThrow(/envMajor 0 is below current major 1/);
+  });
 });

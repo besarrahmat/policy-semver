@@ -6,6 +6,19 @@
 - Open a PR **`dev` → `main`** only when preparing a publishable release.
 - Do not land feature work directly on `main`.
 
+## Branch protection (this tool repo)
+
+**VE-15:** protect **`main`** so it is not a direct-push branch.
+
+1. GitHub → **Settings → Rules → Rulesets → New branch ruleset** (or classic **Settings → Branches → Add branch protection rule**).
+2. Target `main`. Enforcement: **Active**.
+3. Enable **Require a pull request before merging**, **Block force pushes**, and **Restrict deletions**.
+4. Do not add a blanket bypass for all admins if that restores direct pushes to `main`.
+
+**VE-42 (dogfood later):** the Action must push the bump commit onto protected `main`. `GITHUB_TOKEN` (`github-actions[bot]`) is often blocked. Add a dedicated GitHub App (or PAT user) to the ruleset **Bypass list**, store it as `POLICY_SEMVER_TOKEN`, and pass it as the Action `token` input. Consumer-side detail lives in `packages/action/README.md`.
+
+`dev` may stay less strict for day-to-day work. Sync `main` → `dev` must not bump.
+
 ## Tooling
 
 - Node **24+** (see `.node-version`).

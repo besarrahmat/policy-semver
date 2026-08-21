@@ -48472,9 +48472,10 @@ async function runRelease(input) {
       ...input.hookExec !== void 0 ? { exec: input.hookExec } : {}
     });
   }
+  const branchRef = `HEAD:${input.branch}`;
   await push({
     cwd: input.cwd,
-    refs: [input.branch, tag],
+    refs: [branchRef, tag],
     ...input.remote !== void 0 ? { remote: input.remote } : {},
     ...input.exec !== void 0 ? { exec: input.exec } : {}
   });
@@ -48521,7 +48522,7 @@ async function runRelease(input) {
   });
   await push({
     cwd: input.cwd,
-    refs: [input.branch],
+    refs: [branchRef],
     ...input.remote !== void 0 ? { remote: input.remote } : {},
     ...input.exec !== void 0 ? { exec: input.exec } : {}
   });
@@ -48690,6 +48691,14 @@ function toVersionFiles(versionFiles) {
   };
 }
 
+// src/write-failure.ts
+function writeFailureMessage(err) {
+  const msg = err instanceof Error ? err.message : String(err);
+  const pushDenied = /protected branch|GH006|not allowed to push|permission.*denied/i.test(msg);
+  const hint = pushDenied ? " If branch protection blocks github-actions, use POLICY_SEMVER_TOKEN (PAT) or a GitHub App with contents:write bypass." : "";
+  return `Write/push/release failed: ${msg}.${hint}`;
+}
+
 // src/write-release.ts
 var import_github2 = __toESM(require_github(), 1);
 function toReposOctokit(token) {
@@ -48717,10 +48726,7 @@ function shortRef(ref) {
   return ref.replace(/^refs\/heads\//, "");
 }
 function failWrite(err) {
-  const msg = err instanceof Error ? err.message : String(err);
-  const pushDenied = /protected branch|GH006|not allowed to push|permission.*denied/i.test(msg);
-  const hint = pushDenied ? " If branch protection blocks github-actions, use POLICY_SEMVER_TOKEN (PAT) or a GitHub App with contents:write bypass." : "";
-  setFailed(`Write/push/release failed: ${msg}.${hint}`);
+  setFailed(writeFailureMessage(err));
 }
 async function runAction() {
   const configPath = getInput("config-path") || "versioning.config.json";

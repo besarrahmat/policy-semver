@@ -27,6 +27,7 @@ const REQUIRED_CLASSIFIER_FIXTURES = [
   "title-feat-docs-commits.json",
   "breaking-warn-only.json",
   "major-env-reset.json",
+  "squash-pr-title.json",
 ] as const;
 
 describe("golden fixtures", () => {

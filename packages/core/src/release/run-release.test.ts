@@ -171,13 +171,13 @@ describe("runRelease", () => {
       }),
     );
     expect(push).toHaveBeenLastCalledWith(
-      expect.objectContaining({ refs: ["main"] }),
+      expect.objectContaining({ refs: ["HEAD:main"] }),
     );
     expect(tag).toHaveBeenCalledWith(
       expect.objectContaining({ tag: "v1.2.3" }),
     );
     expect(push).toHaveBeenCalledWith(
-      expect.objectContaining({ refs: ["main", "v1.2.3"] }),
+      expect.objectContaining({ refs: ["HEAD:main", "v1.2.3"] }),
     );
     expect(release).toHaveBeenCalledWith(
       expect.objectContaining({

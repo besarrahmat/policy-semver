@@ -166,4 +166,16 @@ describe("classify", () => {
       classify(input({ commits: [{ subject: "feat: x" }], skip: true })).kind,
     ).toBe("none");
   });
+
+  it("envMajor below current major throws", () => {
+    expect(() =>
+      classify(
+        input({
+          commits: [{ subject: "fix: x" }],
+          currentVersion: "1.2.3",
+          envMajor: 0,
+        }),
+      ),
+    ).toThrow(/envMajor 0 is below current major 1/);
+  });
 });

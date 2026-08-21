@@ -1,0 +1,17 @@
+{
+  "name": "squash-pr-title",
+  "input": {
+    "commits": [
+      {
+        "subject": "Add route (#12)"
+      }
+    ],
+    "prTitle": "feat: add route",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "minor",
+    "warnings": []
+  }
+}

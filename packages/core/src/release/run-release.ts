@@ -64,7 +64,7 @@ export type RunReleaseResult =
 
 /**
  * After version + changelog files are written:
- * commit → annotated tag → afterTag → push → GitHub Release → afterRelease →
+ * commit → annotated tag → afterTag → push HEAD:{branch} + tag → GitHub Release → afterRelease →
  * last-release.json → `[skip version]` commit + push branch (no second tag).
  * kind `none` → no commit, no tag, no push, no release, no audit.
  */
@@ -111,9 +111,13 @@ export async function runRelease(
     });
   }
 
+  // HEAD:branch — PR checkout is often detached; pushing the local
+  // branch name would miss the bump commit.
+  const branchRef = `HEAD:${input.branch}`;
+
   await push({
     cwd: input.cwd,
-    refs: [input.branch, tag],
+    refs: [branchRef, tag],
     ...(input.remote !== undefined ? { remote: input.remote } : {}),
     ...(input.exec !== undefined ? { exec: input.exec } : {}),
   });
@@ -166,7 +170,7 @@ export async function runRelease(
 
   await push({
     cwd: input.cwd,
-    refs: [input.branch],
+    refs: [branchRef],
     ...(input.remote !== undefined ? { remote: input.remote } : {}),
     ...(input.exec !== undefined ? { exec: input.exec } : {}),
   });
