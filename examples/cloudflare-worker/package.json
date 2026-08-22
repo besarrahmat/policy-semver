@@ -1,0 +1,11 @@
+{
+  "name": "policy-semver-example-worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "inject-version": "node scripts/inject-version.js",
+    "dev": "node scripts/inject-version.js && npx wrangler@latest dev",
+    "deploy": "node scripts/inject-version.js && npx wrangler@latest deploy"
+  }
+}

@@ -1,0 +1,46 @@
+name: PolicySemVer
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, closed]
+
+concurrency:
+  group: policy-semver-${{ github.repository }}-${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  version:
+    if: github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # Pin a full commit SHA in production (not @main / @dev). Until
+      # policy-semver is public, uses: owner/repo@sha 404s from another
+      # private repo — Action README, Consumer workflow stub.
+      - uses: besarrahmat/policy-semver/packages/action@<full-commit-sha>
+        env:
+          APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR || '0' }}
+        with:
+          config-path: versioning.config.json
+
+  build:
+    needs: version
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: node -e "console.log('bake', require('fs').readFileSync('VERSION','utf8').trim(), 'into the image; do not fetch a CDN at runtime')"
+
+  deploy:
+    needs: build
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "deploy the artifact that already contains VERSION"

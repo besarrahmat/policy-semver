@@ -1,3 +1,4 @@
+# examples/* are standalone consumer stubs, not workspace packages.
 packages:
   - "packages/*"
 allowBuilds:

@@ -2,7 +2,14 @@
 
 Thin adapter over [`@policy-semver/core`](../core). Does **not** re-implement classify / SemVer / changelog rules.
 
-> Package is still `private` until publish phase. Use workspace build locally — do not expect public `npx` yet.
+> Package is still `private` until publish. Use workspace build locally — do not expect public `npx` yet.
+
+npm CLI vs GitHub Action are **different channels**. Action install and pin-by-SHA: root [README](../../README.md#install-channels).
+
+```bash
+# after public 0.1.0
+npx policy-semver@0.1.0 classify --help
+```
 
 ## Requirements
 
