@@ -1,0 +1,17 @@
+{
+  "name": "dependabot-bump",
+  "input": {
+    "commits": [
+      {
+        "subject": "Bump lodash from 1.0.0 to 1.1.0"
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "patch",
+    "warnings": []
+  }
+}

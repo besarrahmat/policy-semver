@@ -205,4 +205,28 @@ describe("bump write integration", () => {
       applyBump({ kind: "patch", currentVersion: "1.2.3", envMajor: 0 }),
     ).toThrow(/envMajor 0 is below current major 1/);
   });
+
+  it("major skip 1→3 → 3.0.0", () => {
+    expect(
+      applyBump({
+        kind: "major-reset",
+        currentVersion: "1.4.2",
+        envMajor: 3,
+      }),
+    ).toBe("3.0.0");
+  });
+
+  it("skip label forces none / no write", () => {
+    const guards = decideBumpGuards({
+      isFork: false,
+      baseBranch: "main",
+      headBranch: "feat/x",
+      prodBranch: "main",
+      developBranch: "dev",
+      isMergedToProd: true,
+      labels: ["skip-version"],
+    });
+    expect(guards.forceKindNone).toBe(true);
+    expect(guards.allowWrite).toBe(false);
+  });
 });

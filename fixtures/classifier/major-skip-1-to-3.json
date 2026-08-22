@@ -1,0 +1,17 @@
+{
+  "name": "major-skip-1-to-3",
+  "input": {
+    "commits": [
+      {
+        "subject": "docs: x"
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": 3
+  },
+  "expected": {
+    "kind": "major-reset",
+    "warnings": []
+  }
+}

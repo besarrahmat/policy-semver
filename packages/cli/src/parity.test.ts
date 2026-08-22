@@ -98,6 +98,24 @@ describe("bump dirty write", () => {
       beforePkg,
     );
   });
+
+  it("dirty + --write --force writes", async () => {
+    const cwd = await makeTempApp({ version: "1.0.0" });
+    vi.spyOn(await import("./git-clean.js"), "isGitClean").mockResolvedValue(
+      false,
+    );
+    vi.spyOn(console, "log").mockImplementation(() => {});
+
+    const code = await cmdBump({
+      flags: { cwd, config: "versioning.config.json", json: true },
+      dryRun: false,
+      write: true,
+      force: true,
+      commits: [{ subject: "feat: x" }],
+    });
+    expect(code).toBe(0);
+    expect(await readFile(path.join(cwd, "VERSION"), "utf8")).toBe("1.1.0\n");
+  });
 });
 
 describe("bump beforeBump hook", () => {

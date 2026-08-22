@@ -11,6 +11,7 @@ export type GoldenFixture = {
     prTitle?: string;
     currentVersion: string;
     envMajor?: number | null;
+    skip?: boolean;
   };
   expected: { kind: ClassifyKind; warnings?: string[] };
 };
@@ -64,6 +65,7 @@ export async function runClassifierFixtures(
       ...(fixture.input.envMajor !== undefined
         ? { envMajor: fixture.input.envMajor }
         : {}),
+      ...(fixture.input.skip !== undefined ? { skip: fixture.input.skip } : {}),
     });
 
     if (result.kind !== fixture.expected.kind) {

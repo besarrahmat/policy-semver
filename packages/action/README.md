@@ -36,13 +36,13 @@ Consumer workflows that run a **version write** (merged bump / tag) must set:
 
 ```yaml
 concurrency:
-  group: policy-semver-${{ github.repository }}-${{ github.event.pull_request.base.ref }}
+  group: policy-semver-${{ github.repository }}-${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref }}
   cancel-in-progress: false   # never cancel mid-write
 ```
 
 | Rule | Why |
 | --- | --- |
-| Group per repo + **prod base** | Serialize overlapping merges into the same `prodBranch`. Do not use `github.ref` — on `pull_request` that is `refs/pull/N/merge`, so two PRs would not share a group |
+| Group per repo + **prod base** | Serialize overlapping merges into the same `prodBranch`. Use `pull_request.base.ref` or `merge_group.base_ref` (not `github.ref` — on `pull_request` that is `refs/pull/N/merge`) |
 | `cancel-in-progress: false` | Cancelling mid-write can leave VERSION / tags half-applied |
 
 ### Do not share cancel-friendly groups with lint
@@ -139,11 +139,31 @@ That write token is **not** the checkout PAT used to `uses:` a private Action re
 | `closed` + `merged` on prod (or `merge_group`) | Write → tag → release |
 | `push` to prod | **Skip** (hindari double bump) |
 
+## Merge methods
+
+Classify uses the **final subjects** visible when the job runs: `pulls.listCommits` when there is a PR, otherwise `git log` (`load-commits.ts`) — including `merge_group`.
+
+| Method | What is classified |
+| --- | --- |
+| **Rebase merge** | Rebased commit subjects (not `Merge branch…`) |
+| **Squash** | PR title + squash subject |
+| **Merge commit** | `Merge pull request…` subjects are ignored; commits inside the PR still aggregate |
+
+`merge_group` is treated as a write. If merge queue **and** `pull_request` `closed+merged` both write, the second job can hit tag-exists. Pick **one** write trigger per consumer.
+
+## Signed tags
+
+v1 creates **unsigned** annotated tags (`git tag -a --no-sign`). Do not set `tag.gpgSign` on the runner without a key — signing is not the default; there is no `signedTags` config key (unknown keys fail-closed).
+
+## Prerelease / beta
+
+Beta channels / `1.0.0-beta.1` are **out of scope for v1**. Default off. Do not add a `prerelease` key to config until the schema is extended.
+
 ## Consumer workflow stub
 
 Copy [`examples/consumer.yml`](./examples/consumer.yml) into the **app** repo as `.github/workflows/policy-semver.yml`. Pin a SHA in production. This file is documentation — it is not a workflow of *this* monorepo.
 
-Keep **bump → build → deploy**. The stub’s `build` job `needs: version`; `deploy` `needs: build`. Both run only after a merged PR. A failed or skipped bump never deploys. Do not put deploy steps in the version job.
+Keep **bump → build → deploy**. The stub’s `build` job `needs: version`; `deploy` `needs: build`. Both run only after a merged PR. A failed or skipped `version` job skips `build`/`deploy` because of `needs:`. Do not use `if: always()` on deploy. Do not put deploy steps in the version job.
 
 Until this Action is public (or org-internal with Access enabled), `uses: besarrahmat/policy-semver@ref` 404s from another private repo. The stub **checkouts** this repo with `secrets.POLICY_SEMVER_TOKEN` (fine-grained **Contents: read** on `policy-semver`) then `uses: ./.github/actions/policy-semver`. Set `persist-credentials: false` on that checkout so the PAT is not used to push the app repo.
 

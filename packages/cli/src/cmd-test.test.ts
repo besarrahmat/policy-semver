@@ -31,6 +31,12 @@ const REQUIRED_CLASSIFIER_FIXTURES = [
   "feat-uppercase.json",
   "merge-only.json",
   "title-docs-feat-commit.json",
+  "docs-scope.json",
+  "feat-amp-fix.json",
+  "empty-pr.json",
+  "major-skip-1-to-3.json",
+  "skip-true.json",
+  "dependabot-bump.json",
 ] as const;
 
 describe("golden fixtures", () => {

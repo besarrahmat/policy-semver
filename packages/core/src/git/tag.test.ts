@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createAnnotatedTag } from "./tag.js";
+import { assertTagMatchesVersion, createAnnotatedTag } from "./tag.js";
 
 describe("createAnnotatedTag", () => {
   it("tag exists → throw (no overwrite)", async () => {
@@ -43,8 +43,45 @@ describe("createAnnotatedTag", () => {
     });
 
     expect(exec).toHaveBeenCalledWith(
-      ["tag", "-a", "v1.2.3", "-m", "v1.2.3"],
+      ["tag", "-a", "--no-sign", "v1.2.3", "-m", "v1.2.3"],
       expect.anything(),
     );
+  });
+});
+
+describe("assertTagMatchesVersion", () => {
+  it("tags exist but VERSION tag missing → throw", async () => {
+    const exec = vi.fn(async (args: string[]) => {
+      if (args.includes("--is-inside-work-tree")) {
+        return { stdout: "true\n", stderr: "" };
+      }
+      if (args[0] === "tag") return { stdout: "v1.0.0\n", stderr: "" };
+      throw new Error("not found");
+    });
+    await expect(
+      assertTagMatchesVersion({
+        cwd: "/tmp",
+        version: "1.2.3",
+        tagPrefix: "v",
+        exec,
+      }),
+    ).rejects.toThrow(/expected v1\.2\.3/);
+  });
+
+  it("no tags yet → skip", async () => {
+    const exec = vi.fn(async (args: string[]) => {
+      if (args.includes("--is-inside-work-tree")) {
+        return { stdout: "true\n", stderr: "" };
+      }
+      if (args[0] === "tag") return { stdout: "\n", stderr: "" };
+      throw new Error("not found");
+    });
+    await expect(
+      assertTagMatchesVersion({
+        cwd: "/tmp",
+        version: "0.0.0",
+        exec,
+      }),
+    ).resolves.toBeUndefined();
   });
 });

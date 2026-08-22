@@ -80,6 +80,7 @@ export {
 } from "./dual-source/index.js";
 export type { CommitBumpInput, PushInput, TagInput } from "./git/index.js";
 export {
+  assertTagMatchesVersion,
   commitBumpFiles,
   createAnnotatedTag,
   defaultGitExec,

@@ -4,7 +4,7 @@ export function printHelp(): void {
 Commands:
   classify   Print classify kind (JSON)
   bump       --dry-run | --write [--force]
-  verify     Config schema + dual-source match
+  verify     Config schema + dual-source + tag↔VERSION (skip if no tags)
   test       Run fixtures/classifier goldens
   --help     This message
 

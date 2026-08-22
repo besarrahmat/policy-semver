@@ -27,3 +27,17 @@ it("bump then build then deploy via needs", () => {
   );
   expect(yaml).toMatch(/inject VERSION into the build/);
 });
+
+it("merge_group is a trigger", () => {
+  expect(yaml).toMatch(/^\s+merge_group:\s*$/m);
+  expect(yaml).toMatch(/github\.event\.merge_group\.base_ref/);
+  expect(yaml).toMatch(
+    /pull_request\.base\.ref \|\| github\.event\.merge_group\.base_ref/,
+  );
+});
+
+it("deploy does not run after failed bump", () => {
+  expect(yaml).not.toMatch(/if:\s*always\(\)/);
+  expect(yaml).toMatch(/^\s+needs:\s*version\s*$/m);
+  expect(yaml).toMatch(/^\s+needs:\s*build\s*$/m);
+});

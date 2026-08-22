@@ -48347,7 +48347,7 @@ async function createAnnotatedTag(input) {
   if (await tagExists(input.cwd, input.tag, exec)) {
     throw new Error(`tag already exists: ${input.tag}`);
   }
-  await exec(["tag", "-a", input.tag, "-m", input.message], {
+  await exec(["tag", "-a", "--no-sign", input.tag, "-m", input.message], {
     cwd: input.cwd
   });
 }

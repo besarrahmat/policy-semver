@@ -30,10 +30,13 @@
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) subject lines, for example:
 
-- `feat:` / `feat(scope):` / `feat & fix:` — minor (once the classifier ships)
+- `feat:` / `feat(scope):` / `feat & fix:` — minor
 - `fix:` / `chore:` / `refactor:` — patch
+- `feature:` (typo, not `feat:`) — patch, not minor
+- Dependabot `Bump …` / `chore(deps):` — patch; label `skip-version` disables the bump
 - `docs:` — docs-only
-- `chore:` — tooling / Phase 0 bootstrap
+- `chore:` — tooling / bootstrap
+- 0.x: `APP_VERSION_MAJOR=0` until a human raises it; feat is still minor, fix still patch, major only via env
 
 ## Before you push
 

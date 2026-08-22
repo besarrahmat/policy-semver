@@ -1,0 +1,17 @@
+{
+  "name": "docs-scope",
+  "input": {
+    "commits": [
+      {
+        "subject": "docs(readme): x"
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "none",
+    "warnings": []
+  }
+}

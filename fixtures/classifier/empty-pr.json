@@ -1,0 +1,13 @@
+{
+  "name": "empty-pr",
+  "input": {
+    "commits": [],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "none",
+    "warnings": []
+  }
+}

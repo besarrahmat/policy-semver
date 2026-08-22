@@ -14,6 +14,8 @@ Policy lives in **`versioning.config.json`** at the repo root (JSON Schema fail-
 | --- | --- |
 | Config path | `versioning.config.json` |
 | Major bumps | Manual only via env named by `majorEnv` (default **`APP_VERSION_MAJOR`**) — set to the next major integer (e.g. `2`) to reset to `N.0.0`; never auto-major from `BREAKING` / `feat!:` |
+| 0.x | `APP_VERSION_MAJOR=0` until a human raises it. Feat stays minor, fix stays patch, major only via env — 0.x is **not** “any breaking change may be a minor”. First public tool release: **0.1.0** (not `0.0.0`). Consumers may seed `VERSION` `0.0.0`. |
+| Dependabot (VE-33) | Subject `Bump …` / `chore(deps):` → **patch**, not minor. Label `skip-version` disables the bump. |
 | Branches | `prodBranch` = `main`, `developBranch` = `dev` (this repo’s dogfood topology) |
 | Audit | `.policy-semver/last-release.json` after a successful release — **commit** by default |
 
@@ -25,7 +27,7 @@ Workflows that **write** versions / tags must use:
 
 ```yaml
 concurrency:
-  group: policy-semver-${{ github.repository }}-${{ github.event.pull_request.base.ref }}
+  group: policy-semver-${{ github.repository }}-${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref }}
   cancel-in-progress: false
 ```
 

@@ -103,8 +103,8 @@ describe("decideActionMode", () => {
         baseBranch: "main",
         headBranch: "feat",
         eventName: "merge_group",
-      }).mode,
-    ).toBe("write");
+      }),
+    ).toMatchObject({ mode: "write", allowWrite: true, reason: "merge_group" });
   });
 
   it("push → skip", () => {
