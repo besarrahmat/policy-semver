@@ -7,6 +7,7 @@ import {
   decideBumpGuards,
   loadConfig,
   readVersion,
+  readVersionAtRef,
   runHook,
   writeChangelog,
   writeVersion,
@@ -104,7 +105,12 @@ export async function runAction(): Promise<void> {
     commits = await loadCommitsFromGit(cwd);
   }
 
-  const currentVersion = await readVersion({ cwd, files });
+  const fromProd = await readVersionAtRef({
+    cwd,
+    ref: `origin/${config.prodBranch}`,
+    files,
+  });
+  const currentVersion = fromProd ?? (await readVersion({ cwd, files }));
   const envRaw = process.env[config.majorEnv];
   let envMajor: number | null = null;
   if (envRaw !== undefined && envRaw !== "") {

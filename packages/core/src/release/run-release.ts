@@ -96,6 +96,7 @@ export async function runRelease(
     cwd: input.cwd,
     tag,
     message: tag,
+    ...(input.remote !== undefined ? { remote: input.remote } : {}),
     ...(input.exec !== undefined ? { exec: input.exec } : {}),
   });
 

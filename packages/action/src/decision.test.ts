@@ -178,4 +178,52 @@ describe("decideActionMode", () => {
       reason: "sync-from-prod",
     });
   });
+
+  it("cherry-pick onto feature base → skip", () => {
+    expect(
+      decideActionMode({
+        ...base,
+        isFork: false,
+        baseBranch: "feat/long-lived",
+        headBranch: "cherry-bump",
+        action: "closed",
+        merged: true,
+      }),
+    ).toMatchObject({
+      mode: "skip",
+      allowWrite: false,
+      reason: "non-prod base: no write",
+    });
+  });
+
+  it("release/* ≠ prod → skip", () => {
+    expect(
+      decideActionMode({
+        ...base,
+        isFork: false,
+        baseBranch: "release/1.2",
+        headBranch: "cut",
+        action: "closed",
+        merged: true,
+      }),
+    ).toMatchObject({
+      mode: "skip",
+      allowWrite: false,
+      reason: "non-prod base: no write",
+    });
+  });
+
+  it("release/* as prodBranch → write", () => {
+    expect(
+      decideActionMode({
+        ...base,
+        prodBranch: "release/1.2",
+        isFork: false,
+        baseBranch: "release/1.2",
+        headBranch: "cut",
+        action: "closed",
+        merged: true,
+      }),
+    ).toMatchObject({ mode: "write", allowWrite: true });
+  });
 });

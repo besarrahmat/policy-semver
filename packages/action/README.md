@@ -123,7 +123,7 @@ Branch rulesets / required reviews often block `github-actions[bot]`. The write 
 
 1. Prefer input `token` (defaults to `${{ github.token }}`).
 2. Or set repo/org secret **`POLICY_SEMVER_TOKEN`** (PAT or GitHub App installation token with `contents: write` and ruleset bypass). Action reads `POLICY_SEMVER_TOKEN` before the input token.
-3. On the **consumer** ruleset **Bypass list**, add that App (or the user that owns the PAT) so the bump commit can land on protected `main`. Do not add “everyone”. Prefer **Always allow** only for that dedicated bot — not for personal admin accounts.
+3. On the **consumer** ruleset **Bypass list**, add that App (or the user that owns the PAT) so the bump commit can land on protected `main`. Do not add "everyone". Prefer **Always allow** only for that dedicated bot — not for personal admin accounts.
 4. Pass the same write token to **app** `actions/checkout` (`token:`) so `git push` can update prod. Action input `token` is Octokit (Release + comments) only.
 
 That write token is **not** the checkout PAT used to `uses:` a private Action repo (Contents: **read** on `policy-semver` only).
@@ -137,7 +137,7 @@ That write token is **not** the checkout PAT used to `uses:` a private Action re
 | Sync `develop ← prod` | `kind: none` · no write |
 | `opened` / `synchronize` / `reopened` on prod | Dry-run + sticky comment |
 | `closed` + `merged` on prod (or `merge_group`) | Write → tag → release |
-| `push` to prod | **Skip** (hindari double bump) |
+| `push` to prod | **Skip** (avoids a double bump) |
 
 ## Merge methods
 
@@ -151,6 +151,26 @@ Classify uses the **final subjects** visible when the job runs: `pulls.listCommi
 
 `merge_group` is treated as a write. If merge queue **and** `pull_request` `closed+merged` both write, the second job can hit tag-exists. Pick **one** write trigger per consumer.
 
+## Revert
+
+A revert does **not** roll VERSION back. Subject `Revert "feat: …"` is other → **patch** (not a downgrade). To republish an older number, set VERSION and the tag by hand, or raise major via env.
+
+## Cherry-pick onto a feature branch
+
+A PR whose base is not `prodBranch` (including cherry-picking a bump commit onto `feat/…`) → **skip / no write**. Bump only after merge to prod.
+
+## `release/*`
+
+`release/1.2` is ignored unless `versioning.config.json` `prodBranch` is that branch.
+
+## Mirror tags
+
+If `origin` (or a mirror) already has `{tagPrefix}{version}` at a different SHA → **fail** (`mirror tag conflict`). Tags are never force-pushed. Fetch tags (`fetch-depth: 0`).
+
+## Long-lived PR + hotfix
+
+The Action reads VERSION from `origin/{prodBranch}` (dry-run and write), not the feature-branch tree. Sticky comment refreshes on `opened` / `synchronize` / `reopened`. After a hotfix lands on prod, re-run / push the long-lived PR so next-version follows prod HEAD.
+
 ## Signed tags
 
 v1 creates **unsigned** annotated tags (`git tag -a --no-sign`). Do not set `tag.gpgSign` on the runner without a key — signing is not the default; there is no `signedTags` config key (unknown keys fail-closed).
@@ -163,11 +183,11 @@ Beta channels / `1.0.0-beta.1` are **out of scope for v1**. Default off. Do not 
 
 Copy [`examples/consumer.yml`](./examples/consumer.yml) into the **app** repo as `.github/workflows/policy-semver.yml`. Pin a SHA in production. This file is documentation — it is not a workflow of *this* monorepo.
 
-Keep **bump → build → deploy**. The stub’s `build` job `needs: version`; `deploy` `needs: build`. Both run only after a merged PR. A failed or skipped `version` job skips `build`/`deploy` because of `needs:`. Do not use `if: always()` on deploy. Do not put deploy steps in the version job.
+Keep **bump → build → deploy**. The stub's `build` job `needs: version`; `deploy` `needs: build`. Both run only after a merged PR. A failed or skipped `version` job skips `build`/`deploy` because of `needs:`. Do not use `if: always()` on deploy. Do not put deploy steps in the version job.
 
 Until this Action is public (or org-internal with Access enabled), `uses: besarrahmat/policy-semver@ref` 404s from another private repo. The stub **checkouts** this repo with `secrets.POLICY_SEMVER_TOKEN` (fine-grained **Contents: read** on `policy-semver`) then `uses: ./.github/actions/policy-semver`. Set `persist-credentials: false` on that checkout so the PAT is not used to push the app repo.
 
-That checkout secret is **not** VE-42. VE-42 is a **write** token on the **consumer** (`contents: write` / ruleset bypass) passed as Action input `token` if `github-actions[bot]` cannot push `main`.
+<!-- That checkout secret is **not** VE-42. VE-42 is a **write** token on the **consumer** (`contents: write` / ruleset bypass) passed as Action input `token` if `github-actions[bot]` cannot push `main`. -->
 
 ## App version at runtime
 

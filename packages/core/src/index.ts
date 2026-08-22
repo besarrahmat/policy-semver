@@ -73,6 +73,7 @@ export {
   assertDualSourceMatch,
   DUAL_SOURCE,
   readBothConfigured,
+  readVersionAtRef,
   tryReadPackageJsonVersion,
   tryReadVersionFile,
   type WriteBothInput,
@@ -80,6 +81,7 @@ export {
 } from "./dual-source/index.js";
 export type { CommitBumpInput, PushInput, TagInput } from "./git/index.js";
 export {
+  assertRemoteTagCompatible,
   assertTagMatchesVersion,
   commitBumpFiles,
   createAnnotatedTag,

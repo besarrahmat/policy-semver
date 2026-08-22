@@ -10,7 +10,7 @@
 
 `pnpm test:fixtures` (repo root) or `policy-semver test` from a cwd inside this monorepo.
 
-### Add a edge case
+### Add an edge case
 
 1. Copy an existing file in `fixtures/classifier/`.
 2. Name it after the edge case (e.g. `edge-case-10-title-feat.json`).

@@ -47540,10 +47540,6 @@ function assertDualSourceMatch(versionFileVersion, packageJsonVersion) {
   }
 }
 
-// ../core/src/dual-source/read-sources.ts
-var import_promises2 = require("fs/promises");
-var import_node_path2 = __toESM(require("path"), 1);
-
 // ../core/src/bump/parse-version.ts
 var SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)$/;
 function isSemVerString(value) {
@@ -47565,7 +47561,64 @@ function formatSemVer(parts) {
   return `${parts.major}.${parts.minor}.${parts.patch}`;
 }
 
+// ../core/src/git/exec.ts
+var import_node_child_process = require("child_process");
+var import_node_util = require("util");
+var execFileAsync = (0, import_node_util.promisify)(import_node_child_process.execFile);
+var defaultGitExec = async (args, opts) => {
+  const { stdout, stderr } = await execFileAsync("git", args, {
+    cwd: opts?.cwd,
+    encoding: "utf8",
+    maxBuffer: 10 * 1024 * 1024
+  });
+  return { stdout: String(stdout), stderr: String(stderr) };
+};
+
+// ../core/src/dual-source/read-at-ref.ts
+function parseVersionFile(raw, label) {
+  const trimmed = raw.trim();
+  if (!isSemVerString(trimmed)) {
+    throw new Error(
+      `malformed VERSION at ${label}: ${JSON.stringify(trimmed)}`
+    );
+  }
+  return formatSemVer(parseSemVer(trimmed));
+}
+function parsePackageVersion(raw, label) {
+  const pkg = JSON.parse(raw);
+  if (typeof pkg.version !== "string" || !isSemVerString(pkg.version)) {
+    throw new Error(`malformed package.json version at ${label}`);
+  }
+  return formatSemVer(parseSemVer(pkg.version));
+}
+async function showAtRef(exec, cwd, ref, rel) {
+  try {
+    const { stdout } = await exec(["show", `${ref}:${rel}`], { cwd });
+    return stdout;
+  } catch {
+    return null;
+  }
+}
+async function readVersionAtRef(input) {
+  const exec = input.exec ?? defaultGitExec;
+  const vfRel = input.files.versionFile;
+  const pkgRel = input.files.packageJson;
+  const vfRaw = vfRel !== void 0 ? await showAtRef(exec, input.cwd, input.ref, vfRel) : null;
+  const pkgRaw = pkgRel !== void 0 ? await showAtRef(exec, input.cwd, input.ref, pkgRel) : null;
+  const vf = vfRaw !== null ? parseVersionFile(vfRaw, `${input.ref}:${vfRel}`) : null;
+  const pkg = pkgRaw !== null ? parsePackageVersion(pkgRaw, `${input.ref}:${pkgRel}`) : null;
+  if (vf !== null && pkg !== null) {
+    assertDualSourceMatch(vf, pkg);
+    return vf;
+  }
+  if (vf !== null) return vf;
+  if (pkg !== null) return pkg;
+  return null;
+}
+
 // ../core/src/dual-source/read-sources.ts
+var import_promises2 = require("fs/promises");
+var import_node_path2 = __toESM(require("path"), 1);
 async function tryReadVersionFile(cwd, rel) {
   const p = import_node_path2.default.join(cwd, rel);
   try {
@@ -48296,19 +48349,6 @@ async function loadConfig(path8) {
   return data;
 }
 
-// ../core/src/git/exec.ts
-var import_node_child_process = require("child_process");
-var import_node_util = require("util");
-var execFileAsync = (0, import_node_util.promisify)(import_node_child_process.execFile);
-var defaultGitExec = async (args, opts) => {
-  const { stdout, stderr } = await execFileAsync("git", args, {
-    cwd: opts?.cwd,
-    encoding: "utf8",
-    maxBuffer: 10 * 1024 * 1024
-  });
-  return { stdout: String(stdout), stderr: String(stderr) };
-};
-
 // ../core/src/git/commit.ts
 var BOT_NAME = "github-actions[bot]";
 var BOT_EMAIL = "41898282+github-actions[bot]@users.noreply.github.com";
@@ -48347,9 +48387,40 @@ async function createAnnotatedTag(input) {
   if (await tagExists(input.cwd, input.tag, exec)) {
     throw new Error(`tag already exists: ${input.tag}`);
   }
+  await assertRemoteTagCompatible({
+    cwd: input.cwd,
+    tag: input.tag,
+    ...input.remote !== void 0 ? { remote: input.remote } : {},
+    ...input.exec !== void 0 ? { exec: input.exec } : {}
+  });
   await exec(["tag", "-a", "--no-sign", input.tag, "-m", input.message], {
     cwd: input.cwd
   });
+}
+async function assertRemoteTagCompatible(input) {
+  const exec = input.exec ?? defaultGitExec;
+  const remote = input.remote ?? "origin";
+  let listed;
+  try {
+    listed = (await exec(["ls-remote", "--tags", remote, `refs/tags/${input.tag}`], {
+      cwd: input.cwd
+    })).stdout;
+  } catch {
+    return;
+  }
+  const lines = listed.split("\n").map((l) => l.trim()).filter(Boolean);
+  if (lines.length === 0) return;
+  const peeled = lines.find((l) => l.endsWith(`refs/tags/${input.tag}^{}`));
+  const direct = lines.find((l) => l.endsWith(`refs/tags/${input.tag}`));
+  const remoteSha = (peeled ?? direct)?.split(/[\s\t]/)[0];
+  if (!remoteSha) return;
+  const headSha = (await exec(["rev-parse", "HEAD"], { cwd: input.cwd })).stdout.trim();
+  if (remoteSha === headSha) {
+    throw new Error(`tag already exists: ${input.tag}`);
+  }
+  throw new Error(
+    `mirror tag conflict: ${input.tag} remote=${remoteSha} local HEAD=${headSha}`
+  );
 }
 
 // ../core/src/github/create-release.ts
@@ -48459,6 +48530,7 @@ async function runRelease(input) {
     cwd: input.cwd,
     tag,
     message: tag,
+    ...input.remote !== void 0 ? { remote: input.remote } : {},
     ...input.exec !== void 0 ? { exec: input.exec } : {}
   });
   if (input.hooks) {
@@ -48773,7 +48845,12 @@ async function runAction() {
   if (commits.length === 0) {
     commits = await loadCommitsFromGit(cwd);
   }
-  const currentVersion = await readVersion({ cwd, files });
+  const fromProd = await readVersionAtRef({
+    cwd,
+    ref: `origin/${config.prodBranch}`,
+    files
+  });
+  const currentVersion = fromProd ?? await readVersion({ cwd, files });
   const envRaw = process.env[config.majorEnv];
   let envMajor = null;
   if (envRaw !== void 0 && envRaw !== "") {

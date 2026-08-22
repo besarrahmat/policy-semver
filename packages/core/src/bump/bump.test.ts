@@ -229,4 +229,41 @@ describe("bump write integration", () => {
     expect(guards.forceKindNone).toBe(true);
     expect(guards.allowWrite).toBe(false);
   });
+
+  it("cherry-pick onto feature base → no write", () => {
+    const guards = decideBumpGuards({
+      isFork: false,
+      baseBranch: "feat/long-lived",
+      headBranch: "cherry-bump",
+      prodBranch: "main",
+      developBranch: "dev",
+      isMergedToProd: true,
+    });
+    expect(guards.allowWrite).toBe(false);
+    expect(guards.forceKindNone).toBe(false);
+  });
+
+  it("release/* base ≠ prod → no write", () => {
+    const guards = decideBumpGuards({
+      isFork: false,
+      baseBranch: "release/1.2",
+      headBranch: "hotfix",
+      prodBranch: "main",
+      developBranch: "dev",
+      isMergedToProd: true,
+    });
+    expect(guards.allowWrite).toBe(false);
+  });
+
+  it("release/* as prodBranch → allow write", () => {
+    const guards = decideBumpGuards({
+      isFork: false,
+      baseBranch: "release/1.2",
+      headBranch: "hotfix",
+      prodBranch: "release/1.2",
+      developBranch: "dev",
+      isMergedToProd: true,
+    });
+    expect(guards.allowWrite).toBe(true);
+  });
 });

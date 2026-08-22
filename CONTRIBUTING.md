@@ -8,14 +8,14 @@
 
 ## Branch protection (this tool repo)
 
-**VE-15:** protect **`main`** so it is not a direct-push branch.
+Protect **`main`** so it is not a direct-push branch.
 
 1. GitHub → **Settings → Rules → Rulesets → New branch ruleset** (or classic **Settings → Branches → Add branch protection rule**).
 2. Target `main`. Enforcement: **Active**.
 3. Enable **Require a pull request before merging**, **Block force pushes**, and **Restrict deletions**.
 4. Do not add a blanket bypass for all admins if that restores direct pushes to `main`.
 
-**VE-42 (dogfood later):** the Action must push the bump commit onto protected `main`. `GITHUB_TOKEN` (`github-actions[bot]`) is often blocked. Add a dedicated GitHub App (or PAT user) to the ruleset **Bypass list**, store it as `POLICY_SEMVER_TOKEN`, and pass it as the Action `token` input. Consumer-side detail lives in `packages/action/README.md`.
+The Action must push the bump commit onto protected `main`. `GITHUB_TOKEN` (`github-actions[bot]`) is often blocked. Add a dedicated GitHub App (or PAT user) to the ruleset **Bypass list**, store it as `POLICY_SEMVER_TOKEN`, and pass it as the Action `token` input. Consumer-side detail lives in `packages/action/README.md`.
 
 `dev` may stay less strict for day-to-day work. Sync `main` → `dev` must not bump.
 
@@ -37,6 +37,9 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) subject lines, 
 - `docs:` — docs-only
 - `chore:` — tooling / bootstrap
 - 0.x: `APP_VERSION_MAJOR=0` until a human raises it; feat is still minor, fix still patch, major only via env
+- Revert of a bump does **not** roll VERSION back
+- Tags must be `{tagPrefix}{version}` (default `v1.2.3`). A human `1.2.3` / `release-1.2.3` is not rewritten; `pnpm policy-semver verify` will fail once tags exist
+- v1 versions the **repo root** only. Do not expect `packages/foo/package.json` to bump on its own
 
 ## Before you push
 
@@ -49,7 +52,7 @@ pnpm lint
 
 ## Config
 
-`versioning.config.json` is fail-closed: **unknown keys fail validation** (and will fail CI once config checks are wired). Extend `schemas/versioning.config.schema.json` (then sync the package embed) before adding new keys. Never “warn and continue” on unknown policy fields.
+`versioning.config.json` is fail-closed: **unknown keys fail validation** (and will fail CI once config checks are wired). Extend `schemas/versioning.config.schema.json` (then sync the package embed) before adding new keys. Never "warn and continue" on unknown policy fields.
 
 ## Schema embed
 

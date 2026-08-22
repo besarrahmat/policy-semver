@@ -14,9 +14,13 @@ Policy lives in **`versioning.config.json`** at the repo root (JSON Schema fail-
 | --- | --- |
 | Config path | `versioning.config.json` |
 | Major bumps | Manual only via env named by `majorEnv` (default **`APP_VERSION_MAJOR`**) — set to the next major integer (e.g. `2`) to reset to `N.0.0`; never auto-major from `BREAKING` / `feat!:` |
-| 0.x | `APP_VERSION_MAJOR=0` until a human raises it. Feat stays minor, fix stays patch, major only via env — 0.x is **not** “any breaking change may be a minor”. First public tool release: **0.1.0** (not `0.0.0`). Consumers may seed `VERSION` `0.0.0`. |
-| Dependabot (VE-33) | Subject `Bump …` / `chore(deps):` → **patch**, not minor. Label `skip-version` disables the bump. |
-| Branches | `prodBranch` = `main`, `developBranch` = `dev` (this repo’s dogfood topology) |
+| 0.x | `APP_VERSION_MAJOR=0` until a human raises it. Feat stays minor, fix stays patch, major only via env — 0.x is **not** "any breaking change may be a minor". First public tool release: **0.1.0** (not `0.0.0`). Consumers may seed `VERSION` `0.0.0`. |
+| Dependabot | Subject `Bump …` / `chore(deps):` → **patch**, not minor. Label `skip-version` disables the bump. |
+| Branches | `prodBranch` = `main`, `developBranch` = `dev` (this repo's dogfood topology) |
+| Dual-source | Default `versionFiles`: **root** `VERSION` + **root** `package.json`. Nested `packages/*/package.json` are not bumped separately in v1 |
+| `tagPrefix` | Default `v` → tag `vX.Y.Z`. A human tag with a missing or wrong prefix is **not** renamed; `verify` checks `{tagPrefix}{VERSION}` |
+| `release/*` | Not production unless `prodBranch` is set to that name; PRs targeting `release/1.2` are ignored |
+| Workspaces | v1 is **root-only**. Omit the `workspaces` key or set it to `null`. Path filters are Phase 12; a missed workspace path is not a v1 bug |
 | Audit | `.policy-semver/last-release.json` after a successful release — **commit** by default |
 
 Unknown keys in the config file are **rejected**. See [CONTRIBUTING.md](./CONTRIBUTING.md).
@@ -33,13 +37,13 @@ concurrency:
 
 Do not put the write job in the same cancel-friendly concurrency group as flaky lint. Details: [`packages/action/README.md`](./packages/action/README.md).
 
-## Branch protection (VE-15, VE-42)
+## Branch protection
 
 The Action does not bump on `push` to production. Protect **`main`** (consumer `prodBranch`) so VERSION / tags only change through a PR.
 
 | Repo | Protect | Why |
 | --- | --- | --- |
-| **Consumer** (app using the Action) | `main` / `prodBranch` | VE-15: require a pull request; block force-pushes. After merge the Action must push the bump commit — if `github-actions[bot]` is blocked, that is VE-42 (PAT / GitHub App). Settings: [`packages/action/README.md`](./packages/action/README.md) |
+| **Consumer** (app using the Action) | `main` / `prodBranch` | Require a pull request; block force-pushes. After merge the Action must push the bump commit — if `github-actions[bot]` is blocked (PAT / GitHub App). Settings: [`packages/action/README.md`](./packages/action/README.md) |
 | **This tool repo** | `main` | Same rules. Day-to-day work stays on `dev`; only `dev` → `main` PRs land on production. See [CONTRIBUTING.md](./CONTRIBUTING.md) |
 
 The Action **skips `push` events**, so a direct push does not bump. Branch protection is still required so humans cannot rewrite VERSION by pushing to `main`.

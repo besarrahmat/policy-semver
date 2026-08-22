@@ -8,6 +8,7 @@ import { writeVersion } from "../bump/write-version.js";
 import {
   assertDualSourceMatch,
   readBothConfigured,
+  readVersionAtRef,
   writeBothAtomically,
 } from "./index.js";
 
@@ -135,5 +136,28 @@ describe("dual-source module", () => {
     await expect(readVersion({ cwd, files: both })).rejects.toThrow(
       /malformed VERSION/,
     );
+  });
+
+  it("readVersionAtRef uses prod ref not working tree", async () => {
+    const exec = async (args: string[]) => {
+      if (args[0] === "show" && args[1] === "origin/main:VERSION") {
+        return { stdout: "1.2.1\n", stderr: "" };
+      }
+      if (args[0] === "show" && args[1] === "origin/main:package.json") {
+        return {
+          stdout: JSON.stringify({ name: "app", version: "1.2.1" }),
+          stderr: "",
+        };
+      }
+      throw new Error(`unexpected ${args.join(" ")}`);
+    };
+    await expect(
+      readVersionAtRef({
+        cwd: "/tmp",
+        ref: "origin/main",
+        files: { versionFile: "VERSION", packageJson: "package.json" },
+        exec,
+      }),
+    ).resolves.toBe("1.2.1");
   });
 });

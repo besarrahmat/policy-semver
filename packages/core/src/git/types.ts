@@ -14,6 +14,7 @@ export type TagInput = {
   cwd: string;
   tag: string; // tagPrefix + version
   message: string; // annotated message
+  remote?: string; // default "origin" — ls-remote
   exec?: GitExec;
 };
 

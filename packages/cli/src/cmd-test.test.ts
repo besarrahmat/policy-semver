@@ -37,6 +37,8 @@ const REQUIRED_CLASSIFIER_FIXTURES = [
   "major-skip-1-to-3.json",
   "skip-true.json",
   "dependabot-bump.json",
+  "feat-in-body-only.json",
+  "breaking-body-warn-only.json",
 ] as const;
 
 describe("golden fixtures", () => {
