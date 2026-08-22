@@ -1,0 +1,17 @@
+{
+  "name": "feat-and-fix",
+  "input": {
+    "commits": [
+      {
+        "subject": "feat & fix: x"
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "minor",
+    "warnings": []
+  }
+}

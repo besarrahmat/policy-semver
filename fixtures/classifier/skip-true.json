@@ -1,0 +1,18 @@
+{
+  "name": "skip-true",
+  "input": {
+    "commits": [
+      {
+        "subject": "feat: x"
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": null,
+    "skip": true
+  },
+  "expected": {
+    "kind": "none",
+    "warnings": []
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "feature-typo-patch",
+  "input": {
+    "commits": [
+      {
+        "subject": "feature: typo"
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "patch",
+    "warnings": []
+  }
+}

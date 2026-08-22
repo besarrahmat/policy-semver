@@ -1,0 +1,18 @@
+{
+  "name": "feat-in-body-only",
+  "input": {
+    "commits": [
+      {
+        "subject": "fix: x",
+        "body": "feat: ignored"
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "patch",
+    "warnings": []
+  }
+}

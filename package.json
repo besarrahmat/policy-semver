@@ -1,0 +1,32 @@
+{
+  "name": "policy-semver-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.20.0",
+  "engines": {
+    "node": ">=24",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "preinstall": "npx only-allow pnpm",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:fixtures": "node --import tsx packages/cli/src/bin.ts test",
+    "typecheck": "pnpm -r run typecheck",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "build": "pnpm -r --if-present run build",
+    "policy-semver": "node packages/cli/dist/bin.js",
+    "sync:schema": "cp schemas/versioning.config.schema.json packages/core/src/config/versioning.config.schema.json",
+    "prebuild": "pnpm sync:schema"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.0",
+    "@types/node": "^24.0.0",
+    "only-allow": "^1.2.1",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.9",
+    "typescript": "^5.9.0",
+    "vitest": "^3.0.0"
+  }
+}

@@ -1,0 +1,18 @@
+coverage/
+docs/
+dist/
+node_modules/
+.pnpm-store/
+.cursor/
+*.tgz
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+
+# Phase 6 layout A: Action bundle MUST be committed at repo root
+# (runners do not npm-install Action deps). See packages/action/src/locks.ts
+!/dist/
+!/dist/**
+
+# Do NOT ignore .policy-semver/ — commit last-release.json by default

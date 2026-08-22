@@ -1,0 +1,20 @@
+{
+  "name": "breaking-body-warn-only",
+  "input": {
+    "commits": [
+      {
+        "subject": "fix: x",
+        "body": "BREAKING CHANGE: yes"
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "patch",
+    "warnings": [
+      "Breaking change marker detected; major only via APP_VERSION_MAJOR (never auto-major)"
+    ]
+  }
+}

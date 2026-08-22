@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "1",
+  "hooks": {
+    "beforePublish": "echo no"
+  }
+}

@@ -1,0 +1,65 @@
+name: PolicySemVer
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, closed]
+  # Merge-queue checks. Version write also runs here. If you enable
+  # merge queue, pick one write trigger: closed+merged AND merge_group both
+  # writing can hit tag-exists.
+  merge_group:
+
+# serialize writes on the same prod base (not github.ref — that is refs/pull/N/merge).
+# never cancel mid-bump. fetch-depth: 0 so classify/tag see prod HEAD.
+concurrency:
+  group: policy-semver-${{ github.repository }}-${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  version:
+    if: github.event.pull_request.base.ref == 'main' || github.event.merge_group.base_ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          # git push uses this checkout token. If github-actions[bot] cannot
+          # push protected prod, set a contents:write PAT/App here (not the Action-repo read PAT).
+          # token: ${{ secrets.POLICY_SEMVER_WRITE_TOKEN }}
+      # Private action repo: `uses: owner/policy-semver@ref` 404s from another repo
+      # (personal-account private). Checkout with a PAT (Contents: read on the
+      # Action repo), then run locally. persist-credentials: false so the PAT is
+      # not used for the consumer push. After the Action is public/org-internal,
+      # replace these two steps with: uses: besarrahmat/policy-semver@<sha>
+      - name: Checkout PolicySemVer action
+        uses: actions/checkout@v7
+        with:
+          repository: besarrahmat/policy-semver
+          ref: dev
+          token: ${{ secrets.POLICY_SEMVER_TOKEN }}
+          path: .github/actions/policy-semver
+          persist-credentials: false
+      - name: PolicySemVer
+        uses: ./.github/actions/policy-semver
+        with:
+          config-path: versioning.config.json
+          # token: ${{ secrets.POLICY_SEMVER_TOKEN }}  # contents:write on THIS repo — not a read-only Action checkout PAT
+
+  # never build/deploy if the bump job failed or was skipped.
+  build:
+    needs: version
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "inject VERSION into the build; do not read version from CDN at runtime"
+
+  deploy:
+    needs: build
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "deploy after successful build"
