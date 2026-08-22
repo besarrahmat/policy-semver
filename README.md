@@ -1,7 +1,6 @@
 # PolicySemVer
 
 Policy-first SemVer automation for deployed apps (major via env, `feat & fix:`, develop/`main` topology).
-
 ## Configuration
 
 Policy lives in **`versioning.config.json`** at the repo root (JSON Schema fail-closed).
