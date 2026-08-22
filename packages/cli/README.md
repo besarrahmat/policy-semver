@@ -23,7 +23,7 @@ pnpm --filter ./packages/cli build
 
 ```bash
 pnpm policy-semver --help
-# or
+# or (cwd = packages/cli — pass --cwd to the repo root for verify/bump)
 pnpm --filter ./packages/cli run policy-semver -- --help
 # or
 node packages/cli/dist/bin.js --help

@@ -1,0 +1,30 @@
+name: PolicySemVer (dogfood)
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, closed]
+
+concurrency:
+  group: policy-semver-dogfood-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  version:
+    if: github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.POLICY_SEMVER_TOKEN || github.token }}
+
+      - uses: ./packages/action
+        env:
+          APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR || '0' }}
+        with:
+          config-path: versioning.config.json

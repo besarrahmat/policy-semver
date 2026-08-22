@@ -48,6 +48,14 @@ The Action does not bump on `push` to production. Protect **`main`** (consumer `
 
 The Action **skips `push` events**, so a direct push does not bump. Branch protection is still required so humans cannot rewrite VERSION by pushing to `main`.
 
+## Dogfood (this repo)
+
+This repository versions itself with `.github/workflows/policy-semver.yml` (`uses: ./packages/action`) on pull requests targeting `main`.
+
+Major stays manual: repository variable `APP_VERSION_MAJOR` (keep `0` until a human raises it). If branch protection blocks `github-actions[bot]`, set secret `POLICY_SEMVER_TOKEN` (PAT or GitHub App with `contents: write` and ruleset bypass) so the bump commit can push to `main`. Details: [`packages/action/README.md`](./packages/action/README.md) (Token when `GITHUB_TOKEN` cannot push) and [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+Manual edits to `VERSION` / root `package.json` `version` are sunset as of 2026-08-22. After the dogfood workflow is live, do not bump those files by hand. Nested `packages/*/package.json` stay `0.0.0` until later phase (`0.1.0` lockstep). There is no Changesets process in this repo.
+
 ## Community
 
 - [Contributing](./CONTRIBUTING.md)
