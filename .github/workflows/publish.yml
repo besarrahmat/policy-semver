@@ -1,0 +1,40 @@
+name: Publish npm
+
+on:
+  push:
+    tags: ["v0.*", "v1.*"]
+
+permissions:
+  contents: read
+  id-token: write # required for OIDC trusted publishing
+
+jobs:
+  publish:
+    if: github.repository == 'besarrahmat/policy-semver'
+    runs-on: ubuntu-latest # GitHub-hosted required; self-hosted is not supported
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        # Reads version from root package.json "packageManager"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version # must resolve to Node 24+
+          cache: pnpm
+          # Do NOT set registry-url when using Trusted Publishing without NODE_AUTH_TOKEN.
+          # setup-node writes _authToken=${NODE_AUTH_TOKEN}; empty token → ENEEDAUTH.
+
+      - run: npm install -g npm@latest # ensure npm CLI >= 11.5.1
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm -r run build
+
+      - run: pnpm --filter '@policy-semver/core' publish --access public --no-git-checks
+        env:
+          NPM_CONFIG_PROVENANCE: "true"
+
+      - run: pnpm --filter policy-semver publish --access public --no-git-checks
+        env:
+          NPM_CONFIG_PROVENANCE: "true"

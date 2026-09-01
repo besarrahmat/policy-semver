@@ -1,18 +1,24 @@
-import { defineConfig } from "tsup";
+import { defineConfig, type Options } from "tsup";
 
-export default defineConfig({
-  entry: ["src/bin.ts"],
+const shared: Options = {
   format: ["esm"],
   platform: "node",
   target: "node24",
   sourcemap: true,
-  clean: true,
+  clean: false,
   splitting: false,
-  dts: false,
-  // Required: @policy-semver/core exports .ts source today
-  noExternal: ["@policy-semver/core"],
-  // Survive strip of source shebang; matches CLI_BUILD.shebangBanner
-  banner: {
-    js: "#!/usr/bin/env node\n",
+};
+
+export default defineConfig([
+  {
+    ...shared,
+    entry: { bin: "src/bin.ts" },
+    dts: false,
+    banner: { js: "#!/usr/bin/env node\n" },
   },
-});
+  {
+    ...shared,
+    entry: { index: "src/index.ts" },
+    dts: true,
+  },
+]);

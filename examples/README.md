@@ -20,14 +20,14 @@ Production write workflow (build → deploy, merge queue, private Action checkou
 A second deployed app (not this monorepo) wires the **published** artifacts like this:
 
 1. Copy [`node-app`](./node-app/) or [`cloudflare-worker`](./cloudflare-worker/) to a new repository.
-2. Pin the Action by SHA in `.github/workflows/policy-semver.yml`:
+2. Pin the Action by SHA in `.github/workflows/policy-semver.yml` (prod):
    `uses: besarrahmat/policy-semver/packages/action@<full-commit-sha>`
-   (or root `uses: besarrahmat/policy-semver@<sha>`).
+   (or root `uses: besarrahmat/policy-semver@<sha>` / demo `@v0.1.0`).
 3. Set repository variable `APP_VERSION_MAJOR=0`.
-4. After public npm `0.1.0`: `npx policy-semver@0.1.0 classify` / `verify` from that app root. Until then, classify from the tool workspace with `--cwd` pointing at the copied app (see each example README).
+4. From that app root: `npx policy-semver@0.1.0 classify` / `verify`.
 5. Do not copy `packages/core` / `packages/cli` into the app.
 
-Until this Action repo is public, `uses: besarrahmat/policy-semver@…` 404s from another private repo — checkout workaround in [`packages/action/README.md`](../packages/action/README.md#consumer-workflow-stub).
+This Action repo is public, so `uses: besarrahmat/policy-semver@v0.1.0` works from other repos. A private fork still 404s — checkout workaround in [`packages/action/README.md`](../packages/action/README.md#consumer-workflow-stub).
 
 ## Migrate from another tool
 

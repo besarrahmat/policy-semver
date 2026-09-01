@@ -8,7 +8,7 @@ Public documentation is this README, [CONTRIBUTING.md](./CONTRIBUTING.md), packa
 
 ## Status
 
-The GitHub Action is usable: pin a commit SHA (see [Quickstart](#quickstart)). The npm CLI (`policy-semver@0.1.0`) is not published yet — use this workspace until then. Major bumps stay manual via `APP_VERSION_MAJOR`. Day-to-day work is on `dev`; `main` is for releases.
+The GitHub Action is usable: pin a commit SHA in production (see [Quickstart](#quickstart) and [Pin by SHA](#pin-by-sha)), or `@v0.1.0` / `@v0` for demos. The npm CLI is `npx policy-semver@0.1.0`. Major bumps stay manual via `APP_VERSION_MAJOR`. Day-to-day work is on `dev`; `main` is for releases.
 
 ## Quickstart
 
@@ -82,7 +82,7 @@ Root metadata is equivalent and is what Marketplace listing uses:
 - uses: besarrahmat/policy-semver@<full-commit-sha>
 ```
 
-Until this repository is public, `uses: besarrahmat/policy-semver@…` 404s from another private repo. Use the checkout workaround in [`packages/action/README.md`](./packages/action/README.md#consumer-workflow-stub).
+This repository is **public**. `uses: besarrahmat/policy-semver@v0.1.0` (or a SHA) works from other repos. A **private fork** of this Action still 404s from another private repo — checkout workaround in [`packages/action/README.md`](./packages/action/README.md#consumer-workflow-stub).
 
 ### 4. Open a pull request targeting `main`
 
@@ -103,7 +103,7 @@ Copy-out stubs (not workspace packages):
 | [`examples/node-app`](./examples/node-app/) | Console + HTTP version from `VERSION` / `package.json` |
 | [`examples/cloudflare-worker`](./examples/cloudflare-worker/) | Build-time inject into the Worker bundle (no CDN fetch) |
 
-How a second app pins the Action and (later) `npx policy-semver`: [`examples/README.md`](./examples/README.md#a-second-consumer-app).
+How a second app pins the Action and `npx policy-semver@0.1.0`: [`examples/README.md`](./examples/README.md#a-second-consumer-app).
 
 ## Install channels
 
@@ -111,30 +111,47 @@ This repo produces three artifacts. They are not interchangeable.
 
 | Artifact | How to use | Runtime deps on the consumer |
 | --- | --- | --- |
-| GitHub Action | `uses: besarrahmat/policy-semver@<sha>` or `…/packages/action@<sha>` | **None** — runners execute committed `dist/index.js` |
-| `policy-semver` CLI | `npx policy-semver@0.1.0 …` after public npm | Resolved from npm; depends on `@policy-semver/core` |
-| `@policy-semver/core` | `pnpm add @policy-semver/core` after public npm | Resolved from npm |
+| GitHub Action | `uses: besarrahmat/policy-semver@<sha>` (prod) or `@v0.1.0` / `@v0` (demo) | **None** — runners execute committed `dist/index.js` |
+| `policy-semver` CLI | `npx policy-semver@0.1.0 …` | Resolved from npm; depends on `@policy-semver/core` |
+| `@policy-semver/core` | `pnpm add @policy-semver/core@0.1.0` | Resolved from npm |
 
-Until public npm `0.1.0`, run the CLI from this workspace only: `pnpm policy-semver --help`.
+Contributors still run the workspace CLI: `pnpm policy-semver --help`.
 
 ```bash
-# CLI (after public 0.1.0)
 npx policy-semver@0.1.0 classify --help
 ```
 
 ```yaml
-# Action (pin SHA in production)
+# Action — production: full SHA. Demo: @v0.1.0 or @v0.
 - uses: besarrahmat/policy-semver/packages/action@<full-commit-sha>
+# - uses: besarrahmat/policy-semver@v0.1.0
 ```
 
 Do not `npm install` / `npx` the Action. Do not treat the CLI as a substitute for the write path (tag + GitHub Release).
 
+## Public npm
+
+Published: **`policy-semver@0.1.0`** and **`@policy-semver/core@0.1.0`**. Install the CLI with `npx policy-semver@0.1.0`. The Action stays git `uses:` (not npm), for example `@v0.1.0` or a full commit SHA.
+
+| Package | Access |
+| --- | --- |
+| `policy-semver` | public (CLI) |
+| `@policy-semver/core` | public (library) |
+| `@policy-semver/action` / monorepo root | **not** published |
+
+Publish uses [Trusted publishing](https://docs.npmjs.com/trusted-publishers/) (OIDC) from GitHub Actions: permission `id-token: write`, npm CLI **≥ 11.5.1**, Node **24+** (`.node-version`), GitHub-hosted runner, workflow filename **`publish.yml`** (exact, including `.yml`). [Provenance](https://docs.npmjs.com/generating-provenance-statements) is generated automatically under trusted publishing **only from a public GitHub repo** — private source repos cannot publish provenance attestations. `0.1.0` was a laptop publish (no OIDC attestation); later versions should publish from `publish.yml`.
+
+`package.json` `repository.url` must be `git+https://github.com/besarrahmat/policy-semver.git`. Publishable packages use `"files"` (`dist`, `LICENSE`, `README.md`) and `publishConfig.access: public`.
+
+**Published versions are immutable.** A fix is `0.1.1`, not an overwrite of `0.1.0`.
+
 ## Pin by SHA
 
-Production workflows pin a **full commit SHA**. Moving major tags (`v0` / `v1`) are acceptable after those tags exist. Floating `@main` / `@dev` is not.
+Production workflows pin a **full commit SHA**. Moving major tags (`v0` / `v1`) and the release tag `@v0.1.0` are acceptable for demos. Floating `@main` / `@dev` is not.
 
 ```yaml
 - uses: besarrahmat/policy-semver/packages/action@<full-commit-sha>
+# - uses: besarrahmat/policy-semver@v0.1.0
 ```
 
 ## Policy differences

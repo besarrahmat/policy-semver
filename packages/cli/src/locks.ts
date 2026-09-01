@@ -12,6 +12,7 @@
  * | Bin name | `policy-semver` |
  * | Published entry (after build) | `"bin": { "policy-semver": "./dist/bin.js" }` |
  * | Until publish | workspace / `node dist/bin.js` only — no public `npx` expectation |
+ * | Public npm | `publish-locks.ts` (trusted publishing + provenance) |
  *
  * ## Build (plan tsup)
  * | Concern | Lock |
