@@ -1,16 +1,48 @@
 {
   "name": "@policy-semver/core",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Policy-first SemVer core (classify, bump, changelog, config)",
   "type": "module",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=24"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/besarrahmat/policy-semver.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/besarrahmat/policy-semver#readme",
+  "bugs": {
+    "url": "https://github.com/besarrahmat/policy-semver/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --config ../../vitest.config.ts"
+    "test": "vitest run --config ../../vitest.config.ts",
+    "prebuild": "pnpm -w run sync:schema",
+    "build": "tsup",
+    "pack:dry": "pnpm build && npm pack --dry-run"
   },
   "dependencies": {
     "ajv": "^8.20.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1"
   }
 }

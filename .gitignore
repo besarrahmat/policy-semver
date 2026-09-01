@@ -10,7 +10,7 @@ node_modules/
 .env
 .env.*
 
-# Phase 6 layout A: Action bundle MUST be committed at repo root
+# Action bundle MUST be committed at repo root
 # (runners do not npm-install Action deps). See packages/action/src/locks.ts
 !/dist/
 !/dist/**

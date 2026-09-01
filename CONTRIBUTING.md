@@ -26,6 +26,18 @@ The Action must push the bump commit onto protected `main`. `GITHUB_TOKEN` (`git
 - Prefer Corepack when available: `corepack enable` then `corepack prepare`.
 - On Homebrew Node without Corepack: install pnpm globally and match that version.
 
+## Commit cheat sheet
+
+| Subject | Bump |
+| --- | --- |
+| `feat:` / `feat(scope):` / `feat & fix:` | minor |
+| `fix:` / `chore:` / `refactor:` | patch |
+| `docs:` only | none |
+| major env raised | `N.0.0` |
+| `[skip version]` / label | none |
+
+Major is **never** inferred from `BREAKING CHANGE` / `feat!:` — those warn only. Raise the env named by `majorEnv` (default `APP_VERSION_MAJOR`). Sync `main` → `dev` must not bump.
+
 ## Commits
 
 Use [Conventional Commits](https://www.conventionalcommits.org/) subject lines, for example:

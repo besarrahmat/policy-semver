@@ -2,6 +2,8 @@
 
 Thin adapter over [`@policy-semver/core`](../core).
 
+Consumer install (dry-run in under 15 minutes): root [README quickstart](../../README.md#quickstart). Pin a commit SHA; do not `npm install` this Action.
+
 ## Docs locks
 
 | Lock | Decision |

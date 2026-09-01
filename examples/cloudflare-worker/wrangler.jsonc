@@ -1,0 +1,5 @@
+{
+  "name": "policy-semver-example-worker",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-08-22"
+}

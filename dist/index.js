@@ -47497,21 +47497,34 @@ function info(message) {
 }
 
 // src/run-action.ts
-var import_node_path7 = __toESM(require("path"), 1);
-var import_github3 = __toESM(require_github(), 1);
+var import_node_path = __toESM(require("path"), 1);
+var import_github2 = __toESM(require_github(), 1);
 
-// ../core/src/audit/locks.ts
+// ../core/dist/index.js
+var import_promises = require("fs/promises");
+var import_path = __toESM(require("path"), 1);
+var import_child_process = require("child_process");
+var import_util = require("util");
+var import_promises2 = require("fs/promises");
+var import_path2 = __toESM(require("path"), 1);
+var import_promises3 = require("fs/promises");
+var import_path3 = __toESM(require("path"), 1);
+var import_path4 = __toESM(require("path"), 1);
+var import_promises4 = require("fs/promises");
+var import_path5 = __toESM(require("path"), 1);
+var import_promises5 = require("fs/promises");
+var import_path6 = __toESM(require("path"), 1);
+var import_promises6 = require("fs/promises");
+var import_ajv = __toESM(require_ajv(), 1);
+var import_child_process2 = require("child_process");
+var import_util2 = require("util");
 var AUDIT_DIR = ".policy-semver";
 var AUDIT_FILE = "last-release.json";
-
-// ../core/src/audit/write-last-release.ts
-var import_promises = require("fs/promises");
-var import_node_path = __toESM(require("path"), 1);
 function lastReleaseRelPath() {
   return `${AUDIT_DIR}/${AUDIT_FILE}`;
 }
 function lastReleasePath(cwd) {
-  return import_node_path.default.join(cwd, AUDIT_DIR, AUDIT_FILE);
+  return import_path.default.join(cwd, AUDIT_DIR, AUDIT_FILE);
 }
 async function writeLastRelease(input) {
   const record = {
@@ -47521,7 +47534,7 @@ async function writeLastRelease(input) {
     tag: input.tag,
     at: input.at ?? (/* @__PURE__ */ new Date()).toISOString()
   };
-  await (0, import_promises.mkdir)(import_node_path.default.join(input.cwd, AUDIT_DIR), { recursive: true });
+  await (0, import_promises.mkdir)(import_path.default.join(input.cwd, AUDIT_DIR), { recursive: true });
   await (0, import_promises.writeFile)(
     lastReleasePath(input.cwd),
     `${JSON.stringify(record, null, 2)}
@@ -47530,8 +47543,6 @@ async function writeLastRelease(input) {
   );
   return record;
 }
-
-// ../core/src/dual-source/assert-match.ts
 function assertDualSourceMatch(versionFileVersion, packageJsonVersion) {
   if (versionFileVersion !== packageJsonVersion) {
     throw new Error(
@@ -47539,8 +47550,6 @@ function assertDualSourceMatch(versionFileVersion, packageJsonVersion) {
     );
   }
 }
-
-// ../core/src/bump/parse-version.ts
 var SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)$/;
 function isSemVerString(value) {
   return SEMVER_RE.test(value.trim());
@@ -47560,11 +47569,7 @@ function parseSemVer(version) {
 function formatSemVer(parts) {
   return `${parts.major}.${parts.minor}.${parts.patch}`;
 }
-
-// ../core/src/git/exec.ts
-var import_node_child_process = require("child_process");
-var import_node_util = require("util");
-var execFileAsync = (0, import_node_util.promisify)(import_node_child_process.execFile);
+var execFileAsync = (0, import_util.promisify)(import_child_process.execFile);
 var defaultGitExec = async (args, opts) => {
   const { stdout, stderr } = await execFileAsync("git", args, {
     cwd: opts?.cwd,
@@ -47573,8 +47578,6 @@ var defaultGitExec = async (args, opts) => {
   });
   return { stdout: String(stdout), stderr: String(stderr) };
 };
-
-// ../core/src/dual-source/read-at-ref.ts
 function parseVersionFile(raw, label) {
   const trimmed = raw.trim();
   if (!isSemVerString(trimmed)) {
@@ -47615,12 +47618,8 @@ async function readVersionAtRef(input) {
   if (pkg !== null) return pkg;
   return null;
 }
-
-// ../core/src/dual-source/read-sources.ts
-var import_promises2 = require("fs/promises");
-var import_node_path2 = __toESM(require("path"), 1);
 async function tryReadVersionFile(cwd, rel) {
-  const p = import_node_path2.default.join(cwd, rel);
+  const p = import_path2.default.join(cwd, rel);
   try {
     const raw = (await (0, import_promises2.readFile)(p, "utf8")).trim();
     if (!isSemVerString(raw)) {
@@ -47633,7 +47632,7 @@ async function tryReadVersionFile(cwd, rel) {
   }
 }
 async function tryReadPackageJsonVersion(cwd, rel) {
-  const p = import_node_path2.default.join(cwd, rel);
+  const p = import_path2.default.join(cwd, rel);
   try {
     const pkg = JSON.parse(await (0, import_promises2.readFile)(p, "utf8"));
     if (typeof pkg.version !== "string" || !isSemVerString(pkg.version)) {
@@ -47656,16 +47655,12 @@ async function readBothConfigured(cwd, versionFile, packageJson) {
   if (pkg !== null) return pkg;
   throw new Error("readVersion: neither VERSION nor package.json found");
 }
-
-// ../core/src/dual-source/write-both.ts
-var import_promises3 = require("fs/promises");
-var import_node_path3 = __toESM(require("path"), 1);
 async function writeVersionFile(cwd, rel, nextVersion) {
-  await (0, import_promises3.writeFile)(import_node_path3.default.join(cwd, rel), `${nextVersion}
+  await (0, import_promises3.writeFile)(import_path3.default.join(cwd, rel), `${nextVersion}
 `, "utf8");
 }
 async function writePackageJsonVersion(cwd, rel, nextVersion) {
-  const p = import_node_path3.default.join(cwd, rel);
+  const p = import_path3.default.join(cwd, rel);
   const raw = await (0, import_promises3.readFile)(p, "utf8");
   const pkg = JSON.parse(raw);
   pkg.version = nextVersion;
@@ -47673,8 +47668,8 @@ async function writePackageJsonVersion(cwd, rel, nextVersion) {
 `, "utf8");
 }
 async function writeBothAtomically(input) {
-  const vfPath = import_node_path3.default.join(input.cwd, input.versionFile);
-  const pkgPath = import_node_path3.default.join(input.cwd, input.packageJson);
+  const vfPath = import_path3.default.join(input.cwd, input.versionFile);
+  const pkgPath = import_path3.default.join(input.cwd, input.packageJson);
   const vfPrev = await (0, import_promises3.readFile)(vfPath, "utf8");
   const pkgPrev = await (0, import_promises3.readFile)(pkgPath, "utf8");
   try {
@@ -47690,8 +47685,6 @@ async function writeBothAtomically(input) {
     throw err;
   }
 }
-
-// ../core/src/bump/apply-bump.ts
 function applyBump(input) {
   const { kind, currentVersion, envMajor } = input;
   const cur = parseSemVer(currentVersion);
@@ -47728,16 +47721,10 @@ function applyBump(input) {
     }
   }
 }
-
-// ../core/src/bump/locks.ts
 var BOT_SKIP_TRAILER = "[skip version]";
-
-// ../core/src/bump/bot-message.ts
 function formatBotBumpCommitMessage(nextVersion, tagPrefix = "v") {
   return `chore(release): ${tagPrefix}${nextVersion} ${BOT_SKIP_TRAILER}`;
 }
-
-// ../core/src/bump/guards.ts
 function decideBumpGuards(ctx) {
   const reasons = [];
   let allowWrite = true;
@@ -47792,9 +47779,6 @@ function decideBumpGuards(ctx) {
 function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
-
-// ../core/src/bump/read-version.ts
-var import_node_path4 = __toESM(require("path"), 1);
 async function readVersion(input) {
   const { cwd, files } = input;
   const hasVf = Boolean(files.versionFile);
@@ -47810,7 +47794,7 @@ async function readVersion(input) {
     const vf = await tryReadVersionFile(cwd, files.versionFile);
     if (vf === null) {
       throw new Error(
-        `readVersion: VERSION not found at ${import_node_path4.default.join(cwd, files.versionFile)}`
+        `readVersion: VERSION not found at ${import_path4.default.join(cwd, files.versionFile)}`
       );
     }
     return vf;
@@ -47822,23 +47806,19 @@ async function readVersion(input) {
     );
     if (pkg === null) {
       throw new Error(
-        `readVersion: package.json not found at ${import_node_path4.default.join(cwd, files.packageJson)}`
+        `readVersion: package.json not found at ${import_path4.default.join(cwd, files.packageJson)}`
       );
     }
     return pkg;
   }
   throw new Error("readVersion: no versionFiles configured");
 }
-
-// ../core/src/bump/write-version.ts
-var import_promises4 = require("fs/promises");
-var import_node_path5 = __toESM(require("path"), 1);
 async function writeVersionFile2(cwd, rel, nextVersion) {
-  await (0, import_promises4.writeFile)(import_node_path5.default.join(cwd, rel), `${nextVersion}
+  await (0, import_promises4.writeFile)(import_path5.default.join(cwd, rel), `${nextVersion}
 `, "utf8");
 }
 async function writePackageJsonVersion2(cwd, rel, nextVersion) {
-  const p = import_node_path5.default.join(cwd, rel);
+  const p = import_path5.default.join(cwd, rel);
   const raw = await (0, import_promises4.readFile)(p, "utf8");
   const pkg = JSON.parse(raw);
   pkg.version = nextVersion;
@@ -47849,7 +47829,7 @@ async function writeSingleSource(cwd, nextVersion, kind, rel) {
   if (kind === "versionFile") {
     let current = "";
     try {
-      current = (await (0, import_promises4.readFile)(import_node_path5.default.join(cwd, rel), "utf8")).trim();
+      current = (await (0, import_promises4.readFile)(import_path5.default.join(cwd, rel), "utf8")).trim();
     } catch (err) {
       if (err.code !== "ENOENT") throw err;
     }
@@ -47859,7 +47839,7 @@ async function writeSingleSource(cwd, nextVersion, kind, rel) {
     await writeVersionFile2(cwd, rel, nextVersion);
     return { nextVersion, wrote: true, reason: "written" };
   }
-  const raw = await (0, import_promises4.readFile)(import_node_path5.default.join(cwd, rel), "utf8");
+  const raw = await (0, import_promises4.readFile)(import_path5.default.join(cwd, rel), "utf8");
   const pkg = JSON.parse(raw);
   if (pkg.version === nextVersion) {
     return { nextVersion, wrote: false, reason: "already-current" };
@@ -47920,8 +47900,6 @@ async function writeVersion(input) {
   }
   throw new Error("writeVersion: no versionFiles configured");
 }
-
-// ../core/src/changelog/locks.ts
 var BUCKET_TO_SECTION = {
   feat: "Added",
   fix: "Fixed",
@@ -47930,8 +47908,6 @@ var BUCKET_TO_SECTION = {
   // never mutate for docs-only / kind none
   "major-note": "Changed"
 };
-
-// ../core/src/changelog/map-commits.ts
 function firstLine(text) {
   return text.split("\n")[0] ?? "";
 }
@@ -48000,12 +47976,6 @@ function renderReleaseSection(input) {
   return `${lines.join("\n").trimEnd()}
 `;
 }
-
-// ../core/src/changelog/write-changelog.ts
-var import_promises5 = require("fs/promises");
-var import_node_path6 = __toESM(require("path"), 1);
-
-// ../core/src/github/locks.ts
 var SECRET_REDACT_PATTERNS = [
   /\bghp_[A-Za-z0-9]{20,}\b/g,
   /\bgho_[A-Za-z0-9]{20,}\b/g,
@@ -48015,8 +47985,6 @@ var SECRET_REDACT_PATTERNS = [
 ];
 var SECRET_REDACT_REPLACEMENT = "[REDACTED]";
 var TAG_EXISTS_FAILS = true;
-
-// ../core/src/github/redact.ts
 function redactSecrets(text) {
   let out = text;
   for (const re of SECRET_REDACT_PATTERNS) {
@@ -48024,8 +47992,6 @@ function redactSecrets(text) {
   }
   return out;
 }
-
-// ../core/src/changelog/write-changelog.ts
 var DEFAULT_HEADER = `# Changelog
 
 All notable changes to this project will be documented in this file.
@@ -48058,7 +48024,7 @@ ${section}`;
 }
 async function writeChangelog(input) {
   const rel = input.changelogPath;
-  const abs = import_node_path6.default.join(input.cwd, rel);
+  const abs = import_path6.default.join(input.cwd, rel);
   const attempt = input.attempt ?? 1;
   if (input.kind === "none") {
     return { wrote: false, reason: "kind-none", path: abs };
@@ -48109,8 +48075,6 @@ async function writeChangelog(input) {
     sectionMarkdown
   };
 }
-
-// ../core/src/classify/classify.ts
 function parseMajor(version) {
   const major = Number.parseInt(version.split(".")[0] ?? "", 10);
   if (Number.isNaN(major)) {
@@ -48215,12 +48179,6 @@ function classify(input) {
   if (hasDocs || texts.length === 0) return { kind: "none", warnings };
   return { kind: "none", warnings };
 }
-
-// ../core/src/config/load-config.ts
-var import_promises6 = require("fs/promises");
-var import_ajv = __toESM(require_ajv(), 1);
-
-// ../core/src/config/versioning.config.schema.json
 var versioning_config_schema_default = {
   $schema: "http://json-schema.org/draft-07/schema#",
   $id: "https://policy-semver.dev/schemas/versioning.config.schema.json",
@@ -48317,21 +48275,19 @@ var versioning_config_schema_default = {
     }
   }
 };
-
-// ../core/src/config/load-config.ts
 var ajv = new import_ajv.Ajv({
   allErrors: true,
   useDefaults: true
 });
 var validate = ajv.compile(versioning_config_schema_default);
-async function loadConfig(path8) {
+async function loadConfig(path72) {
   let raw;
   try {
-    raw = await (0, import_promises6.readFile)(path8, "utf8");
+    raw = await (0, import_promises6.readFile)(path72, "utf8");
   } catch (err) {
     const code = err.code;
     if (code === "ENOENT") {
-      throw new Error(`versioning config not found: ${path8}`);
+      throw new Error(`versioning config not found: ${path72}`);
     }
     throw err;
   }
@@ -48339,17 +48295,15 @@ async function loadConfig(path8) {
   try {
     data = JSON.parse(raw);
   } catch {
-    throw new Error(`versioning config is not valid JSON: ${path8}`);
+    throw new Error(`versioning config is not valid JSON: ${path72}`);
   }
   if (!validate(data)) {
     throw new Error(
-      `invalid versioning config (${path8}): ${ajv.errorsText(validate.errors, { separator: "; " })}`
+      `invalid versioning config (${path72}): ${ajv.errorsText(validate.errors, { separator: "; " })}`
     );
   }
   return data;
 }
-
-// ../core/src/git/commit.ts
 var BOT_NAME = "github-actions[bot]";
 var BOT_EMAIL = "41898282+github-actions[bot]@users.noreply.github.com";
 async function commitBumpFiles(input) {
@@ -48363,15 +48317,11 @@ async function commitBumpFiles(input) {
   await exec(["add", "--", ...input.paths], cwd);
   await exec(["commit", "-m", input.message], cwd);
 }
-
-// ../core/src/git/push.ts
 async function pushRefs(input) {
   const exec = input.exec ?? defaultGitExec;
   const remote = input.remote ?? "origin";
   await exec(["push", remote, ...input.refs], { cwd: input.cwd });
 }
-
-// ../core/src/git/tag.ts
 async function tagExists(cwd, tag, exec = defaultGitExec) {
   try {
     await exec(["rev-parse", "-q", "--verify", `refs/tags/${tag}`], {
@@ -48422,8 +48372,6 @@ async function assertRemoteTagCompatible(input) {
     `mirror tag conflict: ${input.tag} remote=${remoteSha} local HEAD=${headSha}`
   );
 }
-
-// ../core/src/github/create-release.ts
 function statusOf(err) {
   return err.status;
 }
@@ -48452,19 +48400,13 @@ async function createGitHubRelease(input) {
     ...input.targetCommitish !== void 0 ? { target_commitish: input.targetCommitish } : {}
   });
 }
-
-// ../core/src/hooks/locks.ts
 var HOOK_ENV = {
   version: "POLICY_SEMVER_VERSION",
   kind: "POLICY_SEMVER_KIND",
   dryRun: "POLICY_SEMVER_DRY_RUN"
 };
 var HOOK_SHELL = "sh";
-
-// ../core/src/hooks/run-hook.ts
-var import_node_child_process2 = require("child_process");
-var import_node_util2 = require("util");
-var execFileAsync2 = (0, import_node_util2.promisify)(import_node_child_process2.execFile);
+var execFileAsync2 = (0, import_util2.promisify)(import_child_process2.execFile);
 var defaultHookExec = async (command, opts) => {
   const { stdout, stderr } = await execFileAsync2(HOOK_SHELL, ["-c", command], {
     cwd: opts.cwd,
@@ -48506,8 +48448,6 @@ async function runHook(input) {
     throw new Error(`hook ${input.name} failed (exit ${code}): ${detail}`);
   }
 }
-
-// ../core/src/release/run-release.ts
 async function runRelease(input) {
   const kind = input.kind;
   if (kind === "none") {
@@ -48698,9 +48638,9 @@ function decideActionMode(input) {
 }
 
 // src/load-commits.ts
-var import_node_child_process3 = require("child_process");
-var import_node_util3 = require("util");
-var execFileAsync3 = (0, import_node_util3.promisify)(import_node_child_process3.execFile);
+var import_node_child_process = require("child_process");
+var import_node_util = require("util");
+var execFileAsync3 = (0, import_node_util.promisify)(import_node_child_process.execFile);
 async function loadCommitsFromGit(cwd) {
   try {
     const { stdout } = await execFileAsync3(
@@ -48772,9 +48712,9 @@ function writeFailureMessage(err) {
 }
 
 // src/write-release.ts
-var import_github2 = __toESM(require_github(), 1);
+var import_github = __toESM(require_github(), 1);
 function toReposOctokit(token) {
-  const octokit = (0, import_github2.getOctokit)(token);
+  const octokit = (0, import_github.getOctokit)(token);
   return {
     repos: {
       getReleaseByTag: (p) => octokit.rest.repos.getReleaseByTag(p),
@@ -48805,33 +48745,33 @@ async function runAction() {
   const forceDryRun = getBooleanInput("dry-run");
   const token = process.env.POLICY_SEMVER_TOKEN?.trim() || getInput("token") || process.env.GITHUB_TOKEN || "";
   const cwd = process.env.GITHUB_WORKSPACE || process.cwd();
-  const config = await loadConfig(import_node_path7.default.join(cwd, configPath));
+  const config = await loadConfig(import_node_path.default.join(cwd, configPath));
   const files = toVersionFiles(config.versionFiles);
-  const payload = import_github3.context.payload;
+  const payload = import_github2.context.payload;
   const pr = payload.pull_request;
   const mergeGroup = payload.merge_group;
   const isFork = Boolean(pr?.head?.repo?.fork);
-  const baseBranch = pr?.base?.ref ?? (mergeGroup?.base_ref !== void 0 ? shortRef(mergeGroup.base_ref) : shortRef(import_github3.context.ref));
+  const baseBranch = pr?.base?.ref ?? (mergeGroup?.base_ref !== void 0 ? shortRef(mergeGroup.base_ref) : shortRef(import_github2.context.ref));
   const headBranch = pr?.head?.ref ?? (mergeGroup?.head_ref !== void 0 ? shortRef(mergeGroup.head_ref) : "");
   const labels = (pr?.labels ?? []).map((l) => l.name);
-  const payloadAction = typeof import_github3.context.payload.action === "string" ? import_github3.context.payload.action : void 0;
+  const payloadAction = typeof import_github2.context.payload.action === "string" ? import_github2.context.payload.action : void 0;
   const decision = decideActionMode({
     isFork,
     baseBranch,
     headBranch,
     prodBranch: config.prodBranch,
     developBranch: config.developBranch,
-    eventName: import_github3.context.eventName,
+    eventName: import_github2.context.eventName,
     ...payloadAction !== void 0 ? { action: payloadAction } : {},
     ...pr?.merged !== void 0 ? { merged: pr.merged } : {},
     forceDryRun
   });
   let commits = [];
-  const octokit = token ? (0, import_github3.getOctokit)(token) : null;
+  const octokit = token ? (0, import_github2.getOctokit)(token) : null;
   if (octokit && pr?.number) {
     const data = await octokit.paginate(octokit.rest.pulls.listCommits, {
-      owner: import_github3.context.repo.owner,
-      repo: import_github3.context.repo.repo,
+      owner: import_github2.context.repo.owner,
+      repo: import_github2.context.repo.repo,
       pull_number: pr.number,
       per_page: 100
     });
@@ -48901,8 +48841,8 @@ async function runAction() {
   if ((decision.mode === "dry-run-comment" || decision.mode === "force-none") && octokit && pr?.number) {
     await upsertStickyComment({
       octokit,
-      owner: import_github3.context.repo.owner,
-      repo: import_github3.context.repo.repo,
+      owner: import_github2.context.repo.owner,
+      repo: import_github2.context.repo.repo,
       issueNumber: pr.number,
       body: `### PolicySemVer (dry-run)
 \`\`\`
@@ -48962,8 +48902,8 @@ ${summary2}
         paths,
         branch: config.prodBranch,
         sectionMarkdown: changelog.sectionMarkdown ?? "",
-        owner: import_github3.context.repo.owner,
-        repo: import_github3.context.repo.repo,
+        owner: import_github2.context.repo.owner,
+        repo: import_github2.context.repo.repo,
         token,
         hooks: {
           afterTag: config.hooks.afterTag,

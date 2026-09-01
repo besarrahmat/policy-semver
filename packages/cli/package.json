@@ -1,15 +1,45 @@
 {
   "name": "policy-semver",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Policy-first SemVer automation for deployed apps",
   "type": "module",
   "bin": {
     "policy-semver": "./dist/bin.js"
   },
   "files": [
     "dist",
+    "LICENSE",
     "README.md"
   ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/besarrahmat/policy-semver.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/besarrahmat/policy-semver#readme",
+  "bugs": {
+    "url": "https://github.com/besarrahmat/policy-semver/issues"
+  },
+  "keywords": [
+    "semver",
+    "versioning",
+    "github-actions",
+    "conventional-commits"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --config ../../vitest.config.ts",

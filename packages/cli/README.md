@@ -2,7 +2,11 @@
 
 Thin adapter over [`@policy-semver/core`](../core). Does **not** re-implement classify / SemVer / changelog rules.
 
-> Package is still `private` until publish phase. Use workspace build locally — do not expect public `npx` yet.
+npm CLI vs GitHub Action are **different channels**. Action install and pin-by-SHA: root [README](../../README.md#install-channels).
+
+```bash
+npx policy-semver@0.1.0 classify --help
+```
 
 ## Requirements
 
@@ -60,9 +64,9 @@ Core owns policy; this package owns argv, git status/log, and printing.
 ## How `bin` works
 
 1. `"bin": { "policy-semver": "./dist/bin.js" }` — after install, npm/pnpm create a shim named `policy-semver` that runs that file.
-2. `npx policy-semver@x.y.z …` would download that version and run the shim — **not available yet** (`private: true` until publish phase).
-3. The shim target must exist **inside the published tarball**. `"files": ["dist", "README.md"]` allowlists what goes in the pack. Always **build before** pack/publish (`dist/` is gitignored).
-4. Until publish phase, run only via workspace:
+2. `npx policy-semver@0.1.0 …` downloads that version and runs the shim.
+3. The shim target must exist **inside the published tarball**. `"files": ["dist", "LICENSE", "README.md"]` allowlists what goes in the pack. Always **build before** pack/publish (`dist/` is gitignored).
+4. Contributors run via this workspace:
 
 ```bash
 pnpm --filter ./packages/cli build
@@ -70,7 +74,7 @@ pnpm policy-semver --help
 node packages/cli/dist/bin.js --help
 ```
 
-Inspect the future tarball without publishing:
+Inspect a tarball without publishing:
 
 ```bash
 pnpm --filter ./packages/cli run pack:dry
