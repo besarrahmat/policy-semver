@@ -43,7 +43,7 @@ Default files are root `VERSION` and root `package.json` `"version"`. If both ex
 
 ### 3. Add `.github/workflows/policy-semver.yml`
 
-Replace `<full-commit-sha>` with a 40-character commit from [besarrahmat/policy-semver](https://github.com/besarrahmat/policy-semver) that contains `dist/index.js`. Copy it from the commit page, from a clone (`git rev-parse origin/main`), or `git ls-remote https://github.com/besarrahmat/policy-semver.git refs/heads/main` (needs credentials if the repo is private). Do not pin `@main` or `@dev`.
+Replace `<full-commit-sha>` with a 40-character commit from [besarrahmat/policy-semver](https://github.com/besarrahmat/policy-semver) that contains `dist/index.js`. Copy it from the commit page, from a clone (`git rev-parse origin/main`), or `git ls-remote https://github.com/besarrahmat/policy-semver.git refs/heads/main`. Do not pin `@main` or `@dev`.
 
 ```yaml
 name: PolicySemVer

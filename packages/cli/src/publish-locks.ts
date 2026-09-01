@@ -1,15 +1,16 @@
 /**
- * Phase 11.A — public npm / provenance docs locks
+ * Public npm / provenance locks
  *
- * Official refs (re-read before changing locks or adding publish.yml):
+ * Official refs:
  * - https://docs.npmjs.com/trusted-publishers/
  * - https://docs.npmjs.com/generating-provenance-statements
  *
- * Re-verified: 2026-08-22 (npm docs last-edited 2026-06-04 / 2026-05-04).
+ * Re-verified: 2026-09-01 (npm docs last-edited 2026-06-04 / 2026-05-04).
  *
- * 11.A is the docs gate only. Do **not** remove `"private": true`, do **not**
- * add `.github/workflows/publish.yml`, and do **not** `npm publish` here.
- * Manifest + workflow: 11.B / 11.B3. First public version: **0.1.0** (not 0.0.0).
+ * **0.1.0 is on the registry** (laptop publish, no OIDC attestation). Do **not**
+ * unpublish or overwrite it. Next provenance publish is **0.1.1** from
+ * `.github/workflows/publish.yml` (tag `v0.1.1`) after Trusted Publisher is set
+ * on both packages. Root and `@policy-semver/action` stay `"private": true`.
  *
  * ## Trusted publishing (OIDC)
  * | Requirement | Lock |
@@ -41,12 +42,13 @@
  *
  * Publish **core first**, then CLI. `workspace:*` is rewritten on pack/publish.
  *
- * Intended `files` allowlist (applied in 11.B): `dist`, `LICENSE`, `README.md`.
+ * `files` allowlist: `dist`, `LICENSE`, `README.md`.
  *
- * ## Operator (before first publish)
- * npm account 2FA on. Create the `@policy-semver` org/scope. Make this GitHub
- * repo **public** before a provenance publish. Names were free (registry 404)
- * as of 2026-08-22 — re-check with `npm view` until first publish.
+ * ## Operator
+ * npm account 2FA on. GitHub repo is **public**. Attach Trusted Publisher on
+ * npmjs.com for **both** `policy-semver` and `@policy-semver/core` (owner
+ * `besarrahmat`, repo `policy-semver`, file `publish.yml`, allow `npm publish`,
+ * environment empty) before the first OIDC tag publish.
  *
  * ## Immutability
  * Published versions cannot be overwritten. Fixes are `0.1.1`, not a republish
@@ -103,9 +105,7 @@ export const NPM_PACKAGES = {
 export const NPM_OPERATOR = {
   twoFactorRequired: true,
   scopeOrg: "@policy-semver",
-  recheckNamesUntilFirstPublish: [
-    "npm view policy-semver version",
-    "npm view @policy-semver/core version",
-  ] as const,
-  expect404UntilFirstPublish: true,
+  expect404UntilFirstPublish: false,
+  firstPublicVersionPublishedWithoutOidcProvenance: true,
+  nextOidcPublishVersion: "0.1.1",
 } as const;

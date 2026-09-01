@@ -29,7 +29,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm -r run build
+      - run: pnpm build
 
       - run: pnpm --filter '@policy-semver/core' publish --access public --no-git-checks
         env:

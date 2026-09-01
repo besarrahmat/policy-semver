@@ -11,7 +11,7 @@
  * | Never re-implement | classify / SemVer math / changelog format / dual-source rules |
  * | Bin name | `policy-semver` |
  * | Published entry (after build) | `"bin": { "policy-semver": "./dist/bin.js" }` |
- * | Until publish | workspace / `node dist/bin.js` only — no public `npx` expectation |
+ * | Public CLI | `npx policy-semver@0.1.0` — workspace / `node dist/bin.js` for contrib |
  * | Public npm | `publish-locks.ts` (trusted publishing + provenance) |
  *
  * ## Build (plan tsup)

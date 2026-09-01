@@ -30,12 +30,12 @@ jobs:
           # git push uses this checkout token. If github-actions[bot] cannot
           # push protected prod, set a contents:write PAT/App here (not the Action-repo read PAT).
           # token: ${{ secrets.POLICY_SEMVER_WRITE_TOKEN }}
-      # Private action repo: `uses: owner/policy-semver@ref` 404s from another repo
-      # (personal-account private). Checkout with a PAT (Contents: read on the
-      # Action repo), then run locally. persist-credentials: false so the PAT is
-      # not used for the consumer push. Pin a 40-character SHA (not @main / @dev).
-      # After the Action is public/org-internal, replace these two steps with:
+      # Canonical Action repo is public: prefer
       # uses: besarrahmat/policy-semver@<full-commit-sha>
+      # Private fork: `uses: owner/policy-semver@ref` 404s from another repo.
+      # Checkout with a PAT (Contents: read on the Action repo), then run locally.
+      # persist-credentials: false so the PAT is not used for the consumer push.
+      # Pin a 40-character SHA (not @main / @dev).
       - name: Checkout PolicySemVer action
         uses: actions/checkout@v7
         with:
