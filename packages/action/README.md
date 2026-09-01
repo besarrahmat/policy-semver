@@ -187,7 +187,7 @@ Copy [`examples/consumer.yml`](./examples/consumer.yml) into the **app** repo as
 
 Keep **bump → build → deploy**. The stub's `build` job `needs: version`; `deploy` `needs: build`. Both run only after a merged PR. A failed or skipped `version` job skips `build`/`deploy` because of `needs:`. Do not use `if: always()` on deploy. Do not put deploy steps in the version job.
 
-Until this Action is public (or org-internal with Access enabled), `uses: besarrahmat/policy-semver@ref` 404s from another private repo. The stub **checkouts** this repo with `secrets.POLICY_SEMVER_TOKEN` (fine-grained **Contents: read** on `policy-semver`) then `uses: ./.github/actions/policy-semver`. Set `persist-credentials: false` on that checkout so the PAT is not used to push the app repo.
+The canonical Action repo is **public** — prefer `uses: besarrahmat/policy-semver@<sha>` or `@v0.1.0`. A **private fork** still 404s from another private repo. This stub **checkouts** the Action repo with `secrets.POLICY_SEMVER_TOKEN` (fine-grained **Contents: read** on `policy-semver`) then `uses: ./.github/actions/policy-semver`. Set `persist-credentials: false` on that checkout so the PAT is not used to push the app repo.
 
 <!-- That checkout secret is **not** VE-42. VE-42 is a **write** token on the **consumer** (`contents: write` / ruleset bypass) passed as Action input `token` if `github-actions[bot]` cannot push `main`. -->
 

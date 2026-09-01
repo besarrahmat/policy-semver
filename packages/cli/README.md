@@ -1,8 +1,8 @@
 # policy-semver (CLI)
 
-Thin adapter over [`@policy-semver/core`](../core). Does **not** re-implement classify / SemVer / changelog rules.
+Thin adapter over [`@policy-semver/core`](https://www.npmjs.com/package/@policy-semver/core). Does **not** re-implement classify / SemVer / changelog rules.
 
-npm CLI vs GitHub Action are **different channels**. Action install and pin-by-SHA: root [README](../../README.md#install-channels).
+npm CLI vs GitHub Action are **different channels**. Action install and pin-by-SHA: [Install channels](https://github.com/besarrahmat/policy-semver#install-channels).
 
 ```bash
 npx policy-semver@0.1.0 classify --help
@@ -55,11 +55,7 @@ Exit codes: `0` ok · `1` policy/validation · `2` usage.
 
 ## Dependency
 
-```json
-"@policy-semver/core": "workspace:*"
-```
-
-Core owns policy; this package owns argv, git status/log, and printing.
+In git this package uses `"@policy-semver/core": "workspace:*"`. Pack and publish rewrite that to the published version (`0.1.0`). `npx policy-semver@0.1.0` depends on `@policy-semver/core@0.1.0`, not `workspace:*`.
 
 ## How `bin` works
 
