@@ -8,7 +8,7 @@ Public documentation is this README, [CONTRIBUTING.md](./CONTRIBUTING.md), packa
 
 ## Status
 
-The GitHub Action is usable: pin a commit SHA in production (see [Quickstart](#quickstart) and [Pin by SHA](#pin-by-sha)), or `@v0.1.0` / `@v0` for demos. The npm CLI is `npx policy-semver@0.1.0`. Major bumps stay manual via `APP_VERSION_MAJOR`. GitHub Marketplace: [PolicySemVer](https://github.com/marketplace/actions/policysemver). Day-to-day work is on `dev`; `main` is for releases.
+The GitHub Action is usable: pin a commit SHA in production (see [Quickstart](#quickstart) and [Pin by SHA](#pin-by-sha)), or `@v1.0.0` for demos. The npm CLI is `npx policy-semver@1.0.0`. Major bumps stay manual via `APP_VERSION_MAJOR`. GitHub Marketplace: [PolicySemVer](https://github.com/marketplace/actions/policysemver). Day-to-day work is on `dev`; `main` is for releases.
 
 ## Quickstart
 
@@ -78,7 +78,7 @@ jobs:
 
 Marketplace listing uses this root path. Path-based equivalent (dogfood only, not auto-listed): `uses: besarrahmat/policy-semver/packages/action@<full-commit-sha>`.
 
-This repository is **public**. `uses: besarrahmat/policy-semver@v0.1.0` (or a SHA) works from other repos. A **private fork** of this Action still 404s from another private repo — checkout workaround in [`packages/action/README.md`](./packages/action/README.md#consumer-workflow-stub).
+This repository is **public**. `uses: besarrahmat/policy-semver@v1.0.0` (or a SHA) works from other repos. A **private fork** of this Action still 404s from another private repo — checkout workaround in [`packages/action/README.md`](./packages/action/README.md#consumer-workflow-stub).
 
 ### 4. Open a pull request targeting `main`
 
@@ -99,7 +99,7 @@ Copy-out stubs (not workspace packages):
 | [`examples/node-app`](./examples/node-app/) | Console + HTTP version from `VERSION` / `package.json` |
 | [`examples/cloudflare-worker`](./examples/cloudflare-worker/) | Build-time inject into the Worker bundle (no CDN fetch) |
 
-How a second app pins the Action and `npx policy-semver@0.1.0`: [`examples/README.md`](./examples/README.md#a-second-consumer-app).
+How a second app pins the Action and `npx policy-semver@1.0.0`: [`examples/README.md`](./examples/README.md#a-second-consumer-app).
 
 ## Install channels
 
@@ -107,14 +107,14 @@ This repo produces three artifacts. They are not interchangeable.
 
 | Artifact | How to use | Runtime deps on the consumer |
 | --- | --- | --- |
-| GitHub Action | `uses: besarrahmat/policy-semver@<sha>` (prod) or `@v0.1.0` / `@v0` (demo) | **None** — runners execute committed `dist/index.js` |
-| `policy-semver` CLI | `npx policy-semver@0.1.0 …` | Resolved from npm; depends on `@policy-semver/core` |
-| `@policy-semver/core` | `pnpm add @policy-semver/core@0.1.0` | Resolved from npm |
+| GitHub Action | `uses: besarrahmat/policy-semver@<sha>` (prod) or `@v1.0.0` (demo) | **None** — runners execute committed `dist/index.js` |
+| `policy-semver` CLI | `npx policy-semver@1.0.0 …` | Resolved from npm; depends on `@policy-semver/core` |
+| `@policy-semver/core` | `pnpm add @policy-semver/core@1.0.0` | Resolved from npm |
 
 Contributors still run the workspace CLI: `pnpm policy-semver --help`.
 
 ```bash
-npx policy-semver@0.1.0 classify --help
+npx policy-semver@1.0.0 classify --help
 ```
 
 ```yaml
@@ -125,7 +125,7 @@ Do not `npm install` / `npx` the Action. Do not treat the CLI as a substitute fo
 
 ## Public npm
 
-Published: **`policy-semver@0.1.0`** and **`@policy-semver/core@0.1.0`**. Install the CLI with `npx policy-semver@0.1.0`. The Action stays git `uses:` (not npm), for example `@v0.1.0` or a full commit SHA.
+Published: **`policy-semver@1.0.0`** and **`@policy-semver/core@1.0.0`** (OIDC provenance from `publish.yml`). Install the CLI with `npx policy-semver@1.0.0`. The Action stays git `uses:` (not npm), for example `@v1.0.0` or a full commit SHA. `0.1.0` remains on the registry (laptop publish, no provenance).
 
 | Package | Access |
 | --- | --- |
@@ -137,11 +137,11 @@ Publish uses [Trusted publishing](https://docs.npmjs.com/trusted-publishers/) (O
 
 `package.json` `repository.url` must be `git+https://github.com/besarrahmat/policy-semver.git`. Publishable packages use `"files"` (`dist`, `LICENSE`, `README.md`) and `publishConfig.access: public`.
 
-**Published versions are immutable.** A fix is `0.1.1`, not an overwrite of `0.1.0`.
+**Published versions are immutable.** A fix is `1.0.1`, not an overwrite of `1.0.0`. Do not republish `0.1.0` either (a 0.x fix would have been `0.1.1`).
 
 ## GitHub Marketplace
 
-**Live:** [PolicySemVer on GitHub Marketplace](https://github.com/marketplace/actions/policysemver) (Release `v0.1.0`, 2026-09-01). Marketplace is discoverability. Production still pins a commit SHA. Do **not** create a `v0.*` / `v1.*` tag only to refresh the listing — [`.github/workflows/publish.yml`](./.github/workflows/publish.yml) publishes npm on those tags. Later Releases should keep **Publish this Action to the GitHub Marketplace** checked.
+**Live:** [PolicySemVer on GitHub Marketplace](https://github.com/marketplace/actions/policysemver) (Release `v1.0.0`, 2026-09-02; first listed from `v0.1.0` on 2026-09-01). Marketplace is discoverability. Production still pins a commit SHA. Do **not** create a `v0.*` / `v1.*` tag only to refresh the listing — [`.github/workflows/publish.yml`](./.github/workflows/publish.yml) publishes npm on those tags. Later Releases should keep **Publish this Action to the GitHub Marketplace** checked.
 
 | Requirement | This repo |
 | --- | --- |
@@ -149,12 +149,12 @@ Publish uses [Trusted publishing](https://docs.npmjs.com/trusted-publishers/) (O
 | Root `action.yml` (layout A) | Yes — subfolder [`packages/action/action.yml`](./packages/action/action.yml) is dogfood only and is **not** auto-listed |
 | Unique `name` | `PolicySemVer` (listed name; unique vs Marketplace/user/org at list time 2026-09-01) |
 | Branding | `icon: tag`, `color: blue` ([metadata syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/metadata-syntax) Feather v4.28.0 / allowed colors) |
-| Short description | Root `action.yml`: deployed apps + major via `APP_VERSION_MAJOR`. The live card still uses the `v0.1.0` copy until the next Marketplace-checked Release |
+| Short description | Root `action.yml`: deployed apps + major via `APP_VERSION_MAJOR`. The live card follows Release `v1.0.0` |
 | Categories (Release form, not YAML) | Primary **Continuous integration**, secondary **Publishing** |
 | Account 2FA | Enabled (required to publish; listing is live) |
 | [GitHub Marketplace Developer Agreement](https://docs.github.com/en/site-policy/github-terms/github-marketplace-developer-agreement) | Accepted (listing is live) |
 
-Official steps: [Publishing actions in GitHub Marketplace](https://docs.github.com/en/actions/how-tos/create-and-publish-actions/publish-in-github-marketplace). Do not rename `action.yml` to `action.yaml` (hides prior Marketplace versions). The Marketplace card follows `action.yml` on the **Release tag**; the major-via-env description on `dev` lands on the listing with the next Marketplace-checked Release.
+Official steps: [Publishing actions in GitHub Marketplace](https://docs.github.com/en/actions/how-tos/create-and-publish-actions/publish-in-github-marketplace). Do not rename `action.yml` to `action.yaml` (hides prior Marketplace versions). The Marketplace card follows `action.yml` on the **Release tag**.
 
 Marketplace is discoverability. Production still pins a commit SHA:
 
@@ -164,7 +164,7 @@ Marketplace is discoverability. Production still pins a commit SHA:
 
 ## Pin by SHA
 
-Production workflows pin a **full commit SHA**. Moving major tags (`v0` / `v1`) and the release tag `@v0.1.0` are acceptable for demos. Floating `@main` / `@dev` is not.
+Production workflows pin a **full commit SHA**. The release tag `@v1.0.0` is acceptable for demos. Do not mint a moving `v1` tag only to refresh Marketplace — `v1.*` triggers npm publish. Floating `@main` / `@dev` is not.
 
 ```yaml
 - uses: besarrahmat/policy-semver@<full-commit-sha>
@@ -260,9 +260,9 @@ The Action **skips `push` events**, so a direct push does not bump. Branch prote
 
 This repository versions itself with `.github/workflows/policy-semver.yml` (`uses: ./packages/action`) on pull requests targeting `main`.
 
-Major stays manual: repository variable `APP_VERSION_MAJOR` (keep `0` until a human raises it). If branch protection blocks `github-actions[bot]`, set secret `POLICY_SEMVER_TOKEN` (PAT or GitHub App with `contents: write` and ruleset bypass) so the bump commit can push to `main`. Details: [`packages/action/README.md`](./packages/action/README.md) (Token when `GITHUB_TOKEN` cannot push) and [CONTRIBUTING.md](./CONTRIBUTING.md).
+Major stays manual: repository variable `APP_VERSION_MAJOR` (this repo is `1`; raise to `2` for `2.0.0`). If branch protection blocks `github-actions[bot]`, set secret `POLICY_SEMVER_TOKEN` (PAT or GitHub App with `contents: write` and ruleset bypass) so the bump commit can push to `main`. Details: [`packages/action/README.md`](./packages/action/README.md) (Token when `GITHUB_TOKEN` cannot push) and [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-Manual edits to `VERSION` / root `package.json` `version` are sunset as of 2026-08-22. After the dogfood workflow is live, do not bump those files by hand. Nested `packages/*/package.json` stay `0.0.0` until later (`0.1.0` lockstep). There is no Changesets process in this repo.
+Manual edits to `VERSION` / root `package.json` `version` are sunset as of 2026-08-22. After the dogfood workflow is live, do not bump those files by hand. Nested `packages/*/package.json` are lockstepped at **1.0.0** by hand; the Action still only writes root `VERSION` + root `package.json`. There is no Changesets process in this repo.
 
 ## Community
 

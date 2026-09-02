@@ -67,14 +67,14 @@ it("each example README has workspace classify and npx after publish", () => {
   for (const dir of ["examples/node-app", "examples/cloudflare-worker"]) {
     const readme = read(`${dir}/README.md`);
     expect(readme).toMatch(/pnpm policy-semver classify --cwd/);
-    expect(readme).toMatch(/npx policy-semver@0\.1\.0 classify/);
+    expect(readme).toMatch(/npx policy-semver@1\.0\.0 classify/);
     expect(readme).toMatch(/404s from another private repo/);
     expect(readme).not.toMatch(/IMPLEMENTATION-PLAN/);
     expect(readme).not.toMatch(/VE-STATUS/);
   }
   const index = read("examples/README.md");
   expect(index).toMatch(/A second consumer app/);
-  expect(index).toMatch(/npx policy-semver@0\.1\.0 classify/);
+  expect(index).toMatch(/npx policy-semver@1\.0\.0 classify/);
   expect(index).toMatch(/Ranked classifier fixtures/);
   expect(index).toMatch(/<full-commit-sha>/);
 });

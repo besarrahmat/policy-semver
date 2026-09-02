@@ -21,7 +21,7 @@
  * `createGitHubRelease` and `writeChangelog` run `redactSecrets` before send/disk.
  *
  * ## Consumers
- * `examples/*` use published `npx policy-semver@0.1.0` and git `uses:` SHA pins
+ * `examples/*` use published `npx policy-semver@1.0.0` and git `uses:` SHA pins
  * — not `file:` / workspace Action installs. Production pin-by-SHA stays
  * recommended. Dependabot + dependency-review-action@v5 on this repo.
  */

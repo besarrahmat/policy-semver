@@ -14,7 +14,7 @@ function read(rel: string): string {
 }
 
 it("locks launch flags", () => {
-  expect(LAUNCH.npmCli).toBe("npx policy-semver@0.1.0");
+  expect(LAUNCH.npmCli).toBe("npx policy-semver@1.0.0");
   expect(LAUNCH.marketplaceUrl).toContain("marketplace/actions/policysemver");
   expect(LAUNCH.quickstartUnder15Minutes).toBe(true);
   expect(LAUNCH.consumersDependOnPublishedArtifacts).toBe(true);
@@ -62,7 +62,7 @@ it("consumers depend on published artifacts, not vendored packages/", () => {
   const examples = read("examples/README.md");
   expect(examples).toMatch(/Do not import `@policy-semver\/core`/);
   expect(examples).toMatch(/Do not copy `packages\/core`/);
-  expect(examples).toMatch(/npx policy-semver@0\.1\.0/);
+  expect(examples).toMatch(/npx policy-semver@1\.0\.0/);
   expect(read("pnpm-workspace.yaml")).not.toMatch(/^\s+-\s+"examples/m);
   for (const dir of ["examples/node-app", "examples/cloudflare-worker"]) {
     expect(read(`${dir}/package.json`)).not.toMatch(/"file:/);

@@ -38,10 +38,12 @@ it("locks 12.C harden flags", () => {
   expect(actionPkg.dependencies?.["@actions/github"]).toMatch(/9\.1\.1/);
 });
 
-it("SECURITY.md supports 0.1.x and drops pre-release language", () => {
+it("SECURITY.md supports 1.x and drops pre-release language", () => {
   const security = read("SECURITY.md");
-  expect(security).toMatch(/`0\.1\.x`/);
+  expect(security).toMatch(/`1\.x`/);
+  expect(security).toMatch(/`1\.0\.x`/);
   expect(security).toMatch(/Yes/);
+  expect(security).toMatch(/`0\.1\.x`/);
   expect(security).toMatch(/pre-`0\.1\.0`/);
   expect(security).not.toMatch(/when published/);
   expect(security).not.toMatch(/Until the first public release/);
@@ -93,7 +95,7 @@ it("examples use published Action/npm, not file: installs", () => {
     const wf = read(`${dir}/.github/workflows/policy-semver.yml`);
     expect(wf).toMatch(/uses:\s*besarrahmat\/policy-semver@<full-commit-sha>/);
     expect(wf).not.toMatch(/uses:\s*\.\//);
-    expect(read(`${dir}/README.md`)).toMatch(/npx policy-semver@0\.1\.0/);
+    expect(read(`${dir}/README.md`)).toMatch(/npx policy-semver@1\.0\.0/);
   }
 });
 

@@ -5,7 +5,7 @@ Thin adapter over [`@policy-semver/core`](https://www.npmjs.com/package/@policy-
 npm CLI vs GitHub Action are **different channels**. Action install and pin-by-SHA: [Install channels](https://github.com/besarrahmat/policy-semver#install-channels).
 
 ```bash
-npx policy-semver@0.1.0 classify --help
+npx policy-semver@1.0.0 classify --help
 ```
 
 ## Requirements
@@ -55,12 +55,12 @@ Exit codes: `0` ok · `1` policy/validation · `2` usage.
 
 ## Dependency
 
-In git this package uses `"@policy-semver/core": "workspace:*"`. Pack and publish rewrite that to the published version (`0.1.0`). `npx policy-semver@0.1.0` depends on `@policy-semver/core@0.1.0`, not `workspace:*`.
+In git this package uses `"@policy-semver/core": "workspace:*"`. Pack and publish rewrite that to the published version (`1.0.0`). `npx policy-semver@1.0.0` depends on `@policy-semver/core@1.0.0`, not `workspace:*`.
 
 ## How `bin` works
 
 1. `"bin": { "policy-semver": "./dist/bin.js" }` — after install, npm/pnpm create a shim named `policy-semver` that runs that file.
-2. `npx policy-semver@0.1.0 …` downloads that version and runs the shim.
+2. `npx policy-semver@1.0.0 …` downloads that version and runs the shim.
 3. The shim target must exist **inside the published tarball**. `"files": ["dist", "LICENSE", "README.md"]` allowlists what goes in the pack. Always **build before** pack/publish (`dist/` is gitignored).
 4. Contributors run via this workspace:
 

@@ -22,13 +22,13 @@ A second deployed app (not this monorepo) wires the **published** artifacts like
 1. Copy [`node-app`](./node-app/) or [`cloudflare-worker`](./cloudflare-worker/) to a new repository.
 2. Pin the Action by SHA in `.github/workflows/policy-semver.yml` (prod):
    `uses: besarrahmat/policy-semver@<full-commit-sha>`
-   (path-based equivalent: `uses: besarrahmat/policy-semver/packages/action@<sha>`; demo `@v0.1.0`).
+   (path-based equivalent: `uses: besarrahmat/policy-semver/packages/action@<sha>`; demo `@v1.0.0`).
    [GitHub Marketplace](https://github.com/marketplace/actions/policysemver) is discoverability only — production still pins a SHA.
 3. Set repository variable `APP_VERSION_MAJOR=0`.
-4. From that app root: `npx policy-semver@0.1.0 classify` / `verify`.
+4. From that app root: `npx policy-semver@1.0.0 classify` / `verify`.
 5. Do not copy `packages/core` / `packages/cli` into the app.
 
-This Action repo is public, so `uses: besarrahmat/policy-semver@v0.1.0` works from other repos. A private fork still 404s — checkout workaround in [`packages/action/README.md`](../packages/action/README.md#consumer-workflow-stub).
+This Action repo is public, so `uses: besarrahmat/policy-semver@v1.0.0` works from other repos. A private fork still 404s — checkout workaround in [`packages/action/README.md`](../packages/action/README.md#consumer-workflow-stub).
 
 ## Migrate from another tool
 

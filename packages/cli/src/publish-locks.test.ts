@@ -46,7 +46,7 @@ it("locks first public 0.1.0, two public packages, OIDC provenance", () => {
   expect(NPM_OPERATOR.firstPublicVersionPublishedWithoutOidcProvenance).toBe(
     true,
   );
-  expect(NPM_OPERATOR.nextOidcPublishVersion).toBe("0.1.1");
+  expect(NPM_OPERATOR.nextOidcPublishVersion).toBe("1.0.1");
 });
 
 it("publisher Node pin and package names match the repo", () => {
@@ -100,6 +100,6 @@ it("root README documents provenance, public repo, and immutability", () => {
   expect(readme).toMatch(/id-token: write/);
   expect(readme).toMatch(/public GitHub repo/);
   expect(readme).toMatch(/immutable/);
-  expect(readme).toMatch(/0\.1\.1/);
+  expect(readme).toMatch(/1\.0\.1/);
   expect(readme).not.toMatch(/IMPLEMENTATION-PLAN/);
 });
