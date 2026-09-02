@@ -9,14 +9,19 @@ Consumer install (dry-run in under 15 minutes): root [README quickstart](../../R
 | Lock | Decision |
 | --- | --- |
 | Layout | **A** — root [`action.yml`](../../action.yml) + committed root [`dist/index.js`](../../dist/index.js) (Marketplace requires root metadata) |
+| Marketplace | **Live** — [PolicySemVer](https://github.com/marketplace/actions/policysemver) (`v0.1.0`). `name: PolicySemVer`, branding `tag` / `blue`, categories Continuous integration + Publishing. |
 | Runtime | `runs.using: node24` — do **not** regress to `node20` |
 | Bundle | Runners never `npm install` Action deps → **commit** the bundle |
 | Bundler | **tsup** (esbuild) CJS → root `dist/index.js`. ncc failed (`TS6059` / [ncc#1297](https://github.com/vercel/ncc/issues/1297)) |
 | Versioning | Consumers pin **commit SHA** (preferred) or a moving major tag (`v0` / `v1`); avoid `@main` / `@dev` in prod |
 
-Code locks: [`src/locks.ts`](./src/locks.ts).
+Code locks: [`src/locks.ts`](./src/locks.ts), [`src/marketplace-locks.ts`](./src/marketplace-locks.ts).
 
-Dogfood path-based `uses: ./packages/action` is allowed via [`action.yml`](./action.yml) (`main: ../../dist/index.js`) — **canonical** for Marketplace / `uses: org/repo@ref` is the **repo root**.
+Dogfood path-based `uses: ./packages/action` is allowed via [`action.yml`](./action.yml) (`main: ../../dist/index.js`) — **canonical** for Marketplace / `uses: org/repo@ref` is the **repo root**. Subfolder metadata is **not** auto-listed.
+
+### GitHub Marketplace
+
+**Live:** [PolicySemVer on GitHub Marketplace](https://github.com/marketplace/actions/policysemver). Keep the Marketplace checkbox on later Releases. Do not mint a `v0.*` tag only to refresh the listing (that triggers npm `publish.yml`). Production still pins a SHA.
 
 ### Bundler status
 
@@ -187,9 +192,9 @@ Copy [`examples/consumer.yml`](./examples/consumer.yml) into the **app** repo as
 
 Keep **bump → build → deploy**. The stub's `build` job `needs: version`; `deploy` `needs: build`. Both run only after a merged PR. A failed or skipped `version` job skips `build`/`deploy` because of `needs:`. Do not use `if: always()` on deploy. Do not put deploy steps in the version job.
 
-The canonical Action repo is **public** — prefer `uses: besarrahmat/policy-semver@<sha>` or `@v0.1.0`. A **private fork** still 404s from another private repo. This stub **checkouts** the Action repo with `secrets.POLICY_SEMVER_TOKEN` (fine-grained **Contents: read** on `policy-semver`) then `uses: ./.github/actions/policy-semver`. Set `persist-credentials: false` on that checkout so the PAT is not used to push the app repo.
+The stub uses public `uses: besarrahmat/policy-semver@<sha>` (Marketplace layout A). Demo `@v0.1.0` is OK. A **private fork** still 404s from another private repo — the same file has a commented checkout workaround (`secrets.POLICY_SEMVER_TOKEN` with Contents: **read** on `policy-semver`, then `uses: ./.github/actions/policy-semver`, `persist-credentials: false` so that PAT is not used to push the app repo).
 
-<!-- That checkout secret is **not** VE-42. VE-42 is a **write** token on the **consumer** (`contents: write` / ruleset bypass) passed as Action input `token` if `github-actions[bot]` cannot push `main`. -->
+<!-- The Action-repo checkout PAT (Contents: read) is not the consumer write token. If github-actions[bot] cannot push main, pass a contents:write / ruleset-bypass token as Action input `token`. -->
 
 ## App version at runtime
 

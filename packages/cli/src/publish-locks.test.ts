@@ -59,10 +59,10 @@ it("publisher Node pin and package names match the repo", () => {
   const cli = readJson("packages/cli/package.json");
   const core = readJson("packages/core/package.json");
   expect(cli.name).toBe("policy-semver");
-  expect(cli.version).toBe("0.1.0");
+  expect(cli.version).toBe("1.0.0");
   expect(cli.private).toBeUndefined();
   expect(core.name).toBe("@policy-semver/core");
-  expect(core.version).toBe("0.1.0");
+  expect(core.version).toBe("1.0.0");
   expect(core.private).toBeUndefined();
   expect(readJson("packages/action/package.json").private).toBe(true);
   const cliPub = cli.publishConfig as { access?: string; provenance?: boolean };

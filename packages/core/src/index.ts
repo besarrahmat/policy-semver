@@ -68,6 +68,7 @@ export {
   CONFIG_SCHEMA_URI,
   CONFIG_VALIDATOR,
   loadConfig,
+  WORKSPACES_V1,
 } from "./config/index.js";
 export {
   assertDualSourceMatch,

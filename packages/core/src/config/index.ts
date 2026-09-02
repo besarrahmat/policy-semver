@@ -5,3 +5,4 @@ export {
   CONFIG_VALIDATOR,
 } from "./locks.js";
 export type { VersioningConfig } from "./types.js";
+export { WORKSPACES_V1 } from "./workspaces-locks.js";

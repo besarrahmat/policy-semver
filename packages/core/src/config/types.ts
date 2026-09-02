@@ -13,5 +13,4 @@ export type VersioningConfig = {
     afterTag: string | null;
     afterRelease: string | null;
   };
-  workspaces?: Record<string, never> | null;
 };

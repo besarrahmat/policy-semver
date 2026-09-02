@@ -38,6 +38,8 @@
  * Sources stay under `packages/action/`; build emits to **repo-root** `dist/`.
  * Package-local `packages/action/action.yml` may mirror for path-based dogfood
  * (`main: ../../dist/index.js`) — canonical metadata for consumers/Marketplace is **root**.
+ *
+ * Listing / branding / operator: `marketplace-locks.ts`.
  */
 export const ACTION_LAYOUT = {
   id: "A",

@@ -18,3 +18,4 @@
 4. Set `expected.kind`. Include `expected.warnings` when the edge case specifies warnings (exact strings from `@policy-semver/core` `classify`).
 5. Run `pnpm test:fixtures` — fail-closed on kind/warning mismatch.
 6. Do **not** re-implement classify rules in the CLI; goldens only call core.
+7. Do **not** delete a golden to make CI pass. Change `expected.kind` / `warnings` only when the locked classify behavior changed, or add a new file.

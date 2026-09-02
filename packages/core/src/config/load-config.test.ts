@@ -97,4 +97,13 @@ describe("loadConfig", () => {
       loadConfig(fixture("invalid", "unknown-hook.json")),
     ).rejects.toThrow(/additional properties/i);
   });
+
+  it("fails closed on workspaces key (v1 Option B — omit entirely)", async () => {
+    await expect(
+      loadConfig(fixture("invalid", "workspaces-key.json")),
+    ).rejects.toThrow(/additional properties/i);
+    await expect(
+      loadConfig(fixture("invalid", "workspaces-null.json")),
+    ).rejects.toThrow(/additional properties/i);
+  });
 });

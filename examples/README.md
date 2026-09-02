@@ -13,7 +13,7 @@ v1 docs are README + these pages. There is no separate docs site.
 | [node-app](./node-app/) | Dual-source version files, sample workflow, console + HTTP version (consumer displays version) |
 | [cloudflare-worker](./cloudflare-worker/) | Wrangler stub; **build-time** inject of `VERSION` into the Worker bundle (do not read version from a CDN) |
 
-Production write workflow (build → deploy, merge queue, private Action checkout): [`packages/action/examples/consumer.yml`](../packages/action/examples/consumer.yml).
+Production write workflow (build → deploy, merge queue, private-fork checkout commented): [`packages/action/examples/consumer.yml`](../packages/action/examples/consumer.yml).
 
 ## A second consumer app
 
@@ -21,8 +21,9 @@ A second deployed app (not this monorepo) wires the **published** artifacts like
 
 1. Copy [`node-app`](./node-app/) or [`cloudflare-worker`](./cloudflare-worker/) to a new repository.
 2. Pin the Action by SHA in `.github/workflows/policy-semver.yml` (prod):
-   `uses: besarrahmat/policy-semver/packages/action@<full-commit-sha>`
-   (or root `uses: besarrahmat/policy-semver@<sha>` / demo `@v0.1.0`).
+   `uses: besarrahmat/policy-semver@<full-commit-sha>`
+   (path-based equivalent: `uses: besarrahmat/policy-semver/packages/action@<sha>`; demo `@v0.1.0`).
+   [GitHub Marketplace](https://github.com/marketplace/actions/policysemver) is discoverability only — production still pins a SHA.
 3. Set repository variable `APP_VERSION_MAJOR=0`.
 4. From that app root: `npx policy-semver@0.1.0 classify` / `verify`.
 5. Do not copy `packages/core` / `packages/cli` into the app.
@@ -50,7 +51,7 @@ PolicySemVer is for **deployed apps** with a develop/`main` topology and **manua
 | Sync prod→dev no bump | **Yes** | DIY | DIY | DIY | DIY |
 | CHANGELOG + GH Release | Yes | Yes | Yes | Yes | Yes |
 | Fork write-safe | **Yes** | DIY | DIY | DIY | N/A |
-| Ranked VE pack | **Yes** | No | No | No | No |
+| Ranked classifier fixtures | **Yes** | No | No | No | No |
 | Huge npm monorepo graph | Not v1 — use Changesets | Weak | Good | **Best** | DIY |
 
 This project does not claim to be better than Changesets for monorepos.

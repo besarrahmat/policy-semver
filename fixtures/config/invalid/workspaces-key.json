@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "1",
+  "workspaces": {
+    "paths": ["apps/web/**", "packages/ui/**"],
+    "mode": "skip-if-no-match"
+  }
+}
