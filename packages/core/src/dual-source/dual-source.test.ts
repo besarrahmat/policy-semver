@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -88,6 +88,130 @@ describe("dual-source module", () => {
       await readFile(path.join(cwd, "package.json"), "utf8"),
     ) as { version: string };
     expect(pkg.version).toBe("1.1.0");
+  });
+
+  it("writeVersion locksteps extra package.json files", async () => {
+    const cwd = await makeTempCwd();
+    await writeFile(path.join(cwd, "VERSION"), "1.0.0\n");
+    await writeFile(
+      path.join(cwd, "package.json"),
+      `${JSON.stringify({ name: "app", version: "1.0.0" }, null, 2)}\n`,
+    );
+    await mkdir(path.join(cwd, "packages/cli"), { recursive: true });
+    await writeFile(
+      path.join(cwd, "packages/cli/package.json"),
+      `${JSON.stringify({ name: "cli", version: "1.0.0" }, null, 2)}\n`,
+    );
+
+    const files = {
+      versionFile: "VERSION",
+      packageJson: "package.json",
+      extraPackageJson: ["packages/cli/package.json"],
+    };
+    const result = await writeVersion({
+      cwd,
+      nextVersion: "1.0.1",
+      dryRun: false,
+      allowWrite: true,
+      files,
+    });
+    expect(result.wrote).toBe(true);
+    expect((await readFile(path.join(cwd, "VERSION"), "utf8")).trim()).toBe(
+      "1.0.1",
+    );
+    const extra = JSON.parse(
+      await readFile(path.join(cwd, "packages/cli/package.json"), "utf8"),
+    ) as { version: string };
+    expect(extra.version).toBe("1.0.1");
+    await expect(readVersion({ cwd, files })).resolves.toBe("1.0.1");
+  });
+
+  it("already-current primary still writes stale extras", async () => {
+    const cwd = await makeTempCwd();
+    await writeFile(path.join(cwd, "VERSION"), "1.0.1\n");
+    await writeFile(
+      path.join(cwd, "package.json"),
+      `${JSON.stringify({ name: "app", version: "1.0.1" }, null, 2)}\n`,
+    );
+    await mkdir(path.join(cwd, "packages/cli"), { recursive: true });
+    await writeFile(
+      path.join(cwd, "packages/cli/package.json"),
+      `${JSON.stringify({ name: "cli", version: "1.0.0" }, null, 2)}\n`,
+    );
+
+    const files = {
+      versionFile: "VERSION",
+      packageJson: "package.json",
+      extraPackageJson: ["packages/cli/package.json"],
+    };
+    const result = await writeVersion({
+      cwd,
+      nextVersion: "1.0.1",
+      dryRun: false,
+      allowWrite: true,
+      files,
+    });
+    expect(result.wrote).toBe(true);
+    const extra = JSON.parse(
+      await readFile(path.join(cwd, "packages/cli/package.json"), "utf8"),
+    ) as { version: string };
+    expect(extra.version).toBe("1.0.1");
+  });
+
+  it("readVersion fails closed when extras drift", async () => {
+    const cwd = await makeTempCwd();
+    await writeFile(path.join(cwd, "VERSION"), "1.0.1\n");
+    await writeFile(
+      path.join(cwd, "package.json"),
+      `${JSON.stringify({ name: "app", version: "1.0.1" }, null, 2)}\n`,
+    );
+    await mkdir(path.join(cwd, "packages/cli"), { recursive: true });
+    await writeFile(
+      path.join(cwd, "packages/cli/package.json"),
+      `${JSON.stringify({ name: "cli", version: "1.0.0" }, null, 2)}\n`,
+    );
+    await expect(
+      readVersion({
+        cwd,
+        files: {
+          versionFile: "VERSION",
+          packageJson: "package.json",
+          extraPackageJson: ["packages/cli/package.json"],
+        },
+      }),
+    ).rejects.toThrow(/versionFiles mismatch/);
+  });
+
+  it("atomic rollback restores extras when a package.json write fails", async () => {
+    const cwd = await makeTempCwd();
+    await writeFile(path.join(cwd, "VERSION"), "1.0.0\n");
+    await writeFile(
+      path.join(cwd, "package.json"),
+      `${JSON.stringify({ name: "app", version: "1.0.0" }, null, 2)}\n`,
+    );
+    await mkdir(path.join(cwd, "packages/cli"), { recursive: true });
+    await writeFile(path.join(cwd, "packages/cli/package.json"), "NOT-JSON\n");
+
+    await expect(
+      writeBothAtomically({
+        cwd,
+        versionFile: "VERSION",
+        packageJson: "package.json",
+        extraPackageJson: ["packages/cli/package.json"],
+        nextVersion: "1.0.1",
+      }),
+    ).rejects.toThrow();
+
+    expect((await readFile(path.join(cwd, "VERSION"), "utf8")).trim()).toBe(
+      "1.0.0",
+    );
+    const pkg = JSON.parse(
+      await readFile(path.join(cwd, "package.json"), "utf8"),
+    ) as { version: string };
+    expect(pkg.version).toBe("1.0.0");
+    expect(
+      await readFile(path.join(cwd, "packages/cli/package.json"), "utf8"),
+    ).toBe("NOT-JSON\n");
   });
 
   it("atomic rollback restores both when second write fails", async () => {

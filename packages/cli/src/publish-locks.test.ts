@@ -56,14 +56,16 @@ it("publisher Node pin and package names match the repo", () => {
   const rootPkg = readJson("package.json");
   expect(rootPkg.name).toBe("policy-semver-monorepo");
   expect(rootPkg.private).toBe(true);
+  const version = readFileSync(path.join(root, "VERSION"), "utf8").trim();
   const cli = readJson("packages/cli/package.json");
   const core = readJson("packages/core/package.json");
   expect(cli.name).toBe("policy-semver");
-  expect(cli.version).toBe("1.0.0");
+  expect(cli.version).toBe(version);
   expect(cli.private).toBeUndefined();
   expect(core.name).toBe("@policy-semver/core");
-  expect(core.version).toBe("1.0.0");
+  expect(core.version).toBe(version);
   expect(core.private).toBeUndefined();
+  expect(rootPkg.version).toBe(version);
   expect(readJson("packages/action/package.json").private).toBe(true);
   const cliPub = cli.publishConfig as { access?: string; provenance?: boolean };
   const corePub = core.publishConfig as {
@@ -74,14 +76,23 @@ it("publisher Node pin and package names match the repo", () => {
   expect(cliPub.provenance).toBe(true);
   expect(corePub.access).toBe("public");
   expect(corePub.provenance).toBe(true);
+  const config = readJson("versioning.config.json");
+  expect(config.versionFiles).toEqual([
+    "VERSION",
+    "package.json",
+    "packages/cli/package.json",
+    "packages/core/package.json",
+  ]);
 });
 
-it("publish.yml is OIDC tag-only; CI builds before tests", () => {
+it("publish.yml is OIDC on tags (plus dispatch); CI builds before tests", () => {
   const publish = readFileSync(
     path.join(root, ".github/workflows/publish.yml"),
     "utf8",
   );
   expect(publish).toMatch(/tags:\s*\["v0\.\*", "v1\.\*"\]/);
+  expect(publish).toMatch(/workflow_dispatch:/);
+  expect(publish).toMatch(/Assert GitHub VERSION and npm packages match/);
   expect(publish).toMatch(/id-token: write/);
   expect(publish).toMatch(/github\.repository == 'besarrahmat\/policy-semver'/);
   expect(publish).toMatch(/--filter '@policy-semver\/core' publish/);

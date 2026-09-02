@@ -39,7 +39,7 @@ Unknown keys are **rejected**.
 
 ### 2. Seed a version
 
-Default files are root `VERSION` and root `package.json` `"version"`. If both exist they must match. Consumers may start at `0.0.0`. Nested `packages/*/package.json` are not bumped in v1.
+Default files are root `VERSION` and root `package.json` `"version"`. If both exist they must match. Consumers may start at `0.0.0`. List extra `packages/*/package.json` in `versionFiles` to lockstep them to the **same** version (not independent workspace bumps).
 
 ### 3. Add `.github/workflows/policy-semver.yml`
 
@@ -225,7 +225,7 @@ Policy lives in **`versioning.config.json`** at the repo root (JSON Schema fail-
 | 0.x | `APP_VERSION_MAJOR=0` until a human raises it. Feat stays minor, fix stays patch, major only via env — 0.x is **not** "any breaking change may be a minor". First public tool release: **0.1.0** (not `0.0.0`). Consumers may seed `VERSION` `0.0.0`. |
 | Dependabot | Subject `Bump …` / `chore(deps):` → **patch**, not minor. This repo does **not** auto-label those PRs `skip-version`. Label `skip-version` still disables the bump when you add it. |
 | Branches | `prodBranch` = `main`, `developBranch` = `dev` (this repo's dogfood topology) |
-| Dual-source | Default `versionFiles`: **root** `VERSION` + **root** `package.json`. Nested `packages/*/package.json` are not bumped separately in v1 |
+| Dual-source | Default `versionFiles`: **root** `VERSION` + **root** `package.json`. Extra `*.package.json` entries lockstep to the same version (this repo: CLI + core so npm matches the GitHub tag). Not independent per-package bumps. |
 | `tagPrefix` | Default `v` → tag `vX.Y.Z`. A human tag with a missing or wrong prefix is **not** renamed; `verify` checks `{tagPrefix}{VERSION}` |
 | `release/*` | Not production unless `prodBranch` is set to that name; PRs targeting `release/1.2` are ignored |
 | Workspaces | **Option B (v1):** no workspace graph, no path-filter. **Omit** the `workspaces` key — it is not in the schema; `"workspaces": null` or a paths MVP **fail-closed**. A path-filter (and missed-path skipped bumps) is 0.2. Not Changesets-class package graph parity. |
@@ -262,7 +262,7 @@ This repository versions itself with `.github/workflows/policy-semver.yml` (`use
 
 Major stays manual: repository variable `APP_VERSION_MAJOR` (this repo is `1`; raise to `2` for `2.0.0`). If branch protection blocks `github-actions[bot]`, set secret `POLICY_SEMVER_TOKEN` (PAT or GitHub App with `contents: write` and ruleset bypass) so the bump commit can push to `main`. Details: [`packages/action/README.md`](./packages/action/README.md) (Token when `GITHUB_TOKEN` cannot push) and [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-Manual edits to `VERSION` / root `package.json` `version` are sunset as of 2026-08-22. After the dogfood workflow is live, do not bump those files by hand. Nested `packages/*/package.json` are lockstepped at **1.0.0** by hand; the Action still only writes root `VERSION` + root `package.json`. There is no Changesets process in this repo.
+Manual edits to `VERSION` / root `package.json` `version` are sunset as of 2026-08-22. After the dogfood workflow is live, do not bump those files by hand. Extra `versionFiles` (`packages/cli/package.json`, `packages/core/package.json`) lockstep with root so GitHub Release and npm stay on the same version. `@policy-semver/action` stays `"private"` (`0.0.0`); the Action version is the git tag. There is no Changesets process in this repo.
 
 ## Community
 

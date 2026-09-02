@@ -3,6 +3,7 @@ name: Publish npm
 on:
   push:
     tags: ["v0.*", "v1.*"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -28,6 +29,19 @@ jobs:
       - run: npm install -g npm@latest # ensure npm CLI >= 11.5.1
 
       - run: pnpm install --frozen-lockfile
+
+      - name: Assert GitHub VERSION and npm packages match
+        run: |
+          VERSION=$(tr -d '[:space:]' < VERSION)
+          ROOT=$(node -p "require('./package.json').version")
+          CLI=$(node -p "require('./packages/cli/package.json').version")
+          CORE=$(node -p "require('./packages/core/package.json').version")
+          test "$VERSION" = "$ROOT"
+          test "$VERSION" = "$CLI"
+          test "$VERSION" = "$CORE"
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            test "${GITHUB_REF_NAME}" = "v${VERSION}"
+          fi
 
       - run: pnpm build
 

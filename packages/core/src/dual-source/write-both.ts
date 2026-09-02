@@ -25,30 +25,63 @@ export type WriteBothInput = {
   cwd: string;
   versionFile: string;
   packageJson: string;
+  extraPackageJson?: string[];
   nextVersion: string;
 };
 
+type Snapshot = { rel: string; content: string };
+
+async function snapshotFiles(cwd: string, rels: string[]): Promise<Snapshot[]> {
+  return Promise.all(
+    rels.map(async (rel) => ({
+      rel,
+      content: await readFile(path.join(cwd, rel), "utf8"),
+    })),
+  );
+}
+
+async function restoreFiles(cwd: string, prev: Snapshot[]): Promise<void> {
+  await Promise.all(
+    prev.map((p) => writeFile(path.join(cwd, p.rel), p.content, "utf8")),
+  );
+}
+
 /**
- * Logical-atomic dual write: snapshot both → write both → restore both on failure.
+ * Logical-atomic dual write: snapshot listed files → write all → restore all
+ * on failure.
  */
 export async function writeBothAtomically(
   input: WriteBothInput,
 ): Promise<void> {
-  const vfPath = path.join(input.cwd, input.versionFile);
-  const pkgPath = path.join(input.cwd, input.packageJson);
-  const vfPrev = await readFile(vfPath, "utf8");
-  const pkgPrev = await readFile(pkgPath, "utf8");
+  const extras = input.extraPackageJson ?? [];
+  const pkgRels = [input.packageJson, ...extras];
+  const prev = await snapshotFiles(input.cwd, [input.versionFile, ...pkgRels]);
 
   try {
     await writeVersionFile(input.cwd, input.versionFile, input.nextVersion);
-    await writePackageJsonVersion(
-      input.cwd,
-      input.packageJson,
-      input.nextVersion,
-    );
+    for (const rel of pkgRels) {
+      await writePackageJsonVersion(input.cwd, rel, input.nextVersion);
+    }
   } catch (err) {
-    await writeFile(vfPath, vfPrev, "utf8");
-    await writeFile(pkgPath, pkgPrev, "utf8");
+    await restoreFiles(input.cwd, prev);
+    throw err;
+  }
+}
+
+export async function writePackageJsonFilesAtomically(input: {
+  cwd: string;
+  packageJsonFiles: string[];
+  nextVersion: string;
+}): Promise<void> {
+  const rels = input.packageJsonFiles;
+  if (rels.length === 0) return;
+  const prev = await snapshotFiles(input.cwd, rels);
+  try {
+    for (const rel of rels) {
+      await writePackageJsonVersion(input.cwd, rel, input.nextVersion);
+    }
+  } catch (err) {
+    await restoreFiles(input.cwd, prev);
     throw err;
   }
 }

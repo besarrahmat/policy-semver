@@ -4,8 +4,9 @@ import {
   tryReadPackageJsonVersion,
   tryReadVersionFile,
   writeBothAtomically,
+  writePackageJsonFilesAtomically,
 } from "../dual-source/index.js";
-import { readVersion } from "./read-version.js";
+import { extrasNeedWrite, readPrimaryVersion } from "./read-version.js";
 import type { WriteVersionInput, WriteVersionResult } from "./types.js";
 
 async function writeVersionFile(
@@ -16,24 +17,15 @@ async function writeVersionFile(
   await writeFile(path.join(cwd, rel), `${nextVersion}\n`, "utf8");
 }
 
-async function writePackageJsonVersion(
-  cwd: string,
-  rel: string,
-  nextVersion: string,
-): Promise<void> {
-  const p = path.join(cwd, rel);
-  const raw = await readFile(p, "utf8");
-  const pkg = JSON.parse(raw) as Record<string, unknown>;
-  pkg.version = nextVersion;
-  await writeFile(p, `${JSON.stringify(pkg, null, 2)}\n`, "utf8");
-}
-
 async function writeSingleSource(
   cwd: string,
   nextVersion: string,
   kind: "versionFile" | "packageJson",
   rel: string,
+  extras: string[],
 ): Promise<WriteVersionResult> {
+  const extrasStale = await extrasNeedWrite(cwd, extras, nextVersion);
+
   if (kind === "versionFile") {
     let current = "";
     try {
@@ -41,19 +33,31 @@ async function writeSingleSource(
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
     }
-    if (current === nextVersion) {
+    if (current === nextVersion && !extrasStale) {
       return { nextVersion, wrote: false, reason: "already-current" };
     }
-    await writeVersionFile(cwd, rel, nextVersion);
+    if (current !== nextVersion) {
+      await writeVersionFile(cwd, rel, nextVersion);
+    }
+    await writePackageJsonFilesAtomically({
+      cwd,
+      packageJsonFiles: extras,
+      nextVersion,
+    });
     return { nextVersion, wrote: true, reason: "written" };
   }
 
   const raw = await readFile(path.join(cwd, rel), "utf8");
   const pkg = JSON.parse(raw) as Record<string, unknown>;
-  if (pkg.version === nextVersion) {
+  if (pkg.version === nextVersion && !extrasStale) {
     return { nextVersion, wrote: false, reason: "already-current" };
   }
-  await writePackageJsonVersion(cwd, rel, nextVersion);
+  const pkgRels = pkg.version === nextVersion ? extras : [rel, ...extras];
+  await writePackageJsonFilesAtomically({
+    cwd,
+    packageJsonFiles: pkgRels,
+    nextVersion,
+  });
   return { nextVersion, wrote: true, reason: "written" };
 }
 
@@ -61,6 +65,7 @@ export async function writeVersion(
   input: WriteVersionInput,
 ): Promise<WriteVersionResult> {
   const { cwd, nextVersion, dryRun, allowWrite, files } = input;
+  const extras = files.extraPackageJson ?? [];
 
   if (dryRun) {
     return { nextVersion, wrote: false, reason: "dry-run" };
@@ -78,15 +83,22 @@ export async function writeVersion(
     const pkg = await tryReadPackageJsonVersion(cwd, pkgRel as string);
 
     if (vf !== null && pkg !== null) {
-      // match + already-current via readVersion
-      const current = await readVersion({ cwd, files });
-      if (current === nextVersion) {
+      const current = await readPrimaryVersion({
+        cwd,
+        files: {
+          versionFile: vfRel as string,
+          packageJson: pkgRel as string,
+        },
+      });
+      const extrasStale = await extrasNeedWrite(cwd, extras, nextVersion);
+      if (current === nextVersion && !extrasStale) {
         return { nextVersion, wrote: false, reason: "already-current" };
       }
       await writeBothAtomically({
         cwd,
         versionFile: vfRel as string,
         packageJson: pkgRel as string,
+        extraPackageJson: extras,
         nextVersion,
       });
       return { nextVersion, wrote: true, reason: "written" };
@@ -99,6 +111,7 @@ export async function writeVersion(
         nextVersion,
         "versionFile",
         vfRel as string,
+        extras,
       );
     }
     if (pkg !== null) {
@@ -107,17 +120,18 @@ export async function writeVersion(
         nextVersion,
         "packageJson",
         pkgRel as string,
+        extras,
       );
     }
     throw new Error("writeVersion: neither VERSION nor package.json found");
   }
 
   if (vfRel) {
-    return writeSingleSource(cwd, nextVersion, "versionFile", vfRel);
+    return writeSingleSource(cwd, nextVersion, "versionFile", vfRel, extras);
   }
 
   if (pkgRel) {
-    return writeSingleSource(cwd, nextVersion, "packageJson", pkgRel);
+    return writeSingleSource(cwd, nextVersion, "packageJson", pkgRel, extras);
   }
 
   throw new Error("writeVersion: no versionFiles configured");

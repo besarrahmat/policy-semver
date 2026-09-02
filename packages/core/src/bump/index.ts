@@ -10,6 +10,7 @@ export {
   type SemVerParts,
 } from "./parse-version.js";
 export { readVersion } from "./read-version.js";
+export { toVersionFiles } from "./to-version-files.js";
 export type {
   ApplyBumpInput,
   BumpGuardContext,

@@ -6,4 +6,8 @@ export {
   tryReadPackageJsonVersion,
   tryReadVersionFile,
 } from "./read-sources.js";
-export { type WriteBothInput, writeBothAtomically } from "./write-both.js";
+export {
+  type WriteBothInput,
+  writeBothAtomically,
+  writePackageJsonFilesAtomically,
+} from "./write-both.js";

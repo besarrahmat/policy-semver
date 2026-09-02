@@ -3,7 +3,12 @@
   "prodBranch": "main",
   "developBranch": "dev",
   "majorEnv": "APP_VERSION_MAJOR",
-  "versionFiles": ["VERSION", "package.json"],
+  "versionFiles": [
+    "VERSION",
+    "package.json",
+    "packages/cli/package.json",
+    "packages/core/package.json"
+  ],
   "changelogPath": "CHANGELOG.md",
   "tagPrefix": "v",
   "skipLabels": ["skip-version"],

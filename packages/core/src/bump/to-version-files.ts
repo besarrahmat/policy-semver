@@ -1,5 +1,6 @@
-import type { VersionFiles } from "@policy-semver/core";
+import type { VersionFiles } from "./types.js";
 
+/** Map config `versionFiles` string list → bump `VersionFiles`. */
 export function toVersionFiles(versionFiles: string[]): VersionFiles {
   const versionFile = versionFiles.find(
     (f) => f === "VERSION" || /(^|\/)VERSION$/.test(f),

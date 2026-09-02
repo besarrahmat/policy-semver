@@ -21,11 +21,11 @@ Follow the root [README quickstart](../README.md#quickstart). Commits/PR titles 
 | --- | --- |
 | Human writes a changeset per PR | Classifier reads subjects (`feat:` / `fix:` / `docs:`) |
 | `major` / `minor` / `patch` in the markdown file | Kind from subjects; **major only** via `APP_VERSION_MAJOR` |
-| Independent or locked workspace versions | Root `VERSION` + root `package.json` only |
+| Independent or locked workspace versions | Same version via extra `versionFiles` paths; no independent graph |
 | `changesets/action` version + publish | Action dry-run comment; write on merge to `prodBranch` |
 | Linked packages / ignore list | Not v1 |
 
-This repository's own nested `packages/*/package.json` stay `0.0.0` on purpose. There is no Changesets process here.
+This repository locksteps npm CLI/core with root `VERSION` through extra `versionFiles` entries. That is **not** a Changesets package graph.
 
 ## Surprises
 

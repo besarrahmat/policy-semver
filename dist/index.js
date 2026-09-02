@@ -31971,10 +31971,12 @@ function toVersionFiles(versionFiles) {
   const versionFile = versionFiles.find(
     (f) => f === "VERSION" || /(^|\/)VERSION$/.test(f)
   );
-  const packageJson = versionFiles.find((f) => f.endsWith("package.json"));
+  const packageJsons = versionFiles.filter((f) => f.endsWith("package.json"));
+  const [packageJson, ...extraPackageJson] = packageJsons;
   return {
     ...versionFile !== void 0 ? { versionFile } : {},
-    ...packageJson !== void 0 ? { packageJson } : {}
+    ...packageJson !== void 0 ? { packageJson } : {},
+    ...extraPackageJson.length > 0 ? { extraPackageJson } : {}
   };
 }
 

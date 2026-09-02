@@ -3,7 +3,13 @@ import type { ClassifyKind } from "../classify/locks.js";
 export type VersionFiles = {
   /** Prefer config `versionFiles`; support at least one. */
   versionFile?: string; // e.g. "VERSION"
+  /** Dual-source primary (first `*.package.json` in config). */
   packageJson?: string; // e.g. "package.json"
+  /**
+   * Further `*.package.json` entries in `versionFiles`. Same version as
+   * primary (lockstep), not independent workspace bumps.
+   */
+  extraPackageJson?: string[];
 };
 
 export type ReadVersionInput = {
