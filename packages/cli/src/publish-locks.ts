@@ -8,9 +8,9 @@
  * Re-verified: 2026-09-01 (npm docs last-edited 2026-06-04 / 2026-05-04).
  *
  * **0.1.0 is on the registry** (laptop publish, no OIDC attestation). Do **not**
- * unpublish or overwrite it. Next provenance publish is **0.1.1** from
- * `.github/workflows/publish.yml` (tag `v0.1.1`) after Trusted Publisher is set
- * on both packages. Root and `@policy-semver/action` stay `"private": true`.
+ * unpublish or overwrite it. Current public line is **1.0.0** (OIDC from
+ * `.github/workflows/publish.yml`, tag `v1.0.0`). Next patch is **1.0.1**.
+ * Root and `@policy-semver/action` stay `"private": true`.
  *
  * ## Trusted publishing (OIDC)
  * | Requirement | Lock |
@@ -51,8 +51,8 @@
  * environment empty) before the first OIDC tag publish.
  *
  * ## Immutability
- * Published versions cannot be overwritten. Fixes are `0.1.1`, not a republish
- * of `0.1.0`. Prefer `npm deprecate` over unpublish except npm's severe-security path.
+ * Published versions cannot be overwritten. Fixes are `1.0.1`, not a republish
+ * of `1.0.0`. Prefer `npm deprecate` over unpublish except npm's severe-security path.
  */
 export const NPM_TRUSTED_PUBLISH = {
   docsTrustedPublishers: "https://docs.npmjs.com/trusted-publishers/",
@@ -107,5 +107,5 @@ export const NPM_OPERATOR = {
   scopeOrg: "@policy-semver",
   expect404UntilFirstPublish: false,
   firstPublicVersionPublishedWithoutOidcProvenance: true,
-  nextOidcPublishVersion: "0.1.1",
+  nextOidcPublishVersion: "1.0.1",
 } as const;

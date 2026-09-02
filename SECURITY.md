@@ -2,11 +2,12 @@
 
 ## Supported versions
 
-Security fixes apply to published **0.1.x** on npm (`policy-semver`, `@policy-semver/core`) and to Action git refs (`v0.1.0`, moving `v0`, or a commit SHA). Pre-`0.1.0` tags and unreleased `dev` commits are **not** supported.
+Security fixes apply to published **1.x** / **1.0.x** on npm (`policy-semver`, `@policy-semver/core`) and to Action git refs (`v1.0.0` or a commit SHA). `0.1.x`, pre-`0.1.0` tags, and unreleased `dev` commits are **not** supported.
 
 | Version     | Supported |
 |-------------|-----------|
-| `0.1.x`     | Yes       |
+| `1.x` / `1.0.x` | Yes   |
+| `0.1.x`     | No        |
 | pre-`0.1.0` | No        |
 
 ## Reporting a vulnerability

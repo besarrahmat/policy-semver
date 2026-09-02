@@ -61,10 +61,10 @@ it("schemaVersion is 1 until a documented breaking bump", () => {
   );
 });
 
-it("second consumer examples pin published 0.1.0 and SHA", () => {
+it("second consumer examples pin published 1.0.0 and SHA", () => {
   const examples = read("examples/README.md");
   expect(examples).toMatch(/A second consumer app/);
-  expect(examples).toMatch(/npx policy-semver@0\.1\.0/);
+  expect(examples).toMatch(/npx policy-semver@1\.0\.0/);
   expect(examples).toMatch(
     /uses: besarrahmat\/policy-semver@<full-commit-sha>/,
   );

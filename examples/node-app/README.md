@@ -28,11 +28,11 @@ pnpm policy-semver classify --cwd examples/node-app --title "feat: demo"
 
 `git log` still walks this monorepo when the example lives here. Copy the folder to its own repo for a realistic commit list.
 
-From a **copied app** (`npx policy-semver@0.1.0`):
+From a **copied app** (`npx policy-semver@1.0.0`):
 
 ```bash
-npx policy-semver@0.1.0 classify --title "feat: demo"
-npx policy-semver@0.1.0 classify --help
+npx policy-semver@1.0.0 classify --title "feat: demo"
+npx policy-semver@1.0.0 classify --help
 ```
 
 ## Action

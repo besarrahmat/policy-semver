@@ -6,7 +6,7 @@
  * minutes, differentiators announced, not a Changesets graph replacement.
  */
 export const LAUNCH = {
-  npmCli: "npx policy-semver@0.1.0",
+  npmCli: "npx policy-semver@1.0.0",
   marketplaceUrl: "https://github.com/marketplace/actions/policysemver",
   pinBySha: "besarrahmat/policy-semver@<full-commit-sha>",
   quickstartUnder15Minutes: true,

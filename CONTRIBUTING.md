@@ -125,7 +125,7 @@ Keep these true on every PR to `dev`.
 | Conventional Commits | Subjects on `dev` must be prefixes the dogfood classifier understands (`feat:`, `fix:`, `docs:`, `feat & fix:`, …). See [Commit cheat sheet](#commit-cheat-sheet). |
 | Action `dist/` | After changing Action sources, rebuild and **commit** repo-root `dist/`: `pnpm --filter @policy-semver/action run build`. CI fails on `git diff --exit-code dist/`. |
 | Config schema | Breaking `versioning.config.json` changes bump `schemaVersion` (currently `"1"`) and document the migration. Then `pnpm sync:schema`. |
-| Second consumer | After a public npm/Action release, keep [`examples/`](./examples/) on the **published** channel (`npx policy-semver@0.1.0`, Action SHA pin) — not `file:` / workspace installs. |
+| Second consumer | After a public npm/Action release, keep [`examples/`](./examples/) on the **published** channel (`npx policy-semver@1.0.0`, Action SHA pin) — not `file:` / workspace installs. |
 | Before a publishable release | Re-read [npm Trusted publishing](https://docs.npmjs.com/trusted-publishers/) and confirm Action `runs.using: node24` (never `node20`) plus `.node-version` **24**. |
 | Blockers | Log accepted or open findings in [`BLOCKERS.md`](./BLOCKERS.md) (table + rationale). Do not commit secrets. |
 
@@ -141,7 +141,7 @@ Public v1 surface. Keep these true before calling a publishable release done. Qu
 
 | Check | Lock |
 | --- | --- |
-| npm CLI | `npx policy-semver@0.1.0` (published artifact, not a workspace path) |
+| npm CLI | `npx policy-semver@1.0.0` (published artifact, not a workspace path) |
 | Action | GitHub Marketplace listing plus `besarrahmat/policy-semver@<full-commit-sha>` |
 | Community | Root [`LICENSE`](./LICENSE), [`SECURITY.md`](./SECURITY.md), [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md) |
 | Consumers | Depend on published npm / Action SHA — do not vendor `packages/` |

@@ -16,7 +16,7 @@ it("README quickstart is Action dry-run under 15 minutes", () => {
   expect(readme).toMatch(/under 15 minutes/);
   expect(readme).toMatch(/PolicySemVer \(dry-run\)/);
   expect(readme).toMatch(/uses: besarrahmat\/policy-semver@<full-commit-sha>/);
-  expect(readme).toMatch(/npx policy-semver@0\.1\.0 classify --help/);
+  expect(readme).toMatch(/npx policy-semver@1\.0\.0 classify --help/);
 });
 
 it("README does not claim Changesets monorepo superiority", () => {
