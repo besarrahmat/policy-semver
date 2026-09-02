@@ -1,7 +1,7 @@
 {
-  "version": "0.1.0",
-  "kind": "minor",
-  "gitSha": "b92b0cf2e7c91901fe48425346ed402220aa58cb",
-  "tag": "v0.1.0",
-  "at": "2026-08-22T07:35:39.063Z"
+  "version": "1.0.0",
+  "kind": "major-reset",
+  "gitSha": "e6fe53bf1460ca31d4a74bebca24b49dd61e1f82",
+  "tag": "v1.0.0",
+  "at": "2026-09-02T08:57:41.131Z"
 }
