@@ -45,7 +45,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) subject lines, 
 - `feat:` / `feat(scope):` / `feat & fix:` — minor
 - `fix:` / `chore:` / `refactor:` — patch
 - `feature:` (typo, not `feat:`) — patch, not minor
-- Dependabot `Bump …` / `chore(deps):` — patch; label `skip-version` disables the bump
+- Dependabot `Bump …` / `chore(deps):` — patch. This repo does not auto-label `skip-version` on those PRs. Adding the label (or `[skip version]`) disables the bump
 - `docs:` — docs-only
 - `chore:` — tooling / bootstrap
 - 0.x: `APP_VERSION_MAJOR=0` until a human raises it; feat is still minor, fix still patch, major only via env

@@ -223,7 +223,7 @@ Policy lives in **`versioning.config.json`** at the repo root (JSON Schema fail-
 | Config path | `versioning.config.json` |
 | Major bumps | Manual only via env named by `majorEnv` (default **`APP_VERSION_MAJOR`**) — set to the next major integer (e.g. `2`) to reset to `N.0.0`; never auto-major from `BREAKING` / `feat!:` |
 | 0.x | `APP_VERSION_MAJOR=0` until a human raises it. Feat stays minor, fix stays patch, major only via env — 0.x is **not** "any breaking change may be a minor". First public tool release: **0.1.0** (not `0.0.0`). Consumers may seed `VERSION` `0.0.0`. |
-| Dependabot | Subject `Bump …` / `chore(deps):` → **patch**, not minor. Label `skip-version` disables the bump. |
+| Dependabot | Subject `Bump …` / `chore(deps):` → **patch**, not minor. This repo does **not** auto-label those PRs `skip-version`. Label `skip-version` still disables the bump when you add it. |
 | Branches | `prodBranch` = `main`, `developBranch` = `dev` (this repo's dogfood topology) |
 | Dual-source | Default `versionFiles`: **root** `VERSION` + **root** `package.json`. Nested `packages/*/package.json` are not bumped separately in v1 |
 | `tagPrefix` | Default `v` → tag `vX.Y.Z`. A human tag with a missing or wrong prefix is **not** renamed; `verify` checks `{tagPrefix}{VERSION}` |

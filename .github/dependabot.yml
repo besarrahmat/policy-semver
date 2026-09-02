@@ -1,15 +1,22 @@
 version: 2
 updates:
+  # chore(deps) / Bump … classify as patch. Do not auto-apply a skip
+  # label or Dependabot merges never mint 1.0.1 / 1.0.2 / …
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
-    labels:
-      - skip-version
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
-    labels:
-      - skip-version
+
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

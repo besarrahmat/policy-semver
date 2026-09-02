@@ -24,6 +24,8 @@
  * `examples/*` use published `npx policy-semver@1.0.0` and git `uses:` SHA pins
  * — not `file:` / workspace Action installs. Production pin-by-SHA stays
  * recommended. Dependabot + dependency-review-action@v5 on this repo.
+ * Dependabot PRs are **not** auto-labeled `skip-version` so `chore(deps):`
+ * still patch-bumps.
  */
 export const HARDEN_AUDIT = {
   date: "2026-09-01",
