@@ -78,6 +78,9 @@ it("Action and CI workflows stay least-privilege", () => {
   expect(read(".github/dependabot.yml")).toMatch(
     /package-ecosystem:\s*github-actions/,
   );
+  expect(read(".github/dependabot.yml")).not.toMatch(
+    /^\s+-\s+skip-version\s*$/m,
+  );
 });
 
 it("README still recommends pin-by-SHA for production", () => {
