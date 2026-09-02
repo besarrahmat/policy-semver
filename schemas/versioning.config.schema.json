@@ -85,12 +85,6 @@
           "description": "Run after GitHub Release is created."
         }
       }
-    },
-    "workspaces": {
-      "description": "Optional; Phase 12. Omit or null in v1.",
-      "type": ["object", "null"],
-      "additionalProperties": false,
-      "properties": {}
     }
   }
 }

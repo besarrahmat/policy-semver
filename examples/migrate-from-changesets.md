@@ -34,4 +34,4 @@ This repository's own nested `packages/*/package.json` stay `0.0.0` on purpose. 
 - Docs-only PRs do not bump.
 - Fork PRs never write.
 
-Stay on Changesets for a huge npm monorepo graph. That is the honest split — not a temporary gap you should paper over with PolicySemVer path filters.
+Stay on Changesets for a huge npm monorepo graph. That is the honest split — not a temporary gap you should paper over with PolicySemVer path filters. v1 **Option B:** no `workspaces` config key (unknown key fail-closed); path-filter MVP is 0.2.

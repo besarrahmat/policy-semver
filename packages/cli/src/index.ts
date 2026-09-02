@@ -1,3 +1,5 @@
+export { REPO_HYGIENE, SCHEMA_VERSION_CURRENT } from "./hygiene-locks.js";
+export { LAUNCH } from "./launch-locks.js";
 export {
   CLI_ADAPTER,
   CLI_ARTIFACT,
@@ -10,3 +12,8 @@ export {
   NPM_PROVENANCE,
   NPM_TRUSTED_PUBLISH,
 } from "./publish-locks.js";
+export {
+  REQUIRED_CLASSIFIER_FIXTURES,
+  TESTING_CI,
+  TESTING_LAYERS,
+} from "./testing-locks.js";

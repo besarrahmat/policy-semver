@@ -2,9 +2,10 @@
 #
 # Canonical entry for `uses: org/policy-semver@ref` and Marketplace.
 # Sources: packages/action/ · bundle: dist/index.js
-# Locks: packages/action/src/locks.ts
+# Locks: packages/action/src/locks.ts · marketplace-locks.ts
+# Do not rename this file to action.yaml after a Marketplace listing exists.
 name: PolicySemVer
-description: Policy-first SemVer automation for deployed apps
+description: Policy-first SemVer for deployed apps; major only via APP_VERSION_MAJOR
 author: Besar Rahmat
 branding:
   icon: tag

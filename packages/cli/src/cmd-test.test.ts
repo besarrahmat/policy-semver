@@ -9,37 +9,12 @@ import {
   findClassifierDir,
   runClassifierFixtures,
 } from "./cmd-test.js";
+import { REQUIRED_CLASSIFIER_FIXTURES } from "./testing-locks.js";
 
 const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../../..",
 );
-
-const REQUIRED_CLASSIFIER_FIXTURES = [
-  "feat-plain.json",
-  "feat-scope.json",
-  "feat-and-fix.json",
-  "docs-only.json",
-  "fix-patch.json",
-  "feature-typo-patch.json",
-  "emoji-feat.json",
-  "merge-ignored.json",
-  "title-feat-docs-commits.json",
-  "breaking-warn-only.json",
-  "major-env-reset.json",
-  "squash-pr-title.json",
-  "feat-uppercase.json",
-  "merge-only.json",
-  "title-docs-feat-commit.json",
-  "docs-scope.json",
-  "feat-amp-fix.json",
-  "empty-pr.json",
-  "major-skip-1-to-3.json",
-  "skip-true.json",
-  "dependabot-bump.json",
-  "feat-in-body-only.json",
-  "breaking-body-warn-only.json",
-] as const;
 
 describe("golden fixtures", () => {
   afterEach(() => vi.restoreAllMocks());

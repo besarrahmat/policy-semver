@@ -42,8 +42,10 @@ it("deploy does not run after failed bump", () => {
   expect(yaml).toMatch(/^\s+needs:\s*build\s*$/m);
 });
 
-it("pins a commit SHA not a floating branch for the Action checkout", () => {
-  expect(yaml).not.toMatch(/^\s+ref:\s*dev\s*$/m);
-  expect(yaml).not.toMatch(/^\s+ref:\s*main\s*$/m);
+it("pins a commit SHA on the public Action uses, not a floating branch", () => {
+  expect(yaml).toMatch(/uses:\s*besarrahmat\/policy-semver@<full-commit-sha>/);
+  expect(yaml).toMatch(/APP_VERSION_MAJOR/);
+  expect(yaml).not.toMatch(/uses:.*@main/);
+  expect(yaml).not.toMatch(/uses:.*@dev/);
   expect(yaml).toMatch(/ref:\s*<full-commit-sha>/);
 });

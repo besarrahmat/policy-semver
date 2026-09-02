@@ -1,8 +1,9 @@
 # Dogfood / path-based uses only (`uses: ./packages/action`).
 # Canonical Marketplace metadata is repo-root action.yml (layout A).
-# Inputs/outputs must match root action.yml; main is the committed root bundle.
+# name / description / branding / inputs / outputs must match root action.yml;
+# only `runs.main` differs (committed root bundle).
 name: PolicySemVer
-description: Policy-first SemVer automation for deployed apps (path-based dogfood)
+description: Policy-first SemVer for deployed apps; major only via APP_VERSION_MAJOR
 author: Besar Rahmat
 branding:
   icon: tag

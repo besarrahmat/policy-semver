@@ -75,7 +75,8 @@ it("each example README has workspace classify and npx after publish", () => {
   const index = read("examples/README.md");
   expect(index).toMatch(/A second consumer app/);
   expect(index).toMatch(/npx policy-semver@0\.1\.0 classify/);
-  expect(index).toMatch(/Ranked VE pack/);
+  expect(index).toMatch(/Ranked classifier fixtures/);
+  expect(index).toMatch(/<full-commit-sha>/);
 });
 
 it("example versioning.config.json files load", async () => {

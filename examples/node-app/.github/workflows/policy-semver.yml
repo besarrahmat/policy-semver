@@ -21,10 +21,9 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      # Pin a full commit SHA in production (not @main / @dev). Until
-      # policy-semver is public, uses: owner/repo@sha 404s from another
-      # private repo — Action README, Consumer workflow stub.
-      - uses: besarrahmat/policy-semver/packages/action@<full-commit-sha>
+      # Pin a full commit SHA in production (not @main / @dev).
+      # Marketplace listing is discoverability only — still pin SHA.
+      - uses: besarrahmat/policy-semver@<full-commit-sha>
         env:
           APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR || '0' }}
         with:

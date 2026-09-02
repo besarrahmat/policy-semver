@@ -30,25 +30,30 @@ jobs:
           # git push uses this checkout token. If github-actions[bot] cannot
           # push protected prod, set a contents:write PAT/App here (not the Action-repo read PAT).
           # token: ${{ secrets.POLICY_SEMVER_WRITE_TOKEN }}
-      # Canonical Action repo is public: prefer
-      # uses: besarrahmat/policy-semver@<full-commit-sha>
-      # Private fork: `uses: owner/policy-semver@ref` 404s from another repo.
-      # Checkout with a PAT (Contents: read on the Action repo), then run locally.
-      # persist-credentials: false so the PAT is not used for the consumer push.
-      # Pin a 40-character SHA (not @main / @dev).
-      - name: Checkout PolicySemVer action
-        uses: actions/checkout@v7
-        with:
-          repository: besarrahmat/policy-semver
-          ref: <full-commit-sha>
-          token: ${{ secrets.POLICY_SEMVER_TOKEN }}
-          path: .github/actions/policy-semver
-          persist-credentials: false
-      - name: PolicySemVer
-        uses: ./.github/actions/policy-semver
+      # Canonical Action repo is public (Marketplace layout A). Pin a 40-character SHA.
+      - uses: besarrahmat/policy-semver@<full-commit-sha>
+        env:
+          APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR || '0' }}
         with:
           config-path: versioning.config.json
-          # token: ${{ secrets.POLICY_SEMVER_TOKEN }}  # contents:write on THIS repo — not a read-only Action checkout PAT
+          # token: ${{ secrets.POLICY_SEMVER_TOKEN }}  # contents:write on THIS repo if github-actions[bot] cannot push
+
+      # Private fork: `uses: owner/policy-semver@ref` 404s from another repo.
+      # Replace the uses: step above with a checkout + local uses:
+      # - name: Checkout PolicySemVer action
+      #   uses: actions/checkout@v7
+      #   with:
+      #     repository: besarrahmat/policy-semver
+      #     ref: <full-commit-sha>
+      #     token: ${{ secrets.POLICY_SEMVER_TOKEN }}
+      #     path: .github/actions/policy-semver
+      #     persist-credentials: false
+      # - name: PolicySemVer
+      #   uses: ./.github/actions/policy-semver
+      #   env:
+      #     APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR || '0' }}
+      #   with:
+      #     config-path: versioning.config.json
 
   # never build/deploy if the bump job failed or was skipped.
   build:

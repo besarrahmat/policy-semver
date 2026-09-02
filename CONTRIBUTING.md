@@ -62,9 +62,23 @@ pnpm typecheck
 pnpm lint
 ```
 
+CI (`.github/workflows/ci.yml`) runs the same unit + golden layers on every PR to `dev` (and `main`).
+
+## Testing
+
+Keep these layers green on every PR to `dev`. Do not delete files under `fixtures/classifier/` to make CI pass — add a case or fix `classify`.
+
+| Layer | What | Proof |
+| --- | --- | --- |
+| Unit | classify, SemVer math, config validate, redact | `pnpm test` |
+| Golden | `fixtures/classifier/*.json` | `pnpm test:fixtures` |
+| Integration | bump + changelog in a temp dir | `pnpm test` |
+| Action | decision matrix + consumer stub | `pnpm test` |
+| Dogfood | this repo on PRs to `main` | `.github/workflows/policy-semver.yml` |
+
 ## Config
 
-`versioning.config.json` is fail-closed: **unknown keys fail validation** (and will fail CI once config checks are wired). Extend `schemas/versioning.config.schema.json` (then sync the package embed) before adding new keys. Never "warn and continue" on unknown policy fields.
+`versioning.config.json` is fail-closed: **unknown keys fail validation**. v1 **omits** `workspaces` (no path-filter, no package graph) — that key fails closed until a 0.2 schema update. Breaking config changes bump `schemaVersion` (currently `"1"`) and document the migration here and in the README Configuration table. Extend `schemas/versioning.config.schema.json` (then sync the package embed) before adding new keys. Never "warn and continue" on unknown policy fields.
 
 ## Schema embed
 
@@ -87,9 +101,51 @@ Expect empty `diff` (exit 0).
 
 Root script `"sync:schema"` copies canonical → embed. Always run sync (or a build that triggers `prebuild`) after editing the schema.
 
-## Secrets
+## Security
 
-Never commit `.env`, npm tokens, PATs, or `_authToken` lines in `.npmrc`. Prefer `~/.npmrc` or CI secrets / Trusted Publishing.
+Standing controls. Keep them true on every PR to `dev`.
+
+| Control | Lock |
+| --- | --- |
+| Least privilege | Write workflows: `contents: write` + `pull-requests: write` only. CI: `contents: read`. npm publish: `contents: read` + `id-token: write`. |
+| Fork PRs | Sticky comment OK; never write (`allowWrite: false`). |
+| Secrets in Release / changelog | `redactSecrets` before disk and GitHub Release. Do not log tokens. |
+| Protected `main` | Secret `POLICY_SEMVER_TOKEN` (PAT or GitHub App) with ruleset bypass. Details: [`packages/action/README.md`](./packages/action/README.md#token-when-github_token-cannot-push). |
+| npm publish | OIDC trusted publishing from [`.github/workflows/publish.yml`](./.github/workflows/publish.yml). No long-lived `NPM_TOKEN` in that workflow. |
+| Do not commit | `.env`, npm tokens, PATs, or `_authToken` lines in `.npmrc`. Prefer `~/.npmrc` or CI secrets / Trusted Publishing. |
+
+Never commit `.env`, npm tokens, PATs, or `_authToken` lines in `.npmrc`.
+
+## Repo hygiene
+
+Keep these true on every PR to `dev`.
+
+| Item | What to do |
+| --- | --- |
+| Conventional Commits | Subjects on `dev` must be prefixes the dogfood classifier understands (`feat:`, `fix:`, `docs:`, `feat & fix:`, …). See [Commit cheat sheet](#commit-cheat-sheet). |
+| Action `dist/` | After changing Action sources, rebuild and **commit** repo-root `dist/`: `pnpm --filter @policy-semver/action run build`. CI fails on `git diff --exit-code dist/`. |
+| Config schema | Breaking `versioning.config.json` changes bump `schemaVersion` (currently `"1"`) and document the migration. Then `pnpm sync:schema`. |
+| Second consumer | After a public npm/Action release, keep [`examples/`](./examples/) on the **published** channel (`npx policy-semver@0.1.0`, Action SHA pin) — not `file:` / workspace installs. |
+| Before a publishable release | Re-read [npm Trusted publishing](https://docs.npmjs.com/trusted-publishers/) and confirm Action `runs.using: node24` (never `node20`) plus `.node-version` **24**. |
+| Blockers | Log accepted or open findings in [`BLOCKERS.md`](./BLOCKERS.md) (table + rationale). Do not commit secrets. |
+
+```markdown
+| Date | Area | Issue | Owner | Status | Resolution |
+|------|------|-------|-------|--------|------------|
+| YYYY-MM-DD | … | … | … | open / accepted | … |
+```
+
+## Launch
+
+Public v1 surface. Keep these true before calling a publishable release done. Quickstart must stay **under 15 minutes**.
+
+| Check | Lock |
+| --- | --- |
+| npm CLI | `npx policy-semver@0.1.0` (published artifact, not a workspace path) |
+| Action | GitHub Marketplace listing plus `besarrahmat/policy-semver@<full-commit-sha>` |
+| Community | Root [`LICENSE`](./LICENSE), [`SECURITY.md`](./SECURITY.md), [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md) |
+| Consumers | Depend on published npm / Action SHA — do not vendor `packages/` |
+| Positioning | Announce differentiators; do not claim to replace Changesets' package graph |
 
 ## Code of Conduct
 
