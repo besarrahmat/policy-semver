@@ -8,9 +8,11 @@
  * Re-verified: 2026-09-01 (npm docs last-edited 2026-06-04 / 2026-05-04).
  *
  * **0.1.0 is on the registry** (laptop publish, no OIDC attestation). Do **not**
- * unpublish or overwrite it. Current public line is **1.0.0** (OIDC from
- * `.github/workflows/publish.yml`, tag `v1.0.0`). Next patch is **1.0.1**.
- * Root and `@policy-semver/action` stay `"private": true`.
+ * unpublish or overwrite it. GitHub Release **1.0.1** and npm **1.0.1** lockstep
+ * via extra `versionFiles` (`packages/cli` + `packages/core`). Registry still
+ * has **1.0.0** until OIDC `publish.yml` on tag `v1.0.1` (or workflow_dispatch)
+ * after those package.json files are 1.0.1. Root and `@policy-semver/action`
+ * stay `"private": true`.
  *
  * ## Trusted publishing (OIDC)
  * | Requirement | Lock |

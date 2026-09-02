@@ -1,6 +1,6 @@
 {
   "name": "policy-semver",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Policy-first SemVer automation for deployed apps",
   "type": "module",
   "bin": {

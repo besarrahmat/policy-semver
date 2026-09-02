@@ -2,10 +2,12 @@
  * Workspaces policy (v1)
  *
  * ## Context
- * v1 versions the **repo root** (`VERSION` + root `package.json`). Nested
- * `packages/*` are not bumped. Consumers coming from Changesets expect a
- * workspace graph or at least path filters. Schema `additionalProperties:
- * false` means any new config key is a coordinated schema change.
+ * v1 versions files listed in `versionFiles` **to the same version**.
+ * Default is repo root (`VERSION` + root `package.json`). Extra nested
+ * package.json paths lockstep with root — they are not independent package
+ * bumps. Consumers coming from Changesets expect a workspace graph or at
+ * least path filters. Schema additionalProperties false means any new
+ * config key is a coordinated schema change.
  *
  * ## Options
  * - **A — Path-filter MVP:** `workspaces.paths` + `mode: skip-if-no-match`.
@@ -22,12 +24,13 @@
  * Path-filter MVP still is not Changesets-class interdependent package
  * graph parity, and a missed path would look like "the tool missed a bump."
  * Defer the whole surface to 0.2 rather than ship a leaky filter.
- * We accept that a monorepo must version the root only, or stay on Changesets.
+ * We accept that independent per-package versions need Changesets (or 0.2).
+ * Same-version lockstep is `versionFiles` entries, not a `workspaces` key.
  *
  * ## Consequences
- * Easy: root-only policy stays honest; unknown `workspaces` fails closed.
- * Hard: no per-package bump; adding Option A later requires a schema
- * migration (`schemaVersion` or a new key) — not a silent default.
+ * Easy: unknown `workspaces` fails closed; lockstep extras use `versionFiles`.
+ * Hard: no independent per-package bump; adding Option A later requires a
+ * schema migration (`schemaVersion` or a new key) — not a silent default.
  */
 export const WORKSPACES_V1 = {
   option: "B",

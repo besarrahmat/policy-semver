@@ -30948,21 +30948,43 @@ async function writePackageJsonVersion(cwd, rel, nextVersion) {
   await (0, import_promises3.writeFile)(p, `${JSON.stringify(pkg, null, 2)}
 `, "utf8");
 }
+async function snapshotFiles(cwd, rels) {
+  return Promise.all(
+    rels.map(async (rel) => ({
+      rel,
+      content: await (0, import_promises3.readFile)(import_path3.default.join(cwd, rel), "utf8")
+    }))
+  );
+}
+async function restoreFiles(cwd, prev) {
+  await Promise.all(
+    prev.map((p) => (0, import_promises3.writeFile)(import_path3.default.join(cwd, p.rel), p.content, "utf8"))
+  );
+}
 async function writeBothAtomically(input) {
-  const vfPath = import_path3.default.join(input.cwd, input.versionFile);
-  const pkgPath = import_path3.default.join(input.cwd, input.packageJson);
-  const vfPrev = await (0, import_promises3.readFile)(vfPath, "utf8");
-  const pkgPrev = await (0, import_promises3.readFile)(pkgPath, "utf8");
+  const extras = input.extraPackageJson ?? [];
+  const pkgRels = [input.packageJson, ...extras];
+  const prev = await snapshotFiles(input.cwd, [input.versionFile, ...pkgRels]);
   try {
     await writeVersionFile(input.cwd, input.versionFile, input.nextVersion);
-    await writePackageJsonVersion(
-      input.cwd,
-      input.packageJson,
-      input.nextVersion
-    );
+    for (const rel of pkgRels) {
+      await writePackageJsonVersion(input.cwd, rel, input.nextVersion);
+    }
   } catch (err) {
-    await (0, import_promises3.writeFile)(vfPath, vfPrev, "utf8");
-    await (0, import_promises3.writeFile)(pkgPath, pkgPrev, "utf8");
+    await restoreFiles(input.cwd, prev);
+    throw err;
+  }
+}
+async function writePackageJsonFilesAtomically(input) {
+  const rels = input.packageJsonFiles;
+  if (rels.length === 0) return;
+  const prev = await snapshotFiles(input.cwd, rels);
+  try {
+    for (const rel of rels) {
+      await writePackageJsonVersion(input.cwd, rel, input.nextVersion);
+    }
+  } catch (err) {
+    await restoreFiles(input.cwd, prev);
     throw err;
   }
 }
@@ -31060,7 +31082,7 @@ function decideBumpGuards(ctx) {
 function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
-async function readVersion(input) {
+async function readPrimaryVersion(input) {
   const { cwd, files } = input;
   const hasVf = Boolean(files.versionFile);
   const hasPkg = Boolean(files.packageJson);
@@ -31094,19 +31116,54 @@ async function readVersion(input) {
   }
   throw new Error("readVersion: no versionFiles configured");
 }
+async function assertExtraPackageJsonMatch(cwd, extras, expected) {
+  if (!extras?.length) return;
+  for (const rel of extras) {
+    const got = await tryReadPackageJsonVersion(cwd, rel);
+    if (got === null) {
+      throw new Error(
+        `readVersion: package.json not found at ${import_path4.default.join(cwd, rel)}`
+      );
+    }
+    if (got !== expected) {
+      throw new Error(
+        `versionFiles mismatch: expected ${JSON.stringify(expected)} at ${rel}, got ${JSON.stringify(got)}`
+      );
+    }
+  }
+}
+async function extrasNeedWrite(cwd, extras, nextVersion) {
+  if (!extras?.length) return false;
+  for (const rel of extras) {
+    const got = await tryReadPackageJsonVersion(cwd, rel);
+    if (got !== nextVersion) return true;
+  }
+  return false;
+}
+function primaryFiles(files) {
+  return {
+    ...files.versionFile !== void 0 ? { versionFile: files.versionFile } : {},
+    ...files.packageJson !== void 0 ? { packageJson: files.packageJson } : {}
+  };
+}
+async function readVersion(input) {
+  const version = await readPrimaryVersion({
+    cwd: input.cwd,
+    files: primaryFiles(input.files)
+  });
+  await assertExtraPackageJsonMatch(
+    input.cwd,
+    input.files.extraPackageJson,
+    version
+  );
+  return version;
+}
 async function writeVersionFile2(cwd, rel, nextVersion) {
   await (0, import_promises4.writeFile)(import_path5.default.join(cwd, rel), `${nextVersion}
 `, "utf8");
 }
-async function writePackageJsonVersion2(cwd, rel, nextVersion) {
-  const p = import_path5.default.join(cwd, rel);
-  const raw = await (0, import_promises4.readFile)(p, "utf8");
-  const pkg = JSON.parse(raw);
-  pkg.version = nextVersion;
-  await (0, import_promises4.writeFile)(p, `${JSON.stringify(pkg, null, 2)}
-`, "utf8");
-}
-async function writeSingleSource(cwd, nextVersion, kind, rel) {
+async function writeSingleSource(cwd, nextVersion, kind, rel, extras) {
+  const extrasStale = await extrasNeedWrite(cwd, extras, nextVersion);
   if (kind === "versionFile") {
     let current = "";
     try {
@@ -31114,22 +31171,35 @@ async function writeSingleSource(cwd, nextVersion, kind, rel) {
     } catch (err) {
       if (err.code !== "ENOENT") throw err;
     }
-    if (current === nextVersion) {
+    if (current === nextVersion && !extrasStale) {
       return { nextVersion, wrote: false, reason: "already-current" };
     }
-    await writeVersionFile2(cwd, rel, nextVersion);
+    if (current !== nextVersion) {
+      await writeVersionFile2(cwd, rel, nextVersion);
+    }
+    await writePackageJsonFilesAtomically({
+      cwd,
+      packageJsonFiles: extras,
+      nextVersion
+    });
     return { nextVersion, wrote: true, reason: "written" };
   }
   const raw = await (0, import_promises4.readFile)(import_path5.default.join(cwd, rel), "utf8");
   const pkg = JSON.parse(raw);
-  if (pkg.version === nextVersion) {
+  if (pkg.version === nextVersion && !extrasStale) {
     return { nextVersion, wrote: false, reason: "already-current" };
   }
-  await writePackageJsonVersion2(cwd, rel, nextVersion);
+  const pkgRels = pkg.version === nextVersion ? extras : [rel, ...extras];
+  await writePackageJsonFilesAtomically({
+    cwd,
+    packageJsonFiles: pkgRels,
+    nextVersion
+  });
   return { nextVersion, wrote: true, reason: "written" };
 }
 async function writeVersion(input) {
   const { cwd, nextVersion, dryRun, allowWrite, files } = input;
+  const extras = files.extraPackageJson ?? [];
   if (dryRun) {
     return { nextVersion, wrote: false, reason: "dry-run" };
   }
@@ -31143,14 +31213,22 @@ async function writeVersion(input) {
     const vf = await tryReadVersionFile(cwd, vfRel);
     const pkg = await tryReadPackageJsonVersion(cwd, pkgRel);
     if (vf !== null && pkg !== null) {
-      const current = await readVersion({ cwd, files });
-      if (current === nextVersion) {
+      const current = await readPrimaryVersion({
+        cwd,
+        files: {
+          versionFile: vfRel,
+          packageJson: pkgRel
+        }
+      });
+      const extrasStale = await extrasNeedWrite(cwd, extras, nextVersion);
+      if (current === nextVersion && !extrasStale) {
         return { nextVersion, wrote: false, reason: "already-current" };
       }
       await writeBothAtomically({
         cwd,
         versionFile: vfRel,
         packageJson: pkgRel,
+        extraPackageJson: extras,
         nextVersion
       });
       return { nextVersion, wrote: true, reason: "written" };
@@ -31160,7 +31238,8 @@ async function writeVersion(input) {
         cwd,
         nextVersion,
         "versionFile",
-        vfRel
+        vfRel,
+        extras
       );
     }
     if (pkg !== null) {
@@ -31168,16 +31247,17 @@ async function writeVersion(input) {
         cwd,
         nextVersion,
         "packageJson",
-        pkgRel
+        pkgRel,
+        extras
       );
     }
     throw new Error("writeVersion: neither VERSION nor package.json found");
   }
   if (vfRel) {
-    return writeSingleSource(cwd, nextVersion, "versionFile", vfRel);
+    return writeSingleSource(cwd, nextVersion, "versionFile", vfRel, extras);
   }
   if (pkgRel) {
-    return writeSingleSource(cwd, nextVersion, "packageJson", pkgRel);
+    return writeSingleSource(cwd, nextVersion, "packageJson", pkgRel, extras);
   }
   throw new Error("writeVersion: no versionFiles configured");
 }
@@ -31971,10 +32051,12 @@ function toVersionFiles(versionFiles) {
   const versionFile = versionFiles.find(
     (f) => f === "VERSION" || /(^|\/)VERSION$/.test(f)
   );
-  const packageJson = versionFiles.find((f) => f.endsWith("package.json"));
+  const packageJsons = versionFiles.filter((f) => f.endsWith("package.json"));
+  const [packageJson, ...extraPackageJson] = packageJsons;
   return {
     ...versionFile !== void 0 ? { versionFile } : {},
-    ...packageJson !== void 0 ? { packageJson } : {}
+    ...packageJson !== void 0 ? { packageJson } : {},
+    ...extraPackageJson.length > 0 ? { extraPackageJson } : {}
   };
 }
 

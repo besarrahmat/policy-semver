@@ -36,6 +36,7 @@ export {
   isSemVerString,
   parseSemVer,
   readVersion,
+  toVersionFiles,
   writeVersion,
 } from "./bump/index.js";
 export {
