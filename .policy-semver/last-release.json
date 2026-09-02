@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0",
-  "kind": "major-reset",
-  "gitSha": "e6fe53bf1460ca31d4a74bebca24b49dd61e1f82",
-  "tag": "v1.0.0",
-  "at": "2026-09-02T08:57:41.131Z"
+  "version": "1.0.1",
+  "kind": "patch",
+  "gitSha": "1e6ac2024874f02fecd2b9172d3d4f3e787b1a1d",
+  "tag": "v1.0.1",
+  "at": "2026-09-02T09:53:34.523Z"
 }
