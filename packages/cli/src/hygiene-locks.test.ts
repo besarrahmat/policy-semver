@@ -83,6 +83,8 @@ it("tracked BLOCKERS.md exists with the public table", () => {
   expect(existsSync(path.join(root, REPO_HYGIENE.blockersFile))).toBe(true);
   const blockers = read(REPO_HYGIENE.blockersFile);
   expect(blockers).toMatch(/# Blockers/);
-  expect(blockers).toMatch(/\| Date \| Area \| Issue \|/);
+  expect(blockers).toMatch(
+    /\| Date\s+\| Area\s+\| Issue\s+\| Owner\s+\| Status\s+\| Resolution\s+\|/,
+  );
   expect(blockers).toMatch(/esbuild/);
 });
