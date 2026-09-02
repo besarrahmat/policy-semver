@@ -15,8 +15,8 @@ importers:
         specifier: ^2.5.11
         version: 2.5.11
       '@types/node':
-        specifier: ^24.0.0
-        version: 24.13.3
+        specifier: ^26.4.0
+        version: 26.4.0
       only-allow:
         specifier: ^1.2.1
         version: 1.2.2
@@ -31,7 +31,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^4.1.11
-        version: 4.1.11(@types/node@24.13.3)(vite@7.3.6(@types/node@24.13.3)(tsx@4.23.13))
+        version: 4.1.11(@types/node@26.4.0)(vite@7.3.6(@types/node@26.4.0)(tsx@4.23.13))
 
   packages/action:
     dependencies:
@@ -714,8 +714,8 @@ packages:
   '@types/estree@1.0.9':
     resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
 
-  '@types/node@24.13.3':
-    resolution: {integrity: sha512-Dh8vAsV36ig5wa9OX4pXvMc9D3Veibfw2wix0CUwYODLD8nkj9UsLjASr49nPg+2eKzxhBV+v7L8pXvT4e639Q==}
+  '@types/node@26.4.0':
+    resolution: {integrity: sha512-faiGnoIrLH/V8cibOMEAZ8pMw6oXqSukl29ra4mN8GdaB2ZewzeaLj+INpV5N+Z1eKWzY+IzaIZH2EIR6YZRNQ==}
 
   '@vitest/expect@4.1.11':
     resolution: {integrity: sha512-VX2x5vNJXET47KAFzwERI+KRMtTTCSWTfSMKsW7JsUsXV4psq++e3DvZpuTDOpHcxytiDs6p2nhVb2tVDiiUYw==}
@@ -1052,8 +1052,8 @@ packages:
   ufo@1.6.4:
     resolution: {integrity: sha512-JFNbkD1Svwe0KvGi8GOeLcP4kAWQ609twvCdcHxq1oSL8svv39ZuSvajcD8B+5D0eL4+s1Is2D/O6KN3qcTeRA==}
 
-  undici-types@7.18.2:
-    resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
+  undici-types@8.3.0:
+    resolution: {integrity: sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==}
 
   undici@6.28.0:
     resolution: {integrity: sha512-LIY910g9TI13YS95lrMFrs8Rm/u/irgHeTWoKCoteeJ04CUJ92eEfj0rVn+7VKMPBpUPiUoBKfhNyLI23EE/KA==}
@@ -1595,9 +1595,9 @@ snapshots:
 
   '@types/estree@1.0.9': {}
 
-  '@types/node@24.13.3':
+  '@types/node@26.4.0':
     dependencies:
-      undici-types: 7.18.2
+      undici-types: 8.3.0
 
   '@vitest/expect@4.1.11':
     dependencies:
@@ -1608,13 +1608,13 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.1.1
 
-  '@vitest/mocker@4.1.11(vite@7.3.6(@types/node@24.13.3)(tsx@4.23.13))':
+  '@vitest/mocker@4.1.11(vite@7.3.6(@types/node@26.4.0)(tsx@4.23.13))':
     dependencies:
       '@vitest/spy': 4.1.11
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.3.6(@types/node@24.13.3)(tsx@4.23.13)
+      vite: 7.3.6(@types/node@26.4.0)(tsx@4.23.13)
 
   '@vitest/pretty-format@4.1.11':
     dependencies:
@@ -1755,6 +1755,10 @@ snapshots:
   fdir@6.5.0(picomatch@4.0.5):
     optionalDependencies:
       picomatch: 4.0.5
+
+  fdir@6.5.0(picomatch@4.0.7):
+    optionalDependencies:
+      picomatch: 4.0.7
 
   fix-dts-default-cjs-exports@1.0.1:
     dependencies:
@@ -1958,29 +1962,29 @@ snapshots:
 
   ufo@1.6.4: {}
 
-  undici-types@7.18.2: {}
+  undici-types@8.3.0: {}
 
   undici@6.28.0: {}
 
   universal-user-agent@7.0.3: {}
 
-  vite@7.3.6(@types/node@24.13.3)(tsx@4.23.13):
+  vite@7.3.6(@types/node@26.4.0)(tsx@4.23.13):
     dependencies:
       esbuild: 0.28.2
-      fdir: 6.5.0(picomatch@4.0.5)
-      picomatch: 4.0.5
+      fdir: 6.5.0(picomatch@4.0.7)
+      picomatch: 4.0.7
       postcss: 8.5.26
       rollup: 4.62.4
       tinyglobby: 0.2.17
     optionalDependencies:
-      '@types/node': 24.13.3
+      '@types/node': 26.4.0
       fsevents: 2.3.3
       tsx: 4.23.13
 
-  vitest@4.1.11(@types/node@24.13.3)(vite@7.3.6(@types/node@24.13.3)(tsx@4.23.13)):
+  vitest@4.1.11(@types/node@26.4.0)(vite@7.3.6(@types/node@26.4.0)(tsx@4.23.13)):
     dependencies:
       '@vitest/expect': 4.1.11
-      '@vitest/mocker': 4.1.11(vite@7.3.6(@types/node@24.13.3)(tsx@4.23.13))
+      '@vitest/mocker': 4.1.11(vite@7.3.6(@types/node@26.4.0)(tsx@4.23.13))
       '@vitest/pretty-format': 4.1.11
       '@vitest/runner': 4.1.11
       '@vitest/snapshot': 4.1.11
@@ -1997,10 +2001,10 @@ snapshots:
       tinyexec: 1.3.0
       tinyglobby: 0.2.17
       tinyrainbow: 3.1.1
-      vite: 7.3.6(@types/node@24.13.3)(tsx@4.23.13)
+      vite: 7.3.6(@types/node@26.4.0)(tsx@4.23.13)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 24.13.3
+      '@types/node': 26.4.0
     transitivePeerDependencies:
       - msw
 
