@@ -87,4 +87,5 @@ it("tracked BLOCKERS.md exists with the public table", () => {
     /\| Date\s+\| Area\s+\| Issue\s+\| Owner\s+\| Status\s+\| Resolution\s+\|/,
   );
   expect(blockers).toMatch(/esbuild/);
+  expect(blockers).toMatch(/resolved/);
 });

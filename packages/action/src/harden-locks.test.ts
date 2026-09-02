@@ -22,12 +22,16 @@ it("locks 12.C harden flags", () => {
   expect(HARDEN_AUDIT.date).toBe("2026-09-01");
   expect(HARDEN_AUDIT.actionsGithubMin).toBe("9.1.1");
   expect(HARDEN_AUDIT.nanoidOverride).toBe("3.3.18");
+  expect(HARDEN_AUDIT.esbuildOverride).toBe("^0.28.1");
   expect(HARDEN_RUNTIME.forkRefuseWrite).toBe(true);
   expect(HARDEN_RUNTIME.redactReleaseBodies).toBe(true);
   expect(HARDEN_RUNTIME.pinShaRecommended).toBe(true);
   expect(HARDEN_RUNTIME.examplesPublishedChannels).toBe(true);
   expect(read("BLOCKERS.md")).toMatch(/esbuild/);
+  expect(read("BLOCKERS.md")).toMatch(/resolved/);
   expect(read("pnpm-workspace.yaml")).toMatch(/nanoid@\^3:\s*3\.3\.18/);
+  expect(read("pnpm-workspace.yaml")).toMatch(/esbuild:\s*"\^0\.28\.1"/);
+  expect(read("pnpm-lock.yaml")).not.toMatch(/esbuild@0\.27/);
   const actionPkg = JSON.parse(read("packages/action/package.json")) as {
     dependencies?: Record<string, string>;
   };

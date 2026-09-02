@@ -5,9 +5,9 @@
  *
  * ## Audit
  * `pnpm audit` (2026-09-01): `@actions/github` bumped to **9.1.1** (undici 6.x);
- * `nanoid@^3` overridden to **3.3.18** in `pnpm-workspace.yaml`. Remaining:
- * **esbuild** low (GHSA-g7r4-m6w7-qqqr) via tsup/vitest — accepted, see root
- * `BLOCKERS.md`.
+ * `nanoid@^3` overridden to **3.3.18** in `pnpm-workspace.yaml`.
+ * `esbuild` overridden to **^0.28.1** (GHSA-g7r4-m6w7-qqqr; `tsup@8.5.1`
+ * still declares `^0.27`). See root `BLOCKERS.md`.
  *
  * ## Action / CI permissions
  * Consumer + dogfood write workflows: `contents: write` + `pull-requests: write`
@@ -29,6 +29,7 @@ export const HARDEN_AUDIT = {
   date: "2026-09-01",
   actionsGithubMin: "9.1.1",
   nanoidOverride: "3.3.18",
+  esbuildOverride: "^0.28.1",
   blockersFile: "BLOCKERS.md",
 } as const;
 
