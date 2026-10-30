@@ -8,3 +8,8 @@ overrides:
   # tsup@8.5.1 still declares esbuild ^0.27; GHSA-g7r4-m6w7-qqqr is patched in 0.28.1+.
   # Drop when tsup (and any other direct parent) declares ^0.28.
   esbuild: "^0.28.1"
+  # vite (vitest peer) and source-map-js (via postcss, tsup peer) are auto-installed peers that
+  # `pnpm update` skips; pin patched releases (GHSA-587h-7wmj-h5pm, GHSA-68fv-2mgg-jv7q).
+  # Drop when vitest/postcss lockfile resolution already lands on these or newer.
+  vite@^7: ^7.3.7
+  source-map-js: ^1.2.2
