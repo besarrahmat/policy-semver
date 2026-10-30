@@ -82,6 +82,24 @@ describe("runRelease against a real git remote", { timeout: 30_000 }, () => {
     expect(octokit.repos.createRelease).toHaveBeenCalledOnce();
   });
 
+  it("signs as the bot without rewriting the repo's identity", async () => {
+    const { remote, work } = await makeRepo();
+    await release(work);
+
+    expect(await git(remote, "log", "-1", "--format=%an", "main")).toBe(
+      "github-actions[bot]",
+    );
+    expect(
+      await git(
+        remote,
+        "for-each-ref",
+        "--format=%(taggername)",
+        "refs/tags/v1.1.0",
+      ),
+    ).toBe("github-actions[bot]");
+    expect(await git(work, "config", "--local", "user.name")).toBe("t");
+  });
+
   it("resolves an annotated remote tag to its commit", async () => {
     const { work } = await makeRepo();
     await release(work);

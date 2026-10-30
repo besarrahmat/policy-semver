@@ -1,4 +1,3 @@
-import { TAG_EXISTS_FAILS } from "./locks.js";
 import { redactSecrets } from "./redact.js";
 
 export type CreateReleaseInput = {
@@ -58,7 +57,7 @@ export async function createGitHubRelease(
 ): Promise<void> {
   const body = redactSecrets(input.body);
 
-  if ((await releaseExists(input)) && TAG_EXISTS_FAILS) {
+  if (await releaseExists(input)) {
     throw new Error(`release already published: ${input.tag}`);
   }
 

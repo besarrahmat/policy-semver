@@ -5,7 +5,6 @@
  * | Surface | Library | Notes |
  * | --- | --- | --- |
  * | GitHub Action | `@actions/github` | Preferred in Action — `getOctokit(token)` already wired to Actions toolkit |
- * | CLI / core helpers | `@octokit/rest` | Optional if CLI creates releases outside Actions; same REST `repos.createRelease` |
  *
  * Do **not** re-implement HTTP to api.github.com by hand.
  * Module `packages/core/src/github/` owns Release API calls — must not own file formats
@@ -24,7 +23,6 @@
  */
 export const GITHUB_RELEASE_CLIENT = {
   action: "@actions/github",
-  cliOrCore: "@octokit/rest",
 } as const;
 
 /** Patterns replaced with a redaction marker before release/changelog publish. */
@@ -44,5 +42,3 @@ export const SECRET_REDACT_PATTERNS: readonly RegExp[] = [
 ];
 
 export const SECRET_REDACT_REPLACEMENT = "[REDACTED]" as const;
-
-export const TAG_EXISTS_FAILS = true as const;

@@ -1,3 +1,4 @@
+import { BOT_IDENTITY_ARGS } from "./commit.js";
 import { defaultGitExec } from "./exec.js";
 import type { TagInput } from "./types.js";
 
@@ -34,9 +35,18 @@ export async function assertTagAvailable(input: {
 export async function createAnnotatedTag(input: TagInput): Promise<void> {
   const exec = input.exec ?? defaultGitExec;
   await assertTagAvailable(input);
-  await exec(["tag", "-a", "--no-sign", input.tag, "-m", input.message], {
-    cwd: input.cwd,
-  });
+  await exec(
+    [
+      ...BOT_IDENTITY_ARGS,
+      "tag",
+      "-a",
+      "--no-sign",
+      input.tag,
+      "-m",
+      input.message,
+    ],
+    { cwd: input.cwd },
+  );
 }
 
 export async function assertTagMatchesVersion(input: {

@@ -72,12 +72,6 @@ export function decideBumpGuards(ctx: BumpGuardContext): BumpGuardDecision {
   return { allowWrite, forceKindNone, reasons };
 }
 
-export function assertBotCommitMessageSafe(message: string): void {
-  if (!message.includes(BOT_SKIP_TRAILER)) {
-    throw new Error(`bot commit message missing ${BOT_SKIP_TRAILER}`);
-  }
-}
-
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

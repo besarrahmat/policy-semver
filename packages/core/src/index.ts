@@ -1,9 +1,3 @@
-export const CORE_PACKAGE = "@policy-semver/core" as const;
-
-export function ping(): string {
-  return "ok";
-}
-
 export type {
   LastReleaseRecord,
   WriteLastReleaseInput,
@@ -27,7 +21,6 @@ export type {
 } from "./bump/index.js";
 export {
   applyBump,
-  assertBotCommitMessageSafe,
   BOT_SKIP_TRAILER,
   BUMP_SAFETY,
   decideBumpGuards,
@@ -101,7 +94,6 @@ export {
   redactSecrets,
   SECRET_REDACT_PATTERNS,
   SECRET_REDACT_REPLACEMENT,
-  TAG_EXISTS_FAILS,
 } from "./github/index.js";
 export type { HookExec, HookName, RunHookInput } from "./hooks/index.js";
 export {

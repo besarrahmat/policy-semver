@@ -142,7 +142,7 @@ Publish uses [Trusted publishing](https://docs.npmjs.com/trusted-publishers/) (O
 
 ## GitHub Marketplace
 
-**Live:** [PolicySemVer on GitHub Marketplace](https://github.com/marketplace/actions/policysemver) (Release `v1.0.0`, 2026-09-02; first listed from `v0.1.0` on 2026-09-01). Marketplace is discoverability. Production still pins a commit SHA. Do **not** create a `v0.*` / `v1.*` tag only to refresh the listing — [`.github/workflows/publish.yml`](./.github/workflows/publish.yml) publishes npm on those tags. Later Releases should keep **Publish this Action to the GitHub Marketplace** checked.
+**Live:** [PolicySemVer on GitHub Marketplace](https://github.com/marketplace/actions/policysemver) (Release `v1.0.0`, 2026-09-02; first listed from `v0.1.0` on 2026-09-01). Marketplace is discoverability. Production still pins a commit SHA. Do **not** create a `vX.Y.Z` tag only to refresh the listing — [`.github/workflows/publish.yml`](./.github/workflows/publish.yml) publishes npm on those tags. Later Releases should keep **Publish this Action to the GitHub Marketplace** checked.
 
 | Requirement                                                                                                                          | This repo                                                                                                                                                           |
 | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

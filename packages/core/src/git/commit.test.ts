@@ -3,7 +3,7 @@ import { commitBumpFiles } from "./commit.js";
 import type { GitExec } from "./types.js";
 
 describe("commitBumpFiles", () => {
-  it("sets local git identity before add/commit", async () => {
+  it("commits as the bot without touching git config", async () => {
     const exec = vi.fn<GitExec>(async () => ({ stdout: "", stderr: "" }));
     await commitBumpFiles({
       cwd: "/tmp/repo",
@@ -12,14 +12,16 @@ describe("commitBumpFiles", () => {
       exec,
     });
     expect(exec.mock.calls.map((c) => c[0])).toEqual([
-      ["config", "user.name", "github-actions[bot]"],
-      [
-        "config",
-        "user.email",
-        "41898282+github-actions[bot]@users.noreply.github.com",
-      ],
       ["add", "--", "VERSION", "package.json"],
-      ["commit", "-m", "chore(release): v1.0.0 [skip version]"],
+      [
+        "-c",
+        "user.name=github-actions[bot]",
+        "-c",
+        "user.email=41898282+github-actions[bot]@users.noreply.github.com",
+        "commit",
+        "-m",
+        "chore(release): v1.0.0 [skip version]",
+      ],
     ]);
   });
 

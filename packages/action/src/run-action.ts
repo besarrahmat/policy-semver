@@ -181,8 +181,7 @@ export async function runAction(): Promise<void> {
     isMergedToProd: decision.mode === "write",
   });
 
-  const allowWrite =
-    decision.allowWrite && guards.allowWrite && decision.mode === "write";
+  const allowWrite = guards.allowWrite && decision.mode === "write";
 
   if (allowWrite && (!token || !octokit)) {
     core.setFailed(

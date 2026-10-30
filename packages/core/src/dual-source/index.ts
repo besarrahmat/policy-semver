@@ -10,4 +10,5 @@ export {
   type WriteBothInput,
   writeBothAtomically,
   writePackageJsonFilesAtomically,
+  writeVersionFile,
 } from "./write-both.js";

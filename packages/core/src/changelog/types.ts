@@ -24,12 +24,7 @@ export type WriteChangelogInput = {
 
 export type WriteChangelogResult = {
   wrote: boolean;
-  reason:
-    | "kind-none"
-    | "created"
-    | "appended"
-    | "already-present"
-    | "conflict-fail";
+  reason: "kind-none" | "created" | "appended" | "already-present";
   path: string;
   /** Rendered section body (without file header) — useful for Release later */
   sectionMarkdown?: string;
