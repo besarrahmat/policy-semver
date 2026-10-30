@@ -94,9 +94,9 @@ Full write stub (build → deploy, merge queue; private-fork checkout is comment
 
 Copy-out stubs (not workspace packages):
 
-| Path | What it shows |
-| --- | --- |
-| [`examples/node-app`](./examples/node-app/) | Console + HTTP version from `VERSION` / `package.json` |
+| Path                                                          | What it shows                                           |
+| ------------------------------------------------------------- | ------------------------------------------------------- |
+| [`examples/node-app`](./examples/node-app/)                   | Console + HTTP version from `VERSION` / `package.json`  |
 | [`examples/cloudflare-worker`](./examples/cloudflare-worker/) | Build-time inject into the Worker bundle (no CDN fetch) |
 
 How a second app pins the Action and `npx policy-semver@1.0.0`: [`examples/README.md`](./examples/README.md#a-second-consumer-app).
@@ -105,11 +105,11 @@ How a second app pins the Action and `npx policy-semver@1.0.0`: [`examples/READM
 
 This repo produces three artifacts. They are not interchangeable.
 
-| Artifact | How to use | Runtime deps on the consumer |
-| --- | --- | --- |
-| GitHub Action | `uses: besarrahmat/policy-semver@<sha>` (prod) or `@v1.0.0` (demo) | **None** — runners execute committed `dist/index.js` |
-| `policy-semver` CLI | `npx policy-semver@1.0.0 …` | Resolved from npm; depends on `@policy-semver/core` |
-| `@policy-semver/core` | `pnpm add @policy-semver/core@1.0.0` | Resolved from npm |
+| Artifact              | How to use                                                         | Runtime deps on the consumer                         |
+| --------------------- | ------------------------------------------------------------------ | ---------------------------------------------------- |
+| GitHub Action         | `uses: besarrahmat/policy-semver@<sha>` (prod) or `@v1.0.0` (demo) | **None** — runners execute committed `dist/index.js` |
+| `policy-semver` CLI   | `npx policy-semver@1.0.0 …`                                        | Resolved from npm; depends on `@policy-semver/core`  |
+| `@policy-semver/core` | `pnpm add @policy-semver/core@1.0.0`                               | Resolved from npm                                    |
 
 Contributors still run the workspace CLI: `pnpm policy-semver --help`.
 
@@ -127,10 +127,10 @@ Do not `npm install` / `npx` the Action. Do not treat the CLI as a substitute fo
 
 Published: **`policy-semver@1.0.0`** and **`@policy-semver/core@1.0.0`** (OIDC provenance from `publish.yml`). Install the CLI with `npx policy-semver@1.0.0`. The Action stays git `uses:` (not npm), for example `@v1.0.0` or a full commit SHA. `0.1.0` remains on the registry (laptop publish, no provenance).
 
-| Package | Access |
-| --- | --- |
-| `policy-semver` | public (CLI) |
-| `@policy-semver/core` | public (library) |
+| Package                                 | Access            |
+| --------------------------------------- | ----------------- |
+| `policy-semver`                         | public (CLI)      |
+| `@policy-semver/core`                   | public (library)  |
 | `@policy-semver/action` / monorepo root | **not** published |
 
 Publish uses [Trusted publishing](https://docs.npmjs.com/trusted-publishers/) (OIDC) from GitHub Actions: permission `id-token: write`, npm CLI **≥ 11.5.1**, Node **24+** (`.node-version`), GitHub-hosted runner, workflow filename **`publish.yml`** (exact, including `.yml`). [Provenance](https://docs.npmjs.com/generating-provenance-statements) is generated automatically under trusted publishing **only from a public GitHub repo** — private source repos cannot publish provenance attestations. `0.1.0` was a laptop publish (no OIDC attestation); later versions should publish from `publish.yml`.
@@ -143,16 +143,16 @@ Publish uses [Trusted publishing](https://docs.npmjs.com/trusted-publishers/) (O
 
 **Live:** [PolicySemVer on GitHub Marketplace](https://github.com/marketplace/actions/policysemver) (Release `v1.0.0`, 2026-09-02; first listed from `v0.1.0` on 2026-09-01). Marketplace is discoverability. Production still pins a commit SHA. Do **not** create a `v0.*` / `v1.*` tag only to refresh the listing — [`.github/workflows/publish.yml`](./.github/workflows/publish.yml) publishes npm on those tags. Later Releases should keep **Publish this Action to the GitHub Marketplace** checked.
 
-| Requirement | This repo |
-| --- | --- |
-| Public repository | Yes |
-| Root `action.yml` (layout A) | Yes — subfolder [`packages/action/action.yml`](./packages/action/action.yml) is dogfood only and is **not** auto-listed |
-| Unique `name` | `PolicySemVer` (listed name; unique vs Marketplace/user/org at list time 2026-09-01) |
-| Branding | `icon: tag`, `color: blue` ([metadata syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/metadata-syntax) Feather v4.28.0 / allowed colors) |
-| Short description | Root `action.yml`: deployed apps + major via `APP_VERSION_MAJOR`. The live card follows Release `v1.0.0` |
-| Categories (Release form, not YAML) | Primary **Continuous integration**, secondary **Publishing** |
-| Account 2FA | Enabled (required to publish; listing is live) |
-| [GitHub Marketplace Developer Agreement](https://docs.github.com/en/site-policy/github-terms/github-marketplace-developer-agreement) | Accepted (listing is live) |
+| Requirement                                                                                                                          | This repo                                                                                                                                                           |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public repository                                                                                                                    | Yes                                                                                                                                                                 |
+| Root `action.yml` (layout A)                                                                                                         | Yes — subfolder [`packages/action/action.yml`](./packages/action/action.yml) is dogfood only and is **not** auto-listed                                             |
+| Unique `name`                                                                                                                        | `PolicySemVer` (listed name; unique vs Marketplace/user/org at list time 2026-09-01)                                                                                |
+| Branding                                                                                                                             | `icon: tag`, `color: blue` ([metadata syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/metadata-syntax) Feather v4.28.0 / allowed colors) |
+| Short description                                                                                                                    | Root `action.yml`: deployed apps + major via `APP_VERSION_MAJOR`. The live card follows Release `v1.0.0`                                                            |
+| Categories (Release form, not YAML)                                                                                                  | Primary **Continuous integration**, secondary **Publishing**                                                                                                        |
+| Account 2FA                                                                                                                          | Enabled (required to publish; listing is live)                                                                                                                      |
+| [GitHub Marketplace Developer Agreement](https://docs.github.com/en/site-policy/github-terms/github-marketplace-developer-agreement) | Accepted (listing is live)                                                                                                                                          |
 
 Official steps: [Publishing actions in GitHub Marketplace](https://docs.github.com/en/actions/how-tos/create-and-publish-actions/publish-in-github-marketplace). Do not rename `action.yml` to `action.yaml` (hides prior Marketplace versions). The Marketplace card follows `action.yml` on the **Release tag**.
 
@@ -174,20 +174,20 @@ Production workflows pin a **full commit SHA**. The release tag `@v1.0.0` is acc
 
 These are the rules that surprise people coming from other release bots. Classifier details: [CONTRIBUTING.md](./CONTRIBUTING.md#commit-cheat-sheet). Golden cases live in [`fixtures/classifier/`](./fixtures/classifier/).
 
-| Topic | PolicySemVer |
-| --- | --- |
-| Major | Only when the env named by `majorEnv` (default **`APP_VERSION_MAJOR`**) is raised to a new integer (`N` → `N.0.0`). `BREAKING CHANGE` / `feat!:` warn; they never auto-major. |
-| `feat & fix:` | First-class **minor** (same bucket as `feat:`). Optional spaces around `&`. |
-| Sync prod → develop | `kind: none` — no bump, no tag (for example `main` → `dev`). |
-| 0.x | `APP_VERSION_MAJOR=0` until a human raises it. Feat stays minor, fix stays patch. |
-| Docs-only | `docs:` / `docs(scope):` → `kind: none`. |
-| Fork PR | Sticky comment only — never write. |
+| Topic               | PolicySemVer                                                                                                                                                                  |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Major               | Only when the env named by `majorEnv` (default **`APP_VERSION_MAJOR`**) is raised to a new integer (`N` → `N.0.0`). `BREAKING CHANGE` / `feat!:` warn; they never auto-major. |
+| `feat & fix:`       | First-class **minor** (same bucket as `feat:`). Optional spaces around `&`.                                                                                                   |
+| Sync prod → develop | `kind: none` — no bump, no tag (for example `main` → `dev`).                                                                                                                  |
+| 0.x                 | `APP_VERSION_MAJOR=0` until a human raises it. Feat stays minor, fix stays patch.                                                                                             |
+| Docs-only           | `docs:` / `docs(scope):` → `kind: none`.                                                                                                                                      |
+| Fork PR             | Sticky comment only — never write.                                                                                                                                            |
 
 ## Permissions and forks
 
 ```yaml
 permissions:
-  contents: write      # commit, tag, GitHub Release (write path)
+  contents: write # commit, tag, GitHub Release (write path)
   pull-requests: write # sticky dry-run comment
 ```
 
@@ -218,18 +218,18 @@ Index and comparison table: [`examples/README.md`](./examples/README.md).
 
 Policy lives in **`versioning.config.json`** at the repo root (JSON Schema fail-closed).
 
-| Item | Default / notes |
-| --- | --- |
-| Config path | `versioning.config.json` |
-| Major bumps | Manual only via env named by `majorEnv` (default **`APP_VERSION_MAJOR`**) — set to the next major integer (e.g. `2`) to reset to `N.0.0`; never auto-major from `BREAKING` / `feat!:` |
-| 0.x | `APP_VERSION_MAJOR=0` until a human raises it. Feat stays minor, fix stays patch, major only via env — 0.x is **not** "any breaking change may be a minor". First public tool release: **0.1.0** (not `0.0.0`). Consumers may seed `VERSION` `0.0.0`. |
-| Dependabot | Subject `Bump …` / `chore(deps):` → **patch**, not minor. This repo does **not** auto-label those PRs `skip-version`. Label `skip-version` still disables the bump when you add it. |
-| Branches | `prodBranch` = `main`, `developBranch` = `dev` (this repo's dogfood topology) |
-| Dual-source | Default `versionFiles`: **root** `VERSION` + **root** `package.json`. Extra `*.package.json` entries lockstep to the same version (this repo: CLI + core so npm matches the GitHub tag). Not independent per-package bumps. |
-| `tagPrefix` | Default `v` → tag `vX.Y.Z`. A human tag with a missing or wrong prefix is **not** renamed; `verify` checks `{tagPrefix}{VERSION}` |
-| `release/*` | Not production unless `prodBranch` is set to that name; PRs targeting `release/1.2` are ignored |
-| Workspaces | **Option B (v1):** no workspace graph, no path-filter. **Omit** the `workspaces` key — it is not in the schema; `"workspaces": null` or a paths MVP **fail-closed**. A path-filter (and missed-path skipped bumps) is 0.2. Not Changesets-class package graph parity. |
-| Audit | `.policy-semver/last-release.json` after a successful release — **commit** by default |
+| Item        | Default / notes                                                                                                                                                                                                                                                       |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Config path | `versioning.config.json`                                                                                                                                                                                                                                              |
+| Major bumps | Manual only via env named by `majorEnv` (default **`APP_VERSION_MAJOR`**) — set to the next major integer (e.g. `2`) to reset to `N.0.0`; never auto-major from `BREAKING` / `feat!:`                                                                                 |
+| 0.x         | `APP_VERSION_MAJOR=0` until a human raises it. Feat stays minor, fix stays patch, major only via env — 0.x is **not** "any breaking change may be a minor". First public tool release: **0.1.0** (not `0.0.0`). Consumers may seed `VERSION` `0.0.0`.                 |
+| Dependabot  | Subject `Bump …` / `chore(deps):` → **patch**, not minor. This repo does **not** auto-label those PRs `skip-version`. Label `skip-version` still disables the bump when you add it.                                                                                   |
+| Branches    | `prodBranch` = `main`, `developBranch` = `dev` (this repo's dogfood topology)                                                                                                                                                                                         |
+| Dual-source | Default `versionFiles`: **root** `VERSION` + **root** `package.json`. Extra `*.package.json` entries lockstep to the same version (this repo: CLI + core so npm matches the GitHub tag). Not independent per-package bumps.                                           |
+| `tagPrefix` | Default `v` → tag `vX.Y.Z`. A human tag with a missing or wrong prefix is **not** renamed; `verify` checks `{tagPrefix}{VERSION}`                                                                                                                                     |
+| `release/*` | Not production unless `prodBranch` is set to that name; PRs targeting `release/1.2` are ignored                                                                                                                                                                       |
+| Workspaces  | **Option B (v1):** no workspace graph, no path-filter. **Omit** the `workspaces` key — it is not in the schema; `"workspaces": null` or a paths MVP **fail-closed**. A path-filter (and missed-path skipped bumps) is 0.2. Not Changesets-class package graph parity. |
+| Audit       | `.policy-semver/last-release.json` after a successful release — **commit** by default                                                                                                                                                                                 |
 
 Unknown keys in the config file are **rejected**. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
@@ -249,10 +249,10 @@ Do not put the write job in the same cancel-friendly concurrency group as flaky 
 
 The Action does not bump on `push` to production. Protect **`main`** (consumer `prodBranch`) so VERSION / tags only change through a PR.
 
-| Repo | Protect | Why |
-| --- | --- | --- |
+| Repo                                | Protect               | Why                                                                                                                                                                                                                         |
+| ----------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Consumer** (app using the Action) | `main` / `prodBranch` | Require a pull request; block force-pushes. After merge the Action must push the bump commit — if `github-actions[bot]` is blocked (PAT / GitHub App). Settings: [`packages/action/README.md`](./packages/action/README.md) |
-| **This tool repo** | `main` | Same rules. Day-to-day work stays on `dev`; only `dev` → `main` PRs land on production. See [CONTRIBUTING.md](./CONTRIBUTING.md) |
+| **This tool repo**                  | `main`                | Same rules. Day-to-day work stays on `dev`; only `dev` → `main` PRs land on production. See [CONTRIBUTING.md](./CONTRIBUTING.md)                                                                                            |
 
 The Action **skips `push` events**, so a direct push does not bump. Branch protection is still required so humans cannot rewrite VERSION by pushing to `main`.
 

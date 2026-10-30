@@ -14,13 +14,13 @@ Follow the root [README quickstart](../README.md#quickstart): `versioning.config
 
 Map roughly:
 
-| semantic-release | PolicySemVer |
-| --- | --- |
-| `branches` production name | `prodBranch` (default `main`) |
-| `@semantic-release/github` | Action write path → GitHub Release |
-| `@semantic-release/changelog` / git commit of notes | `changelogPath` + bump commit |
-| `@semantic-release/npm` (publish the **app**) | Out of scope — optional `hooks.afterRelease` |
-| `BREAKING CHANGE` → major | Warning only; set `APP_VERSION_MAJOR` |
+| semantic-release                                    | PolicySemVer                                 |
+| --------------------------------------------------- | -------------------------------------------- |
+| `branches` production name                          | `prodBranch` (default `main`)                |
+| `@semantic-release/github`                          | Action write path → GitHub Release           |
+| `@semantic-release/changelog` / git commit of notes | `changelogPath` + bump commit                |
+| `@semantic-release/npm` (publish the **app**)       | Out of scope — optional `hooks.afterRelease` |
+| `BREAKING CHANGE` → major                           | Warning only; set `APP_VERSION_MAJOR`        |
 
 ## Surprises
 
@@ -29,4 +29,4 @@ Map roughly:
 - Dual-source: if both `VERSION` and `package.json` exist, they must match.
 - v1 versions the **repo root** only.
 
-Stay on semantic-release if the product is an npm library whose release *is* `npm publish` from Conventional Commits, including auto-major.
+Stay on semantic-release if the product is an npm library whose release _is_ `npm publish` from Conventional Commits, including auto-major.

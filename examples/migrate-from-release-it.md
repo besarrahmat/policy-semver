@@ -12,13 +12,13 @@
 
 Follow the root [README quickstart](../README.md#quickstart).
 
-| release-it | PolicySemVer |
-| --- | --- |
-| Increment prompt / `--ci` increment | Classifier + `APP_VERSION_MAJOR` for major |
-| GitHub plugin | Action `repos.createRelease` after tag |
-| `hooks` in release-it config | `hooks.beforeBump` / `afterTag` / `afterRelease` (POSIX `sh -c`, `null` skips) |
-| npm publish of the **app** | Out of scope — optional `afterRelease` hook |
-| `--no-git.requireCleanWorkingDir` | CLI `bump --write` requires a clean tree unless `--force` |
+| release-it                          | PolicySemVer                                                                   |
+| ----------------------------------- | ------------------------------------------------------------------------------ |
+| Increment prompt / `--ci` increment | Classifier + `APP_VERSION_MAJOR` for major                                     |
+| GitHub plugin                       | Action `repos.createRelease` after tag                                         |
+| `hooks` in release-it config        | `hooks.beforeBump` / `afterTag` / `afterRelease` (POSIX `sh -c`, `null` skips) |
+| npm publish of the **app**          | Out of scope — optional `afterRelease` hook                                    |
+| `--no-git.requireCleanWorkingDir`   | CLI `bump --write` requires a clean tree unless `--force`                      |
 
 ## Surprises
 

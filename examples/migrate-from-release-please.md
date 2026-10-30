@@ -12,13 +12,13 @@
 
 Follow the root [README quickstart](../README.md#quickstart).
 
-| release-please | PolicySemVer |
-| --- | --- |
-| Release PR that accumulates changelog | Sticky dry-run on the feature PR; bump commit after merge |
-| `include-v-in-tag` | `tagPrefix` (default `v`) |
-| `bump-minor-pre-major` / extra-files | 0.x: feat is still minor; major only via `APP_VERSION_MAJOR` |
-| Manifest of many packages | Not v1 — see [Changesets migration](./migrate-from-changesets.md) |
-| `bootstrap-sha` | Seed `VERSION` / `package.json` yourself |
+| release-please                        | PolicySemVer                                                      |
+| ------------------------------------- | ----------------------------------------------------------------- |
+| Release PR that accumulates changelog | Sticky dry-run on the feature PR; bump commit after merge         |
+| `include-v-in-tag`                    | `tagPrefix` (default `v`)                                         |
+| `bump-minor-pre-major` / extra-files  | 0.x: feat is still minor; major only via `APP_VERSION_MAJOR`      |
+| Manifest of many packages             | Not v1 — see [Changesets migration](./migrate-from-changesets.md) |
+| `bootstrap-sha`                       | Seed `VERSION` / `package.json` yourself                          |
 
 ## Surprises
 

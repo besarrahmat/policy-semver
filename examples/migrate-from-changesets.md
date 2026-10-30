@@ -17,13 +17,13 @@ A **single deployed app** (or a repo that only versions the root) that wants PR-
 
 Follow the root [README quickstart](../README.md#quickstart). Commits/PR titles replace changeset files: see the [cheat sheet](../CONTRIBUTING.md#commit-cheat-sheet).
 
-| Changesets | PolicySemVer |
-| --- | --- |
-| Human writes a changeset per PR | Classifier reads subjects (`feat:` / `fix:` / `docs:`) |
-| `major` / `minor` / `patch` in the markdown file | Kind from subjects; **major only** via `APP_VERSION_MAJOR` |
-| Independent or locked workspace versions | Same version via extra `versionFiles` paths; no independent graph |
-| `changesets/action` version + publish | Action dry-run comment; write on merge to `prodBranch` |
-| Linked packages / ignore list | Not v1 |
+| Changesets                                       | PolicySemVer                                                      |
+| ------------------------------------------------ | ----------------------------------------------------------------- |
+| Human writes a changeset per PR                  | Classifier reads subjects (`feat:` / `fix:` / `docs:`)            |
+| `major` / `minor` / `patch` in the markdown file | Kind from subjects; **major only** via `APP_VERSION_MAJOR`        |
+| Independent or locked workspace versions         | Same version via extra `versionFiles` paths; no independent graph |
+| `changesets/action` version + publish            | Action dry-run comment; write on merge to `prodBranch`            |
+| Linked packages / ignore list                    | Not v1                                                            |
 
 This repository locksteps npm CLI/core with root `VERSION` through extra `versionFiles` entries. That is **not** a Changesets package graph.
 

@@ -6,14 +6,14 @@ Consumer install (dry-run in under 15 minutes): root [README quickstart](../../R
 
 ## Docs locks
 
-| Lock | Decision |
-| --- | --- |
-| Layout | **A** — root [`action.yml`](../../action.yml) + committed root [`dist/index.js`](../../dist/index.js) (Marketplace requires root metadata) |
+| Lock        | Decision                                                                                                                                                                                  |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Layout      | **A** — root [`action.yml`](../../action.yml) + committed root [`dist/index.js`](../../dist/index.js) (Marketplace requires root metadata)                                                |
 | Marketplace | **Live** — [PolicySemVer](https://github.com/marketplace/actions/policysemver) (`v1.0.0`). `name: PolicySemVer`, branding `tag` / `blue`, categories Continuous integration + Publishing. |
-| Runtime | `runs.using: node24` — do **not** regress to `node20` |
-| Bundle | Runners never `npm install` Action deps → **commit** the bundle |
-| Bundler | **tsup** (esbuild) CJS → root `dist/index.js`. ncc failed (`TS6059` / [ncc#1297](https://github.com/vercel/ncc/issues/1297)) |
-| Versioning | Consumers pin **commit SHA** (preferred) or a moving major tag (`v0` / `v1`); avoid `@main` / `@dev` in prod |
+| Runtime     | `runs.using: node24` — do **not** regress to `node20`                                                                                                                                     |
+| Bundle      | Runners never `npm install` Action deps → **commit** the bundle                                                                                                                           |
+| Bundler     | **tsup** (esbuild) CJS → root `dist/index.js`. ncc failed (`TS6059` / [ncc#1297](https://github.com/vercel/ncc/issues/1297))                                                              |
+| Versioning  | Consumers pin **commit SHA** (preferred) or a moving major tag (`v0` / `v1`); avoid `@main` / `@dev` in prod                                                                              |
 
 Code locks: [`src/locks.ts`](./src/locks.ts), [`src/marketplace-locks.ts`](./src/marketplace-locks.ts).
 
@@ -44,13 +44,13 @@ Consumer workflows that run a **version write** (merged bump / tag) must set:
 ```yaml
 concurrency:
   group: policy-semver-${{ github.repository }}-${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref }}
-  cancel-in-progress: false   # never cancel mid-write
+  cancel-in-progress: false # never cancel mid-write
 ```
 
-| Rule | Why |
-| --- | --- |
+| Rule                           | Why                                                                                                                                                                               |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Group per repo + **prod base** | Serialize overlapping merges into the same `prodBranch`. Use `pull_request.base.ref` or `merge_group.base_ref` (not `github.ref` — on `pull_request` that is `refs/pull/N/merge`) |
-| `cancel-in-progress: false` | Cancelling mid-write can leave VERSION / tags half-applied |
+| `cancel-in-progress: false`    | Cancelling mid-write can leave VERSION / tags half-applied                                                                                                                        |
 
 ### Do not share cancel-friendly groups with lint
 
@@ -68,11 +68,11 @@ After VERSION / `package.json` / CHANGELOG are written, the Action calls `runWri
 
 Config `hooks.*` are POSIX `sh -c` strings (`null` skips). Write path only (`kind !== "none"`).
 
-| Hook | Timing | On non-zero |
-| --- | --- | --- |
-| `beforeBump` | Before VERSION / changelog write | Abort: files unchanged, no tag, no release |
-| `afterTag` | After local annotated tag, before push | Abort remaining: local tag may exist; no push/release |
-| `afterRelease` | After GitHub Release | Release already exists; remaining audit skipped |
+| Hook           | Timing                                 | On non-zero                                           |
+| -------------- | -------------------------------------- | ----------------------------------------------------- |
+| `beforeBump`   | Before VERSION / changelog write       | Abort: files unchanged, no tag, no release            |
+| `afterTag`     | After local annotated tag, before push | Abort remaining: local tag may exist; no push/release |
+| `afterRelease` | After GitHub Release                   | Release already exists; remaining audit skipped       |
 
 Env: `POLICY_SEMVER_VERSION`, `POLICY_SEMVER_KIND`, `POLICY_SEMVER_DRY_RUN` (`true`/`false`). We do not delete tags or Releases on later hook failure.
 
@@ -96,9 +96,9 @@ Then it commits that path with `[skip version]` and pushes the branch (no second
 
 ### Token / permissions
 
-| Need | Why |
-| --- | --- |
-| `contents: write` | Create commit, annotated tag, GitHub Release |
+| Need                         | Why                                                                                              |
+| ---------------------------- | ------------------------------------------------------------------------------------------------ |
+| `contents: write`            | Create commit, annotated tag, GitHub Release                                                     |
 | Push to **protected** branch | Token/actor must be allowed (ruleset bypass, or a bot that can push) — otherwise push fails loud |
 
 Wire Octokit via `@actions/github` `getOctokit(token)` (locked in core `GITHUB_RELEASE_CLIENT.action`). Prefer `github.token` or a PAT stored as a secret — never log the token or pre-redact release bodies.
@@ -107,7 +107,7 @@ Wire Octokit via `@actions/github` `getOctokit(token)` (locked in core `GITHUB_R
 
 ```yaml
 permissions:
-  contents: write      # commit, tag, release
+  contents: write # commit, tag, release
   pull-requests: write # sticky dry-run comment
 ```
 
@@ -137,23 +137,23 @@ That write token is **not** the checkout PAT used to `uses:` a private Action re
 
 ## Fork / prod / sync (runtime)
 
-| Case | Behavior |
-| --- | --- |
-| Fork PR | Sticky comment OK · `allowWrite: false` |
-| `base !== prodBranch` | Skip write |
-| Sync `develop ← prod` | `kind: none` · no write |
-| `opened` / `synchronize` / `reopened` on prod | Dry-run + sticky comment |
-| `closed` + `merged` on prod (or `merge_group`) | Write → tag → release |
-| `push` to prod | **Skip** (avoids a double bump) |
+| Case                                           | Behavior                                |
+| ---------------------------------------------- | --------------------------------------- |
+| Fork PR                                        | Sticky comment OK · `allowWrite: false` |
+| `base !== prodBranch`                          | Skip write                              |
+| Sync `develop ← prod`                          | `kind: none` · no write                 |
+| `opened` / `synchronize` / `reopened` on prod  | Dry-run + sticky comment                |
+| `closed` + `merged` on prod (or `merge_group`) | Write → tag → release                   |
+| `push` to prod                                 | **Skip** (avoids a double bump)         |
 
 ## Merge methods
 
 Classify uses the **final subjects** visible when the job runs: `pulls.listCommits` when there is a PR, otherwise `git log` (`load-commits.ts`) — including `merge_group`.
 
-| Method | What is classified |
-| --- | --- |
-| **Rebase merge** | Rebased commit subjects (not `Merge branch…`) |
-| **Squash** | PR title + squash subject |
+| Method           | What is classified                                                                |
+| ---------------- | --------------------------------------------------------------------------------- |
+| **Rebase merge** | Rebased commit subjects (not `Merge branch…`)                                     |
+| **Squash**       | PR title + squash subject                                                         |
 | **Merge commit** | `Merge pull request…` subjects are ignored; commits inside the PR still aggregate |
 
 `merge_group` is treated as a write. If merge queue **and** `pull_request` `closed+merged` both write, the second job can hit tag-exists. Pick **one** write trigger per consumer.
@@ -188,7 +188,7 @@ Beta channels / `1.0.0-beta.1` are **out of scope for v1**. Default off. Do not 
 
 ## Consumer workflow stub
 
-Copy [`examples/consumer.yml`](./examples/consumer.yml) into the **app** repo as `.github/workflows/policy-semver.yml`. Pin a SHA in production. This file is documentation — it is not a workflow of *this* monorepo.
+Copy [`examples/consumer.yml`](./examples/consumer.yml) into the **app** repo as `.github/workflows/policy-semver.yml`. Pin a SHA in production. This file is documentation — it is not a workflow of _this_ monorepo.
 
 Keep **bump → build → deploy**. The stub's `build` job `needs: version`; `deploy` `needs: build`. Both run only after a merged PR. A failed or skipped `version` job skips `build`/`deploy` because of `needs:`. Do not use `if: always()` on deploy. Do not put deploy steps in the version job.
 

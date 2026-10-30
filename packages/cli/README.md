@@ -33,13 +33,13 @@ pnpm --filter ./packages/cli run policy-semver -- --help
 node packages/cli/dist/bin.js --help
 ```
 
-| Command | Behavior |
-| --- | --- |
-| `classify` | Print classify kind JSON |
-| `bump --dry-run` | Compute next version; no write |
-| `bump --write` | Write version files (clean tree unless `--force`) |
-| `verify` | Load config + dual-source match + tag↔VERSION (skip if the repo has no tags yet) |
-| `test` | Load `fixtures/classifier/*.json`; assert `expected.kind` (+ `warnings` if present) |
+| Command          | Behavior                                                                            |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| `classify`       | Print classify kind JSON                                                            |
+| `bump --dry-run` | Compute next version; no write                                                      |
+| `bump --write`   | Write version files (clean tree unless `--force`)                                   |
+| `verify`         | Load config + dual-source match + tag↔VERSION (skip if the repo has no tags yet)    |
+| `test`           | Load `fixtures/classifier/*.json`; assert `expected.kind` (+ `warnings` if present) |
 
 Common flags: `--config`, `--cwd`, `--title`, `--json`, `--force`.
 
