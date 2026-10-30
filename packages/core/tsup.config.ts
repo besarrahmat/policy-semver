@@ -8,5 +8,5 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   splitting: false,
-  dts: true,
+  // .d.ts comes from `tsc -p tsconfig.build.json`: tsup dts (rollup-plugin-dts) needs the TS JS API, gone in TS 7.
 });
