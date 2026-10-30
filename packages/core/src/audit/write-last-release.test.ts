@@ -11,7 +11,6 @@ describe("writeLastRelease", () => {
       cwd,
       version: "0.1.0",
       kind: "minor",
-      gitSha: "abc123",
       tag: "v0.1.0",
       at: "2026-08-08T00:00:00.000Z",
     });
@@ -19,7 +18,6 @@ describe("writeLastRelease", () => {
     expect(record).toEqual({
       version: "0.1.0",
       kind: "minor",
-      gitSha: "abc123",
       tag: "v0.1.0",
       at: "2026-08-08T00:00:00.000Z",
     });

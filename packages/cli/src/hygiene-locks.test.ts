@@ -41,9 +41,11 @@ it("CONTRIBUTING documents hygiene without the local plan folder", () => {
 
 it("CI rebuilds Action dist and fails if it drifted", () => {
   const ci = read(".github/workflows/ci.yml");
-  expect(ci).toMatch(/Action dist up to date/);
-  expect(ci).toMatch(/@policy-semver\/action run build/);
+  expect(ci).toMatch(/Action dist and schema embed up to date/);
+  expect(ci).toMatch(/run: pnpm build/);
   expect(ci).toMatch(/git diff --exit-code dist\//);
+  // git diff alone misses a newly generated, untracked bundle file.
+  expect(ci).toMatch(/git status --porcelain dist\//);
   expect(read("action.yml")).toMatch(/using:\s*node24/);
   expect(read(".node-version").trim()).toBe("24");
 });

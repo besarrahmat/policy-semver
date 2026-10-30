@@ -35,4 +35,15 @@ describe("parseArgs", () => {
       flags: { json: true, cwd: "/tmp/x" },
     });
   });
+
+  it("--version", () => {
+    expect(parseArgs(["node", "bin", "--version"]).command).toBe("version");
+    expect(parseArgs(["node", "bin", "-V"]).command).toBe("version");
+  });
+
+  it("bump accepts --title", () => {
+    expect(
+      parseArgs(["node", "bin", "bump", "--dry-run", "--title", "feat: x"]),
+    ).toMatchObject({ command: "bump", title: "feat: x" });
+  });
 });

@@ -4,16 +4,17 @@ on:
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, closed]
-  # Merge-queue checks. Version write also runs here. If you enable
-  # merge queue, pick one write trigger: closed+merged AND merge_group both
-  # writing can hit tag-exists.
+  # Merge-queue checks are dry-run only: the queue's SHA may never land.
+  # The release itself runs on the PR's closed+merged event.
   merge_group:
 
 # serialize writes on the same prod base (not github.ref — that is refs/pull/N/merge).
-# never cancel mid-bump. fetch-depth: 0 so classify/tag see prod HEAD.
+# never cancel mid-bump. queue: max so a new run waits instead of replacing a pending
+# release (the default keeps one pending run). fetch-depth: 0 so reruns find earlier releases.
 concurrency:
   group: policy-semver-${{ github.repository }}-${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref }}
   cancel-in-progress: false
+  queue: max
 
 permissions:
   contents: write
@@ -23,6 +24,7 @@ jobs:
   version:
     if: github.event.pull_request.base.ref == 'main' || github.event.merge_group.base_ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
         with:
@@ -33,10 +35,10 @@ jobs:
       # Canonical Action repo is public (Marketplace layout A). Pin a 40-character SHA.
       - uses: besarrahmat/policy-semver@<full-commit-sha>
         env:
-          APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR || '0' }}
+          APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR }}
         with:
           config-path: versioning.config.json
-          # token: ${{ secrets.POLICY_SEMVER_TOKEN }}  # contents:write on THIS repo if github-actions[bot] cannot push
+          # token: ${{ secrets.POLICY_SEMVER_TOKEN }}  # GitHub API only (Release, PR comment); git push uses the checkout token above
 
       # Private fork: `uses: owner/policy-semver@ref` 404s from another repo.
       # Replace the uses: step above with a checkout + local uses:
@@ -51,7 +53,7 @@ jobs:
       # - name: PolicySemVer
       #   uses: ./.github/actions/policy-semver
       #   env:
-      #     APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR || '0' }}
+      #     APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR }}
       #   with:
       #     config-path: versioning.config.json
   # never build/deploy if the bump job failed or was skipped.

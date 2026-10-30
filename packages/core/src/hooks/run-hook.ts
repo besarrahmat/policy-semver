@@ -1,15 +1,24 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { redactSecrets } from "../github/redact.js";
 import { HOOK_ENV, HOOK_SHELL } from "./locks.js";
 import type { HookExec, RunHookInput } from "./types.js";
 
 const execFileAsync = promisify(execFile);
+
+/** A stuck hook must fail the job, not hold the release queue open. */
+const HOOK_TIMEOUT_MS = 10 * 60 * 1000;
+const HOOK_MAX_BUFFER_BYTES = 50 * 1024 * 1024;
+/** Hook commands come from config; they get no ambient write token. */
+const HOOK_ENV_DENYLIST = ["POLICY_SEMVER_TOKEN", "INPUT_TOKEN"];
 
 export const defaultHookExec: HookExec = async (command, opts) => {
   const { stdout, stderr } = await execFileAsync(HOOK_SHELL, ["-c", command], {
     cwd: opts.cwd,
     env: opts.env,
     encoding: "utf8",
+    maxBuffer: HOOK_MAX_BUFFER_BYTES,
+    timeout: HOOK_TIMEOUT_MS,
   });
   return { stdout: String(stdout), stderr: String(stderr) };
 };
@@ -36,8 +45,10 @@ export async function runHook(input: RunHookInput): Promise<void> {
   }
 
   const exec = input.exec ?? defaultHookExec;
+  const inherited = { ...process.env };
+  for (const name of HOOK_ENV_DENYLIST) delete inherited[name];
   const env: NodeJS.ProcessEnv = {
-    ...process.env,
+    ...inherited,
     ...hookEnvVars({
       version: input.version,
       kind: input.kind,
@@ -50,11 +61,13 @@ export async function runHook(input: RunHookInput): Promise<void> {
       cwd: input.cwd,
       env,
     });
-    if (stdout) process.stdout.write(stdout);
-    if (stderr) process.stderr.write(stderr);
+    if (stdout) process.stdout.write(redactSecrets(stdout));
+    if (stderr) process.stderr.write(redactSecrets(stderr));
   } catch (err) {
     const code = (err as { code?: number | string }).code ?? "unknown";
-    const detail = err instanceof Error ? err.message : String(err);
+    const detail = redactSecrets(
+      err instanceof Error ? err.message : String(err),
+    );
     throw new Error(`hook ${input.name} failed (exit ${code}): ${detail}`);
   }
 }

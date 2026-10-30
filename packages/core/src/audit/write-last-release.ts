@@ -17,7 +17,6 @@ export async function writeLastRelease(
   const record: LastReleaseRecord = {
     version: input.version,
     kind: input.kind,
-    gitSha: input.gitSha,
     tag: input.tag,
     at: input.at ?? new Date().toISOString(),
   };

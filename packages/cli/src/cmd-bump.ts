@@ -4,14 +4,15 @@ import {
   classify,
   type HookExec,
   loadConfig,
+  parseEnvMajor,
   readVersion,
   runHook,
+  toVersionFiles,
   writeVersion,
 } from "@policy-semver/core";
 import { EXIT_OK, EXIT_POLICY, EXIT_USAGE } from "./exit.js";
 import { isGitClean } from "./git-clean.js";
 import type { GlobalFlags } from "./parse-args.js";
-import { toVersionFiles } from "./version-files.js";
 
 export async function cmdBump(input: {
   flags: GlobalFlags;
@@ -19,6 +20,7 @@ export async function cmdBump(input: {
   write: boolean;
   force: boolean;
   commits: { subject: string; body?: string }[];
+  title?: string;
   /** Test seam — omit in production (uses `sh -c`). */
   hookExec?: HookExec;
 }): Promise<number> {
@@ -32,7 +34,7 @@ export async function cmdBump(input: {
     return EXIT_POLICY;
   }
 
-  const configPath = path.join(input.flags.cwd, input.flags.config);
+  const configPath = path.resolve(input.flags.cwd, input.flags.config);
   const config = await loadConfig(configPath);
   const files = toVersionFiles(config.versionFiles);
   const currentVersion = await readVersion({
@@ -40,17 +42,11 @@ export async function cmdBump(input: {
     files,
   });
 
-  const envRaw = process.env[config.majorEnv];
-  let envMajor: number | null = null;
-  if (envRaw !== undefined && envRaw !== "") {
-    envMajor = Number.parseInt(envRaw, 10);
-    if (Number.isNaN(envMajor)) {
-      throw new Error(`invalid ${config.majorEnv}=${JSON.stringify(envRaw)}`);
-    }
-  }
+  const envMajor = parseEnvMajor(config.majorEnv, process.env[config.majorEnv]);
 
   const { kind, warnings } = classify({
     commits: input.commits,
+    ...(input.title !== undefined ? { prTitle: input.title } : {}),
     currentVersion,
     envMajor,
   });

@@ -3,7 +3,6 @@ import {
   writeLastRelease,
 } from "../audit/write-last-release.js";
 import { formatBotBumpCommitMessage } from "../bump/bot-message.js";
-import { BOT_SKIP_TRAILER } from "../bump/locks.js";
 import type { ClassifyKind } from "../classify/locks.js";
 import { commitBumpFiles } from "../git/commit.js";
 import { defaultGitExec } from "../git/exec.js";
@@ -38,8 +37,8 @@ export type RunReleaseInput = {
     afterTag: string | null;
     afterRelease: string | null;
   };
-  /** Test seam; default `git rev-parse HEAD` after the bump commit. */
-  gitSha?: string;
+  /** Recorded on the bump commit so a rerun of this PR can find its release. */
+  prNumber?: number;
   exec?: GitExec;
   hookExec?: HookExec;
   /** Test seams */
@@ -62,10 +61,36 @@ export type RunReleaseResult =
       released: true;
     };
 
+/** Name the failed step: an API error alone ("502") does not say what was happening. */
+async function step(name: string, run: () => Promise<void>): Promise<void> {
+  try {
+    await run();
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    throw new Error(`${name}: ${detail}`, { cause: err });
+  }
+}
+
+/** A consumer may gitignore the audit file; `git add` would refuse it. */
+async function isGitIgnored(
+  cwd: string,
+  rel: string,
+  exec: GitExec = defaultGitExec,
+): Promise<boolean> {
+  try {
+    await exec(["check-ignore", "--quiet", rel], { cwd });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * After version + changelog files are written:
- * commit → annotated tag → afterTag → push HEAD:{branch} + tag → GitHub Release → afterRelease →
- * last-release.json → `[skip version]` commit + push branch (no second tag).
+ * last-release.json → commit → annotated tag → afterTag → atomic push of
+ * HEAD:{branch} + tag → GitHub Release → afterRelease.
+ * Nothing is public before the push, and a failure after it is finished by
+ * `reconcileRelease` on rerun.
  * kind `none` → no commit, no tag, no push, no release, no audit.
  */
 export async function runRelease(
@@ -78,27 +103,48 @@ export async function runRelease(
 
   const tagPrefix = input.tagPrefix ?? "v";
   const tag = `${tagPrefix}${input.version}`;
-  const message = formatBotBumpCommitMessage(input.version, tagPrefix);
+  const message = formatBotBumpCommitMessage(
+    input.version,
+    tagPrefix,
+    input.prNumber !== undefined
+      ? { prNumber: input.prNumber, kind }
+      : undefined,
+  );
 
   const commit = input.commit ?? commitBumpFiles;
   const tagFn = input.tag ?? createAnnotatedTag;
   const push = input.push ?? pushRefs;
   const release = input.release ?? createGitHubRelease;
 
-  await commit({
+  const writeAudit = input.writeAudit ?? writeLastRelease;
+  await writeAudit({
     cwd: input.cwd,
-    message,
-    paths: input.paths,
-    ...(input.exec !== undefined ? { exec: input.exec } : {}),
-  });
-
-  await tagFn({
-    cwd: input.cwd,
+    version: input.version,
+    kind,
     tag,
-    message: tag,
-    ...(input.remote !== undefined ? { remote: input.remote } : {}),
-    ...(input.exec !== undefined ? { exec: input.exec } : {}),
+    at: (input.now ?? (() => new Date()))().toISOString(),
   });
+  const auditPath = lastReleaseRelPath();
+  const auditIgnored = await isGitIgnored(input.cwd, auditPath, input.exec);
+
+  await step("commit", () =>
+    commit({
+      cwd: input.cwd,
+      message,
+      paths: auditIgnored ? input.paths : [...input.paths, auditPath],
+      ...(input.exec !== undefined ? { exec: input.exec } : {}),
+    }),
+  );
+
+  await step("tag", () =>
+    tagFn({
+      cwd: input.cwd,
+      tag,
+      message: tag,
+      ...(input.remote !== undefined ? { remote: input.remote } : {}),
+      ...(input.exec !== undefined ? { exec: input.exec } : {}),
+    }),
+  );
 
   if (input.hooks) {
     await runHook({
@@ -116,20 +162,24 @@ export async function runRelease(
   // branch name would miss the bump commit.
   const branchRef = `HEAD:${input.branch}`;
 
-  await push({
-    cwd: input.cwd,
-    refs: [branchRef, tag],
-    ...(input.remote !== undefined ? { remote: input.remote } : {}),
-    ...(input.exec !== undefined ? { exec: input.exec } : {}),
-  });
+  await step("push", () =>
+    push({
+      cwd: input.cwd,
+      refs: [branchRef, tag],
+      ...(input.remote !== undefined ? { remote: input.remote } : {}),
+      ...(input.exec !== undefined ? { exec: input.exec } : {}),
+    }),
+  );
 
-  await release({
-    owner: input.owner,
-    repo: input.repo,
-    tag,
-    body: input.sectionMarkdown,
-    octokit: input.octokit,
-  });
+  await step("GitHub Release", () =>
+    release({
+      owner: input.owner,
+      repo: input.repo,
+      tag,
+      body: input.sectionMarkdown,
+      octokit: input.octokit,
+    }),
+  );
 
   if (input.hooks) {
     await runHook({
@@ -142,39 +192,6 @@ export async function runRelease(
       ...(input.hookExec !== undefined ? { exec: input.hookExec } : {}),
     });
   }
-
-  let gitSha = input.gitSha;
-  if (gitSha === undefined) {
-    const gitExec = input.exec ?? defaultGitExec;
-    const { stdout } = await gitExec(["rev-parse", "HEAD"], {
-      cwd: input.cwd,
-    });
-    gitSha = stdout.trim();
-  }
-
-  const writeAudit = input.writeAudit ?? writeLastRelease;
-  await writeAudit({
-    cwd: input.cwd,
-    version: input.version,
-    kind,
-    gitSha,
-    tag,
-    at: (input.now ?? (() => new Date()))().toISOString(),
-  });
-
-  await commit({
-    cwd: input.cwd,
-    message: `chore(release): ${tag} last-release ${BOT_SKIP_TRAILER}`,
-    paths: [lastReleaseRelPath()],
-    ...(input.exec !== undefined ? { exec: input.exec } : {}),
-  });
-
-  await push({
-    cwd: input.cwd,
-    refs: [branchRef],
-    ...(input.remote !== undefined ? { remote: input.remote } : {}),
-    ...(input.exec !== undefined ? { exec: input.exec } : {}),
-  });
 
   return {
     skipped: false,

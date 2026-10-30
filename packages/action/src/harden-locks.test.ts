@@ -87,7 +87,7 @@ it("Action and CI workflows stay least-privilege", () => {
   expect(publish).toMatch(/contents:\s*read/);
   expect(publish).toMatch(/id-token:\s*write/);
   const review = read(".github/workflows/dependency-review.yml");
-  expect(review).toMatch(/dependency-review-action@v5/);
+  expect(review).toMatch(/dependency-review-action@[0-9a-f]{40}/);
   expect(review).toMatch(/fail-on-severity:\s*high/);
   const dependabot = read(".github/dependabot.yml");
   expect(dependabot).toMatch(/package-ecosystem:\s*npm/);

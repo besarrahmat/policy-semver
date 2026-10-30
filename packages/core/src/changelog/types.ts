@@ -14,6 +14,8 @@ export type WriteChangelogInput = {
   date: string; // YYYY-MM-DD
   kind: ClassifyKind;
   commits: ChangelogCommit[];
+  /** A `feat:` / `fix:` title is a change even if no commit subject says so. */
+  prTitle?: string;
   /** attempt count; caller may retry once */
   attempt?: number;
   /** Test seam; default `fs/promises.writeFile`. */
@@ -22,12 +24,7 @@ export type WriteChangelogInput = {
 
 export type WriteChangelogResult = {
   wrote: boolean;
-  reason:
-    | "kind-none"
-    | "created"
-    | "appended"
-    | "already-present"
-    | "conflict-fail";
+  reason: "kind-none" | "created" | "appended" | "already-present";
   path: string;
   /** Rendered section body (without file header) — useful for Release later */
   sectionMarkdown?: string;

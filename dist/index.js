@@ -11117,7 +11117,7 @@ var require_mock_interceptor = __commonJS({
 var require_mock_client = __commonJS({
   "../../node_modules/.pnpm/undici@6.29.1/node_modules/undici/lib/mock/mock-client.js"(exports2, module2) {
     "use strict";
-    var { promisify: promisify4 } = require("util");
+    var { promisify: promisify3 } = require("util");
     var Client = require_client();
     var { buildMockDispatch } = require_mock_utils();
     var {
@@ -11157,7 +11157,7 @@ var require_mock_client = __commonJS({
         return new MockInterceptor(opts, this[kDispatches]);
       }
       async [kClose]() {
-        await promisify4(this[kOriginalClose])();
+        await promisify3(this[kOriginalClose])();
         this[kConnected] = 0;
         this[kMockAgent][Symbols.kClients].delete(this[kOrigin]);
       }
@@ -11170,7 +11170,7 @@ var require_mock_client = __commonJS({
 var require_mock_pool = __commonJS({
   "../../node_modules/.pnpm/undici@6.29.1/node_modules/undici/lib/mock/mock-pool.js"(exports2, module2) {
     "use strict";
-    var { promisify: promisify4 } = require("util");
+    var { promisify: promisify3 } = require("util");
     var Pool = require_pool();
     var { buildMockDispatch } = require_mock_utils();
     var {
@@ -11210,7 +11210,7 @@ var require_mock_pool = __commonJS({
         return new MockInterceptor(opts, this[kDispatches]);
       }
       async [kClose]() {
-        await promisify4(this[kOriginalClose])();
+        await promisify3(this[kOriginalClose])();
         this[kConnected] = 0;
         this[kMockAgent][Symbols.kClients].delete(this[kOrigin]);
       }
@@ -19284,22 +19284,22 @@ var require_lib = __commonJS({
       return new (P || (P = Promise))(function(resolve, reject) {
         function fulfilled(value) {
           try {
-            step(generator.next(value));
+            step2(generator.next(value));
           } catch (e) {
             reject(e);
           }
         }
         function rejected(value) {
           try {
-            step(generator["throw"](value));
+            step2(generator["throw"](value));
           } catch (e) {
             reject(e);
           }
         }
-        function step(result) {
+        function step2(result) {
           result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
         }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
+        step2((generator = generator.apply(thisArg, _arguments || [])).next());
       });
     };
     Object.defineProperty(exports2, "__esModule", { value: true });
@@ -26840,7 +26840,6 @@ __export(index_exports, {
   ACTION_LAYOUT: () => ACTION_LAYOUT,
   ACTION_RUNTIME: () => ACTION_RUNTIME,
   ACTION_VERSIONING: () => ACTION_VERSIONING,
-  run: () => run,
   runAction: () => runAction,
   runWriteRelease: () => runWriteRelease
 });
@@ -27015,22 +27014,22 @@ var __awaiter = function(thisArg, _arguments, P, generator) {
   return new (P || (P = Promise))(function(resolve, reject) {
     function fulfilled(value) {
       try {
-        step(generator.next(value));
+        step2(generator.next(value));
       } catch (e) {
         reject(e);
       }
     }
     function rejected(value) {
       try {
-        step(generator["throw"](value));
+        step2(generator["throw"](value));
       } catch (e) {
         reject(e);
       }
     }
-    function step(result) {
+    function step2(result) {
       result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
     }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
+    step2((generator = generator.apply(thisArg, _arguments || [])).next());
   });
 };
 var { access, appendFile, writeFile } = import_fs.promises;
@@ -27286,6 +27285,7 @@ var Summary = class {
   }
 };
 var _summary = new Summary();
+var summary = _summary;
 
 // ../../node_modules/.pnpm/@actions+core@3.0.1/node_modules/@actions/core/lib/platform.js
 var import_os2 = __toESM(require("os"), 1);
@@ -27309,6 +27309,9 @@ var ExitCode;
   ExitCode2[ExitCode2["Success"] = 0] = "Success";
   ExitCode2[ExitCode2["Failure"] = 1] = "Failure";
 })(ExitCode || (ExitCode = {}));
+function setSecret(secret) {
+  issueCommand("add-mask", {}, secret);
+}
 function getInput(name, options) {
   const val = process.env[`INPUT_${name.replace(/ /g, "_").toUpperCase()}`] || "";
   if (options && options.required && !val) {
@@ -27345,11 +27348,15 @@ function setFailed(message) {
 function error(message, properties = {}) {
   issueCommand("error", toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
+function warning(message, properties = {}) {
+  issueCommand("warning", toCommandProperties(properties), message instanceof Error ? message.toString() : message);
+}
 function info(message) {
   process.stdout.write(message + os4.EOL);
 }
 
 // src/run-action.ts
+var import_promises7 = require("fs/promises");
 var import_node_path = __toESM(require("path"), 1);
 
 // ../../node_modules/.pnpm/@actions+github@9.1.1/node_modules/@actions/github/lib/context.js
@@ -27415,22 +27422,22 @@ var __awaiter2 = function(thisArg, _arguments, P, generator) {
   return new (P || (P = Promise))(function(resolve, reject) {
     function fulfilled(value) {
       try {
-        step(generator.next(value));
+        step2(generator.next(value));
       } catch (e) {
         reject(e);
       }
     }
     function rejected(value) {
       try {
-        step(generator["throw"](value));
+        step2(generator["throw"](value));
       } catch (e) {
         reject(e);
       }
     }
-    function step(result) {
+    function step2(result) {
       result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
     }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
+    step2((generator = generator.apply(thisArg, _arguments || [])).next());
   });
 };
 function getAuthString(token, options) {
@@ -31547,7 +31554,6 @@ async function writeLastRelease(input) {
   const record = {
     version: input.version,
     kind: input.kind,
-    gitSha: input.gitSha,
     tag: input.tag,
     at: input.at ?? (/* @__PURE__ */ new Date()).toISOString()
   };
@@ -31567,7 +31573,7 @@ function assertDualSourceMatch(versionFileVersion, packageJsonVersion) {
     );
   }
 }
-var SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)$/;
+var SEMVER_RE = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 function isSemVerString(value) {
   return SEMVER_RE.test(value.trim());
 }
@@ -31587,11 +31593,13 @@ function formatSemVer(parts) {
   return `${parts.major}.${parts.minor}.${parts.patch}`;
 }
 var execFileAsync = (0, import_util.promisify)(import_child_process.execFile);
+var GIT_TIMEOUT_MS = 5 * 60 * 1e3;
 var defaultGitExec = async (args, opts) => {
   const { stdout, stderr } = await execFileAsync("git", args, {
     cwd: opts?.cwd,
     encoding: "utf8",
-    maxBuffer: 10 * 1024 * 1024
+    maxBuffer: 10 * 1024 * 1024,
+    timeout: GIT_TIMEOUT_MS
   });
   return { stdout: String(stdout), stderr: String(stderr) };
 };
@@ -31681,7 +31689,8 @@ async function writePackageJsonVersion(cwd, rel, nextVersion) {
   const raw = await (0, import_promises3.readFile)(p, "utf8");
   const pkg = JSON.parse(raw);
   pkg.version = nextVersion;
-  await (0, import_promises3.writeFile)(p, `${JSON.stringify(pkg, null, 2)}
+  const indent = /^[ \t]+(?=")/m.exec(raw)?.[0] ?? 2;
+  await (0, import_promises3.writeFile)(p, `${JSON.stringify(pkg, null, indent)}
 `, "utf8");
 }
 async function snapshotFiles(cwd, rels) {
@@ -31761,8 +31770,15 @@ function applyBump(input) {
   }
 }
 var BOT_SKIP_TRAILER = "[skip version]";
-function formatBotBumpCommitMessage(nextVersion, tagPrefix = "v") {
-  return `chore(release): ${tagPrefix}${nextVersion} ${BOT_SKIP_TRAILER}`;
+var RELEASE_PR_TRAILER = "Policy-Semver-PR";
+var RELEASE_KIND_TRAILER = "Policy-Semver-Kind";
+function formatBotBumpCommitMessage(nextVersion, tagPrefix = "v", source) {
+  const subject = `chore(release): ${tagPrefix}${nextVersion} ${BOT_SKIP_TRAILER}`;
+  if (source === void 0) return subject;
+  return `${subject}
+
+${RELEASE_PR_TRAILER}: ${source.prNumber}
+${RELEASE_KIND_TRAILER}: ${source.kind}`;
 }
 function decideBumpGuards(ctx) {
   const reasons = [];
@@ -31799,11 +31815,11 @@ function decideBumpGuards(ctx) {
   }
   const trailers = ctx.skipTrailers ?? ["skip version"];
   const patterns = trailers.map(
-    (t) => new RegExp(`\\[${escapeRegExp(t)}\\]`, "i")
+    (t) => new RegExp(`\\[${escapeRegExp(t)}\\]\\s*$`, "im")
   );
   const trailerInner = BOT_SKIP_TRAILER.slice(1, -1);
   if (!trailers.some((t) => t.toLowerCase() === trailerInner.toLowerCase())) {
-    patterns.push(new RegExp(`\\[${escapeRegExp(trailerInner)}\\]`, "i"));
+    patterns.push(new RegExp(`\\[${escapeRegExp(trailerInner)}\\]\\s*$`, "im"));
   }
   for (const text of ctx.textsForSkip ?? []) {
     if (patterns.some((re) => re.test(text))) {
@@ -31817,6 +31833,13 @@ function decideBumpGuards(ctx) {
 }
 function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function parseEnvMajor(name, raw) {
+  if (raw === void 0 || raw === "") return null;
+  if (!/^\d+$/.test(raw)) {
+    throw new Error(`invalid ${name}=${JSON.stringify(raw)}`);
+  }
+  return Number(raw);
 }
 async function readPrimaryVersion(input) {
   const { cwd, files } = input;
@@ -31894,9 +31917,29 @@ async function readVersion(input) {
   );
   return version;
 }
-async function writeVersionFile2(cwd, rel, nextVersion) {
-  await (0, import_promises4.writeFile)(import_path5.default.join(cwd, rel), `${nextVersion}
-`, "utf8");
+function toVersionFiles(versionFiles) {
+  const isVersionFile = (f) => /(^|\/)VERSION$/.test(f);
+  const isPackageJson = (f) => /(^|\/)package\.json$/.test(f);
+  const unsupported = versionFiles.find(
+    (f) => !isVersionFile(f) && !isPackageJson(f)
+  );
+  if (unsupported !== void 0) {
+    throw new Error(
+      `unsupported versionFiles entry ${JSON.stringify(unsupported)}: use a VERSION or package.json path`
+    );
+  }
+  const [versionFile, secondVersionFile] = versionFiles.filter(isVersionFile);
+  if (secondVersionFile !== void 0) {
+    throw new Error(
+      `versionFiles allows one VERSION file: ${versionFile}, ${secondVersionFile}`
+    );
+  }
+  const [packageJson, ...extraPackageJson] = versionFiles.filter(isPackageJson);
+  return {
+    ...versionFile !== void 0 ? { versionFile } : {},
+    ...packageJson !== void 0 ? { packageJson } : {},
+    ...extraPackageJson.length > 0 ? { extraPackageJson } : {}
+  };
 }
 async function writeSingleSource(cwd, nextVersion, kind, rel, extras) {
   const extrasStale = await extrasNeedWrite(cwd, extras, nextVersion);
@@ -31911,7 +31954,7 @@ async function writeSingleSource(cwd, nextVersion, kind, rel, extras) {
       return { nextVersion, wrote: false, reason: "already-current" };
     }
     if (current !== nextVersion) {
-      await writeVersionFile2(cwd, rel, nextVersion);
+      await writeVersionFile(cwd, rel, nextVersion);
     }
     await writePackageJsonFilesAtomically({
       cwd,
@@ -32010,23 +32053,34 @@ function firstLine(text) {
 }
 function normalizeSubject(subject) {
   return subject.replace(
-    new RegExp("^(?:\\p{Extended_Pictographic}|\\p{Emoji_Component}|\\uFE0F|\\u200D)+\\s*", "u"),
+    new RegExp("^(?:\\p{Extended_Pictographic}|\\p{Emoji_Modifier}|\\p{Regional_Indicator}|\\uFE0F|\\u200D)+\\s*", "u"),
     ""
   ).trim();
 }
-function subjectBucket(normalized) {
-  const s = normalized.trim();
-  if (/^merge (pull request|branch|remote-tracking branch)\b/i.test(s)) {
-    return "ignore";
+function isMergeSubject(normalized) {
+  return /^merge (?:pull request|branch|remote-tracking branch|tag)\b/i.test(
+    normalized
+  ) || /^merge [0-9a-f]{7,40} into\b/i.test(normalized) || /^merged in\b/i.test(normalized);
+}
+function subjectType(normalized) {
+  if (/^feat(?:\s*&\s*fix)?(?:\s*\([^)]*\))?!?\s*:/i.test(normalized)) {
+    return "feat";
   }
-  if (/^feat\s*&\s*fix(\([^)]*\))?!?\s*:/i.test(s)) return "feat";
-  if (/^feat(\([^)]*\))?!?\s*:/i.test(s)) return "feat";
-  if (/^docs(\([^)]*\))?\s*:/i.test(s)) return "docs";
-  if (/^fix(\([^)]*\))?!?\s*:/i.test(s)) return "fix";
+  if (/^docs(?:\s*\([^)]*\))?\s*:/i.test(normalized)) return "docs";
+  if (/^fix(?:\s*\([^)]*\))?!?\s*:/i.test(normalized)) return "fix";
   return "other";
 }
+function isConventionalSubject(normalized) {
+  return /^[a-z]+(?:\s*&\s*[a-z]+)?(?:\s*\([^)]*\))?!?\s*:/i.test(normalized);
+}
+function hasBreakingBang(normalized) {
+  return /^[a-z]+(?:\s*&\s*[a-z]+)?(?:\s*\([^)]*\))?!\s*:/i.test(normalized);
+}
+function hasBreakingFooter(text) {
+  return /^BREAKING[ -]CHANGE:/im.test(text);
+}
 function bulletFromSubject(raw) {
-  const line = firstLine(raw).trim();
+  const line = normalizeSubject(firstLine(raw));
   const cleaned = line.replace(
     /^(?:feat\s*&\s*fix|feat|fix|docs|chore|refactor|test|ci|build|perf|style)(\([^)]*\))?!?\s*:\s*/i,
     ""
@@ -32041,9 +32095,9 @@ function mapCommitsToSections(commits) {
     out[section] = list;
   };
   for (const c of commits) {
-    const bucket = subjectBucket(normalizeSubject(firstLine(c.subject)));
-    if (bucket === "ignore") continue;
-    const section = BUCKET_TO_SECTION[bucket];
+    const normalized = normalizeSubject(firstLine(c.subject));
+    if (isMergeSubject(normalized)) continue;
+    const section = BUCKET_TO_SECTION[subjectType(normalized)];
     if (section === null) continue;
     push(section, bulletFromSubject(c.subject));
   }
@@ -32074,14 +32128,20 @@ function renderReleaseSection(input) {
 `;
 }
 var SECRET_REDACT_PATTERNS = [
-  /\bghp_[A-Za-z0-9]{20,}\b/g,
-  /\bgho_[A-Za-z0-9]{20,}\b/g,
+  /\bgh[pousr]_[A-Za-z0-9]{20,}\b/g,
+  /\bgithub_pat_[A-Za-z0-9_]{20,}\b/g,
   /\bnpm_[A-Za-z0-9]{20,}\b/g,
-  /\bAKIA[0-9A-Z]{16}\b/g,
-  /\bBearer\s+[A-Za-z0-9._-]+\b/gi
+  /\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/g,
+  /\bxox[abprs]-[A-Za-z0-9-]{10,}/g,
+  /\bsk-ant-[A-Za-z0-9_-]{20,}/g,
+  /\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]*/g,
+  /\bBearer\s+[A-Za-z0-9._~+/=-]+/gi,
+  // Only as a header: "Basic authentication" is ordinary changelog prose.
+  /\bAuthorization:\s*Basic\s+[A-Za-z0-9+/=]+/gi,
+  // Credentials in a git remote URL, as git prints them in error messages.
+  /(?<=:\/\/)[^\s/:@]+:[^\s/@]+(?=@)/g
 ];
 var SECRET_REDACT_REPLACEMENT = "[REDACTED]";
-var TAG_EXISTS_FAILS = true;
 function redactSecrets(text) {
   let out = text;
   for (const re of SECRET_REDACT_PATTERNS) {
@@ -32106,9 +32166,14 @@ function insertAfterUnreleasedOrHeader(existing, section) {
   const unreleased = /^## \[Unreleased\][^\n]*\n/m;
   const m = unreleased.exec(existing);
   if (m && m.index !== void 0) {
-    const at = m.index + m[0].length;
-    return `${existing.slice(0, at)}
-${section}${existing.slice(at)}`;
+    const afterHeading = m.index + m[0].length;
+    const next = existing.slice(afterHeading).search(/^## \[/m);
+    const at = next === -1 ? existing.length : afterHeading + next;
+    const rest = existing.slice(at);
+    return `${existing.slice(0, at).trimEnd()}
+
+${section}${rest ? `
+${rest}` : ""}`;
   }
   const firstRelease = /^## \[/m.exec(existing);
   if (firstRelease && firstRelease.index !== void 0) {
@@ -32119,6 +32184,17 @@ ${existing.slice(firstRelease.index)}`;
 
 ${section}`;
 }
+function bucketsFor(input) {
+  const buckets = mapCommitsToSections(input.commits);
+  const title = normalizeSubject(firstLine(input.prTitle ?? ""));
+  const titleType = subjectType(title);
+  if (titleType === "feat" || titleType === "fix") {
+    const fromTitle = mapCommitsToSections([{ subject: title }]);
+    if (titleType === "feat") buckets.Added ??= fromTitle.Added ?? [];
+    if (titleType === "fix") buckets.Fixed ??= fromTitle.Fixed ?? [];
+  }
+  return buckets;
+}
 async function writeChangelog(input) {
   const rel = input.changelogPath;
   const abs = import_path6.default.join(input.cwd, rel);
@@ -32126,8 +32202,11 @@ async function writeChangelog(input) {
   if (input.kind === "none") {
     return { wrote: false, reason: "kind-none", path: abs };
   }
-  const buckets = mapCommitsToSections(input.commits);
+  const buckets = bucketsFor(input);
   const majorNote = input.kind === "major-reset" ? `Major reset to ${input.version} via majorEnv` : void 0;
+  if (Object.keys(buckets).length === 0 && majorNote === void 0) {
+    buckets.Changed = ["Maintenance release"];
+  }
   const sectionMarkdown = redactSecrets(
     renderReleaseSection({
       version: input.version,
@@ -32160,7 +32239,7 @@ async function writeChangelog(input) {
   } catch (err) {
     if (attempt >= 2) {
       throw new Error(
-        `CHANGELOG conflict after retry: ${abs}: ${err instanceof Error ? err.message : String(err)}`
+        `CHANGELOG write failed after retry: ${abs}: ${err instanceof Error ? err.message : String(err)}`
       );
     }
     return writeChangelog({ ...input, attempt: 2 });
@@ -32179,63 +32258,16 @@ function parseMajor(version) {
   }
   return major;
 }
-function firstLine2(text) {
-  return text.split("\n")[0] ?? "";
-}
-function isMergeSubject(subject) {
-  const s = subject.trim();
-  return /^merge pull request\b/i.test(s) || /^merge branch\b/i.test(s) || /^merge remote-tracking branch\b/i.test(s);
-}
-function normalizeSubject2(subject) {
-  return subject.replace(
-    new RegExp("^(?:\\p{Extended_Pictographic}|\\p{Emoji_Component}|\\uFE0F|\\u200D)+\\s*", "u"),
-    ""
-  ).trim();
-}
-function bucketSubject(normalized) {
-  const s = normalized.trim();
-  if (/^feat\s*&\s*fix(\([^)]*\))?!?\s*:/i.test(s)) {
-    return "feat";
-  }
-  if (/^feat(\([^)]*\))?!?\s*:/i.test(s)) {
-    return "feat";
-  }
-  if (/^docs(\([^)]*\))?\s*:/i.test(s)) {
-    return "docs";
-  }
-  return "other";
-}
-function hasFeatBang(normalizedFirstLine) {
-  return /^feat(\([^)]*\))?!\s*:/i.test(normalizedFirstLine);
-}
-function collectBreakingWarnings(input) {
-  const warnings = [];
+var BREAKING_WARNING = "Breaking change marker detected; major only via APP_VERSION_MAJOR (never auto-major)";
+function hasBreakingMarker(input) {
   const title = input.prTitle?.trim();
-  if (title) {
-    const normalized = normalizeSubject2(firstLine2(title));
-    if (hasFeatBang(normalized) || /BREAKING CHANGE/i.test(title)) {
-      warnings.push(
-        "Breaking change marker detected; major only via APP_VERSION_MAJOR (never auto-major)"
-      );
-      return warnings;
-    }
+  if (title && (hasBreakingBang(normalizeSubject(firstLine(title))) || hasBreakingFooter(title))) {
+    return true;
   }
-  for (const c of input.commits) {
-    const normalized = normalizeSubject2(firstLine2(c.subject));
-    if (hasFeatBang(normalized)) {
-      warnings.push(
-        "Breaking change marker detected; major only via APP_VERSION_MAJOR (never auto-major)"
-      );
-      return warnings;
-    }
-    if (c.body && /BREAKING CHANGE/i.test(c.body)) {
-      warnings.push(
-        "Breaking change marker detected; major only via APP_VERSION_MAJOR (never auto-major)"
-      );
-      return warnings;
-    }
-  }
-  return warnings;
+  return input.commits.some(
+    (c) => hasBreakingBang(normalizeSubject(firstLine(c.subject))) || // Body may carry the footer; never use body for feat buckets.
+    c.body !== void 0 && hasBreakingFooter(c.body)
+  );
 }
 function classify(input) {
   const warnings = [];
@@ -32252,30 +32284,23 @@ function classify(input) {
   if (envMajor != null && envMajor > currentMajor) {
     return { kind: "major-reset", warnings };
   }
-  const texts = [];
-  const title = input.prTitle?.trim();
-  if (title) texts.push(title);
-  for (const c of input.commits) texts.push(c.subject);
-  let hasFeat = false;
-  let hasOther = false;
-  let hasDocs = false;
-  for (const raw of texts) {
-    const line = firstLine2(raw);
-    if (isMergeSubject(line)) continue;
-    const normalized = normalizeSubject2(line);
-    if (normalized.length === 0) continue;
-    const bucket = bucketSubject(normalized);
-    if (bucket === "ignore") continue;
-    if (bucket === "feat") hasFeat = true;
-    else if (bucket === "docs") hasDocs = true;
-    else if (bucket === "other") hasOther = true;
+  const subjects = input.commits.map((c) => normalizeSubject(firstLine(c.subject))).filter((s) => s.length > 0 && !isMergeSubject(s));
+  const title = normalizeSubject(firstLine(input.prTitle?.trim() ?? ""));
+  if (title.length > 0 && !isMergeSubject(title) && (subjects.length === 0 || isConventionalSubject(title))) {
+    subjects.push(title);
   }
-  warnings.push(...collectBreakingWarnings(input));
-  if (hasFeat) return { kind: "minor", warnings };
-  if (hasOther) return { kind: "patch", warnings };
-  if (hasDocs || texts.length === 0) return { kind: "none", warnings };
+  const types = subjects.map(subjectType);
+  if (hasBreakingMarker(input)) warnings.push(BREAKING_WARNING);
+  if (types.includes("feat")) return { kind: "minor", warnings };
+  if (types.some((t) => t !== "docs")) return { kind: "patch", warnings };
   return { kind: "none", warnings };
 }
+var CLASSIFY_KINDS = [
+  "major-reset",
+  "minor",
+  "patch",
+  "none"
+];
 var versioning_config_schema_default = {
   $schema: "http://json-schema.org/draft-07/schema#",
   $id: "https://policy-semver.dev/schemas/versioning.config.schema.json",
@@ -32284,6 +32309,10 @@ var versioning_config_schema_default = {
   additionalProperties: false,
   required: ["schemaVersion"],
   properties: {
+    $schema: {
+      type: "string",
+      description: "Editor hint only: points at this schema. Ignored at runtime."
+    },
     schemaVersion: {
       type: "string",
       const: "1",
@@ -32320,6 +32349,7 @@ var versioning_config_schema_default = {
     },
     tagPrefix: {
       type: "string",
+      pattern: "^([A-Za-z0-9][A-Za-z0-9._/-]*)?$",
       default: "v"
     },
     skipLabels: {
@@ -32389,29 +32419,72 @@ async function loadConfig(path72) {
     throw new Error(`versioning config is not valid JSON: ${path72}`);
   }
   if (!validate(data)) {
+    const details = (validate.errors ?? []).map(
+      (e) => (
+        // Ajv's own text does not say which key is unknown.
+        e.keyword === "additionalProperties" ? `${ajv.errorsText([e])} (unknown key ${JSON.stringify(e.params.additionalProperty)})` : ajv.errorsText([e])
+      )
+    );
     throw new Error(
-      `invalid versioning config (${path72}): ${ajv.errorsText(validate.errors, { separator: "; " })}`
+      `invalid versioning config (${path72}): ${details.join("; ")}`
     );
   }
   return data;
 }
 var BOT_NAME = "github-actions[bot]";
 var BOT_EMAIL = "41898282+github-actions[bot]@users.noreply.github.com";
+var BOT_IDENTITY_ARGS = [
+  "-c",
+  `user.name=${BOT_NAME}`,
+  "-c",
+  `user.email=${BOT_EMAIL}`
+];
 async function commitBumpFiles(input) {
   if (!input.message.includes(BOT_SKIP_TRAILER)) {
     throw new Error(`commit message missing ${BOT_SKIP_TRAILER}`);
   }
   const exec = input.exec ?? defaultGitExec;
   const cwd = { cwd: input.cwd };
-  await exec(["config", "user.name", BOT_NAME], cwd);
-  await exec(["config", "user.email", BOT_EMAIL], cwd);
   await exec(["add", "--", ...input.paths], cwd);
-  await exec(["commit", "-m", input.message], cwd);
+  await exec([...BOT_IDENTITY_ARGS, "commit", "-m", input.message], cwd);
+}
+var MAX_COMMITS = 1e3;
+async function lastTag(cwd, tagPrefix, exec) {
+  try {
+    const { stdout } = await exec(
+      ["describe", "--tags", "--abbrev=0", `--match=${tagPrefix}[0-9]*`],
+      { cwd }
+    );
+    return stdout.trim() || null;
+  } catch {
+    return null;
+  }
+}
+async function loadCommitsSinceLastTag(cwd, tagPrefix, exec = defaultGitExec) {
+  const tag = await lastTag(cwd, tagPrefix, exec);
+  const { stdout } = await exec(
+    [
+      "log",
+      `--max-count=${MAX_COMMITS}`,
+      "--pretty=format:%s%x00%b%x1e",
+      ...tag !== null ? [`${tag}..HEAD`] : []
+    ],
+    { cwd }
+  );
+  return stdout.split("").map((chunk) => chunk.replace(/^\n+/, "").trimEnd()).filter(Boolean).map((chunk) => {
+    const [subjectRaw, bodyRaw = ""] = chunk.split("\0");
+    const subject = (subjectRaw ?? "").trim();
+    const body = bodyRaw.trim();
+    return {
+      subject,
+      ...body.length > 0 ? { body } : {}
+    };
+  }).filter((c) => c.subject.length > 0);
 }
 async function pushRefs(input) {
   const exec = input.exec ?? defaultGitExec;
   const remote = input.remote ?? "origin";
-  await exec(["push", remote, ...input.refs], { cwd: input.cwd });
+  await exec(["push", "--atomic", remote, ...input.refs], { cwd: input.cwd });
 }
 async function tagExists(cwd, tag, exec = defaultGitExec) {
   try {
@@ -32423,37 +32496,45 @@ async function tagExists(cwd, tag, exec = defaultGitExec) {
     return false;
   }
 }
-async function createAnnotatedTag(input) {
+async function assertTagAvailable(input) {
   const exec = input.exec ?? defaultGitExec;
   if (await tagExists(input.cwd, input.tag, exec)) {
     throw new Error(`tag already exists: ${input.tag}`);
   }
-  await assertRemoteTagCompatible({
-    cwd: input.cwd,
-    tag: input.tag,
-    ...input.remote !== void 0 ? { remote: input.remote } : {},
-    ...input.exec !== void 0 ? { exec: input.exec } : {}
-  });
-  await exec(["tag", "-a", "--no-sign", input.tag, "-m", input.message], {
-    cwd: input.cwd
-  });
+  await assertRemoteTagCompatible(input);
+}
+async function createAnnotatedTag(input) {
+  const exec = input.exec ?? defaultGitExec;
+  await assertTagAvailable(input);
+  await exec(
+    [
+      ...BOT_IDENTITY_ARGS,
+      "tag",
+      "-a",
+      "--no-sign",
+      input.tag,
+      "-m",
+      input.message
+    ],
+    { cwd: input.cwd }
+  );
+}
+async function remoteTagSha(input) {
+  const exec = input.exec ?? defaultGitExec;
+  const remote = input.remote ?? "origin";
+  const ref = `refs/tags/${input.tag}`;
+  const { stdout } = await exec(
+    ["ls-remote", "--tags", remote, ref, `${ref}^{}`],
+    { cwd: input.cwd }
+  );
+  const lines = stdout.split("\n").map((l) => l.trim()).filter(Boolean);
+  const peeled = lines.find((l) => l.endsWith(`${ref}^{}`));
+  const direct = lines.find((l) => l.endsWith(ref));
+  return (peeled ?? direct)?.split(/\s/)[0] ?? null;
 }
 async function assertRemoteTagCompatible(input) {
   const exec = input.exec ?? defaultGitExec;
-  const remote = input.remote ?? "origin";
-  let listed;
-  try {
-    listed = (await exec(["ls-remote", "--tags", remote, `refs/tags/${input.tag}`], {
-      cwd: input.cwd
-    })).stdout;
-  } catch {
-    return;
-  }
-  const lines = listed.split("\n").map((l) => l.trim()).filter(Boolean);
-  if (lines.length === 0) return;
-  const peeled = lines.find((l) => l.endsWith(`refs/tags/${input.tag}^{}`));
-  const direct = lines.find((l) => l.endsWith(`refs/tags/${input.tag}`));
-  const remoteSha = (peeled ?? direct)?.split(/[\s\t]/)[0];
+  const remoteSha = await remoteTagSha(input);
   if (!remoteSha) return;
   const headSha = (await exec(["rev-parse", "HEAD"], { cwd: input.cwd })).stdout.trim();
   if (remoteSha === headSha) {
@@ -32466,20 +32547,22 @@ async function assertRemoteTagCompatible(input) {
 function statusOf(err) {
   return err.status;
 }
-async function createGitHubRelease(input) {
-  const body = redactSecrets(input.body);
-  let releaseExists = false;
+async function releaseExists(input) {
   try {
     await input.octokit.repos.getReleaseByTag({
       owner: input.owner,
       repo: input.repo,
       tag: input.tag
     });
-    releaseExists = true;
+    return true;
   } catch (err) {
     if (statusOf(err) !== 404) throw err;
+    return false;
   }
-  if (releaseExists && TAG_EXISTS_FAILS) {
+}
+async function createGitHubRelease(input) {
+  const body = redactSecrets(input.body);
+  if (await releaseExists(input)) {
     throw new Error(`release already published: ${input.tag}`);
   }
   await input.octokit.repos.createRelease({
@@ -32498,11 +32581,16 @@ var HOOK_ENV = {
 };
 var HOOK_SHELL = "sh";
 var execFileAsync2 = (0, import_util2.promisify)(import_child_process2.execFile);
+var HOOK_TIMEOUT_MS = 10 * 60 * 1e3;
+var HOOK_MAX_BUFFER_BYTES = 50 * 1024 * 1024;
+var HOOK_ENV_DENYLIST = ["POLICY_SEMVER_TOKEN", "INPUT_TOKEN"];
 var defaultHookExec = async (command, opts) => {
   const { stdout, stderr } = await execFileAsync2(HOOK_SHELL, ["-c", command], {
     cwd: opts.cwd,
     env: opts.env,
-    encoding: "utf8"
+    encoding: "utf8",
+    maxBuffer: HOOK_MAX_BUFFER_BYTES,
+    timeout: HOOK_TIMEOUT_MS
   });
   return { stdout: String(stdout), stderr: String(stderr) };
 };
@@ -32518,8 +32606,10 @@ async function runHook(input) {
     return;
   }
   const exec = input.exec ?? defaultHookExec;
+  const inherited = { ...process.env };
+  for (const name of HOOK_ENV_DENYLIST) delete inherited[name];
   const env = {
-    ...process.env,
+    ...inherited,
     ...hookEnvVars({
       version: input.version,
       kind: input.kind,
@@ -32531,12 +32621,111 @@ async function runHook(input) {
       cwd: input.cwd,
       env
     });
-    if (stdout) process.stdout.write(stdout);
-    if (stderr) process.stderr.write(stderr);
+    if (stdout) process.stdout.write(redactSecrets(stdout));
+    if (stderr) process.stderr.write(redactSecrets(stderr));
   } catch (err) {
     const code = err.code ?? "unknown";
-    const detail = err instanceof Error ? err.message : String(err);
+    const detail = redactSecrets(
+      err instanceof Error ? err.message : String(err)
+    );
     throw new Error(`hook ${input.name} failed (exit ${code}): ${detail}`);
+  }
+}
+function extractReleaseSection(changelog, version) {
+  const heading = `## [${version}]`;
+  const start = changelog.split("\n").findIndex((line) => line.startsWith(heading));
+  if (start === -1) return "";
+  const lines = changelog.split("\n").slice(start);
+  const next = lines.findIndex((line, i) => i > 0 && line.startsWith("## ["));
+  const section = next === -1 ? lines : lines.slice(0, next);
+  return `${section.join("\n").trimEnd()}
+`;
+}
+function escapeRegExp2(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+async function findReleaseCommit(input) {
+  const { stdout } = await defaultGitExec(
+    [
+      "log",
+      input.ref,
+      "-n",
+      "1",
+      "-E",
+      `--grep=^${RELEASE_PR_TRAILER}: ${input.prNumber}$`,
+      `--author=${escapeRegExp2(BOT_NAME)}`,
+      "--format=%H%x00%B"
+    ],
+    { cwd: input.cwd }
+  );
+  const [sha, body = ""] = stdout.trim().split("\0");
+  if (!sha) return null;
+  const kind = new RegExp(`^${RELEASE_KIND_TRAILER}: (.+)$`, "m").exec(
+    body
+  )?.[1];
+  if (kind === void 0 || !CLASSIFY_KINDS.includes(kind)) {
+    throw new Error(`release commit ${sha} has no valid kind trailer`);
+  }
+  return { sha, kind };
+}
+async function reconcileRelease(input) {
+  const { sha, kind } = input.commit;
+  const version = await readVersionAtRef({
+    cwd: input.cwd,
+    ref: sha,
+    files: input.files
+  });
+  if (version === null) {
+    throw new Error(`no version files found at release commit ${sha}`);
+  }
+  const tag = `${input.tagPrefix}${version}`;
+  const tagSha = await remoteTagSha({ cwd: input.cwd, tag });
+  if (tagSha === null) {
+    throw new Error(
+      `release commit ${sha} is on the branch but tag ${tag} is missing on the remote; restore the tag, then rerun`
+    );
+  }
+  const target = {
+    owner: input.owner,
+    repo: input.repo,
+    tag,
+    octokit: input.octokit
+  };
+  const releaseCreated = !await releaseExists(target);
+  if (releaseCreated) {
+    const { stdout: changelog } = await defaultGitExec(
+      ["show", `${sha}:${input.changelogPath}`],
+      { cwd: input.cwd }
+    );
+    await createGitHubRelease({
+      ...target,
+      body: extractReleaseSection(changelog, version)
+    });
+  }
+  await runHook({
+    name: "afterRelease",
+    command: input.afterRelease,
+    cwd: input.cwd,
+    version,
+    kind,
+    dryRun: false
+  });
+  return { version, tag, releaseCreated };
+}
+async function step(name, run) {
+  try {
+    await run();
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    throw new Error(`${name}: ${detail}`, { cause: err });
+  }
+}
+async function isGitIgnored(cwd, rel, exec = defaultGitExec) {
+  try {
+    await exec(["check-ignore", "--quiet", rel], { cwd });
+    return true;
+  } catch {
+    return false;
   }
 }
 async function runRelease(input) {
@@ -32546,24 +32735,44 @@ async function runRelease(input) {
   }
   const tagPrefix = input.tagPrefix ?? "v";
   const tag = `${tagPrefix}${input.version}`;
-  const message = formatBotBumpCommitMessage(input.version, tagPrefix);
+  const message = formatBotBumpCommitMessage(
+    input.version,
+    tagPrefix,
+    input.prNumber !== void 0 ? { prNumber: input.prNumber, kind } : void 0
+  );
   const commit = input.commit ?? commitBumpFiles;
   const tagFn = input.tag ?? createAnnotatedTag;
   const push = input.push ?? pushRefs;
   const release = input.release ?? createGitHubRelease;
-  await commit({
+  const writeAudit = input.writeAudit ?? writeLastRelease;
+  await writeAudit({
     cwd: input.cwd,
-    message,
-    paths: input.paths,
-    ...input.exec !== void 0 ? { exec: input.exec } : {}
-  });
-  await tagFn({
-    cwd: input.cwd,
+    version: input.version,
+    kind,
     tag,
-    message: tag,
-    ...input.remote !== void 0 ? { remote: input.remote } : {},
-    ...input.exec !== void 0 ? { exec: input.exec } : {}
+    at: (input.now ?? (() => /* @__PURE__ */ new Date()))().toISOString()
   });
+  const auditPath = lastReleaseRelPath();
+  const auditIgnored = await isGitIgnored(input.cwd, auditPath, input.exec);
+  await step(
+    "commit",
+    () => commit({
+      cwd: input.cwd,
+      message,
+      paths: auditIgnored ? input.paths : [...input.paths, auditPath],
+      ...input.exec !== void 0 ? { exec: input.exec } : {}
+    })
+  );
+  await step(
+    "tag",
+    () => tagFn({
+      cwd: input.cwd,
+      tag,
+      message: tag,
+      ...input.remote !== void 0 ? { remote: input.remote } : {},
+      ...input.exec !== void 0 ? { exec: input.exec } : {}
+    })
+  );
   if (input.hooks) {
     await runHook({
       name: "afterTag",
@@ -32576,19 +32785,25 @@ async function runRelease(input) {
     });
   }
   const branchRef = `HEAD:${input.branch}`;
-  await push({
-    cwd: input.cwd,
-    refs: [branchRef, tag],
-    ...input.remote !== void 0 ? { remote: input.remote } : {},
-    ...input.exec !== void 0 ? { exec: input.exec } : {}
-  });
-  await release({
-    owner: input.owner,
-    repo: input.repo,
-    tag,
-    body: input.sectionMarkdown,
-    octokit: input.octokit
-  });
+  await step(
+    "push",
+    () => push({
+      cwd: input.cwd,
+      refs: [branchRef, tag],
+      ...input.remote !== void 0 ? { remote: input.remote } : {},
+      ...input.exec !== void 0 ? { exec: input.exec } : {}
+    })
+  );
+  await step(
+    "GitHub Release",
+    () => release({
+      owner: input.owner,
+      repo: input.repo,
+      tag,
+      body: input.sectionMarkdown,
+      octokit: input.octokit
+    })
+  );
   if (input.hooks) {
     await runHook({
       name: "afterRelease",
@@ -32600,35 +32815,6 @@ async function runRelease(input) {
       ...input.hookExec !== void 0 ? { exec: input.hookExec } : {}
     });
   }
-  let gitSha = input.gitSha;
-  if (gitSha === void 0) {
-    const gitExec = input.exec ?? defaultGitExec;
-    const { stdout } = await gitExec(["rev-parse", "HEAD"], {
-      cwd: input.cwd
-    });
-    gitSha = stdout.trim();
-  }
-  const writeAudit = input.writeAudit ?? writeLastRelease;
-  await writeAudit({
-    cwd: input.cwd,
-    version: input.version,
-    kind,
-    gitSha,
-    tag,
-    at: (input.now ?? (() => /* @__PURE__ */ new Date()))().toISOString()
-  });
-  await commit({
-    cwd: input.cwd,
-    message: `chore(release): ${tag} last-release ${BOT_SKIP_TRAILER}`,
-    paths: [lastReleaseRelPath()],
-    ...input.exec !== void 0 ? { exec: input.exec } : {}
-  });
-  await push({
-    cwd: input.cwd,
-    refs: [branchRef],
-    ...input.remote !== void 0 ? { remote: input.remote } : {},
-    ...input.exec !== void 0 ? { exec: input.exec } : {}
-  });
   return {
     skipped: false,
     tag,
@@ -32636,6 +32822,35 @@ async function runRelease(input) {
     pushed: true,
     released: true
   };
+}
+async function syncToRemoteBranch(input) {
+  const exec = defaultGitExec;
+  const remote = "origin";
+  const cwd = { cwd: input.cwd };
+  const remoteRef = `${remote}/${input.branch}`;
+  const shallow = await exec(["rev-parse", "--is-shallow-repository"], cwd);
+  if (shallow.stdout.trim() === "true") {
+    throw new Error(
+      "shallow checkout: set `fetch-depth: 0` on actions/checkout so reruns can find earlier releases"
+    );
+  }
+  await exec(
+    ["fetch", remote, `+refs/heads/${input.branch}:refs/remotes/${remoteRef}`],
+    cwd
+  );
+  await exec(["checkout", "--quiet", "--detach", remoteRef], cwd);
+  if (input.mustContain !== void 0) {
+    try {
+      await exec(
+        ["merge-base", "--is-ancestor", input.mustContain, remoteRef],
+        cwd
+      );
+    } catch {
+      throw new Error(
+        `merged commit ${input.mustContain} is not on ${remoteRef}`
+      );
+    }
+  }
 }
 
 // src/locks.ts
@@ -32665,13 +32880,12 @@ var ACTION_BUNDLE = {
 };
 var ACTION_VERSIONING = {
   preferPinSha: true,
-  allowMovingMajorTag: true,
+  allowMovingMajorTag: false,
   discourageFloatingBranchRef: true
 };
 var ACTION_ADAPTER = { thinOnly: true };
 var ACTION_EVENT = {
   writeOn: "pull_request_closed_merged",
-  mergeGroupIsWrite: true,
   dryRunActions: ["opened", "synchronize", "reopened"],
   /** Sync check BEFORE prod-base; mermaid nests Sync under prod — unreachable for real sync PRs */
   syncBeforeProdBaseCheck: true
@@ -32686,28 +32900,24 @@ function decideActionMode(input) {
   if (input.isFork) {
     return {
       mode: "dry-run-comment",
-      allowWrite: false,
       reason: "fork: dry-run + comment only"
     };
   }
   if (input.baseBranch === input.developBranch && input.headBranch === input.prodBranch) {
     return {
       mode: "force-none",
-      allowWrite: false,
       reason: "sync-from-prod"
     };
   }
   if (input.baseBranch !== input.prodBranch) {
     return {
       mode: "skip",
-      allowWrite: false,
       reason: "non-prod base: no write"
     };
   }
   if (input.forceDryRun) {
     return {
       mode: "dry-run-comment",
-      allowWrite: false,
       reason: "input dry-run=true"
     };
   }
@@ -32715,42 +32925,19 @@ function decideActionMode(input) {
   if (input.eventName === "pull_request" && ACTION_EVENT.dryRunActions.includes(action)) {
     return {
       mode: "dry-run-comment",
-      allowWrite: false,
       reason: "pr opened/synchronize/reopened"
     };
   }
   if (input.eventName === "pull_request" && action === "closed" && input.merged === true) {
-    return { mode: "write", allowWrite: true, reason: "pr merged to prod" };
+    return { mode: "write", reason: "pr merged to prod" };
   }
-  if (ACTION_EVENT.mergeGroupIsWrite && input.eventName === "merge_group") {
-    return { mode: "write", allowWrite: true, reason: "merge_group" };
+  if (input.eventName === "merge_group") {
+    return {
+      mode: "dry-run-comment",
+      reason: "merge_group: dry-run only"
+    };
   }
-  return { mode: "skip", allowWrite: false, reason: "other event" };
-}
-
-// src/load-commits.ts
-var import_node_child_process = require("child_process");
-var import_node_util = require("util");
-var execFileAsync3 = (0, import_node_util.promisify)(import_node_child_process.execFile);
-async function loadCommitsFromGit(cwd) {
-  try {
-    const { stdout } = await execFileAsync3(
-      "git",
-      ["log", "-n", "50", "--pretty=format:%s%x00%b%x1e"],
-      { cwd, encoding: "utf8" }
-    );
-    return stdout.split("").map((chunk) => chunk.replace(/^\n+/, "").trimEnd()).filter(Boolean).map((chunk) => {
-      const [subjectRaw, bodyRaw = ""] = chunk.split("\0");
-      const subject = (subjectRaw ?? "").trim();
-      const body = bodyRaw.trim();
-      return {
-        subject,
-        ...body.length > 0 ? { body } : {}
-      };
-    }).filter((c) => c.subject.length > 0);
-  } catch {
-    return [];
-  }
+  return { mode: "skip", reason: "other event" };
 }
 
 // src/sticky-comment.ts
@@ -32782,26 +32969,12 @@ ${input.body}`;
   });
 }
 
-// src/version-files.ts
-function toVersionFiles(versionFiles) {
-  const versionFile = versionFiles.find(
-    (f) => f === "VERSION" || /(^|\/)VERSION$/.test(f)
-  );
-  const packageJsons = versionFiles.filter((f) => f.endsWith("package.json"));
-  const [packageJson, ...extraPackageJson] = packageJsons;
-  return {
-    ...versionFile !== void 0 ? { versionFile } : {},
-    ...packageJson !== void 0 ? { packageJson } : {},
-    ...extraPackageJson.length > 0 ? { extraPackageJson } : {}
-  };
-}
-
 // src/write-failure.ts
 function writeFailureMessage(err) {
-  const msg = err instanceof Error ? err.message : String(err);
+  const msg = redactSecrets(err instanceof Error ? err.message : String(err));
   const pushDenied = /protected branch|GH006|not allowed to push|permission.*denied/i.test(msg);
-  const hint = pushDenied ? " If branch protection blocks github-actions, use POLICY_SEMVER_TOKEN (PAT) or a GitHub App with contents:write bypass." : "";
-  return `Write/push/release failed: ${msg}.${hint}`;
+  const hint = pushDenied ? " If branch protection blocks github-actions, set `token` on actions/checkout to a PAT or GitHub App token with contents:write bypass (git push uses the checkout's credentials)." : "";
+  return `Write/push/release failed: ${msg}.${hint} Rerunning this job is safe: it finishes the release without a second bump.`;
 }
 
 // src/write-release.ts
@@ -32823,6 +32996,7 @@ async function runWriteRelease(input) {
 }
 
 // src/run-action.ts
+var PR_COMMITS_API_LIMIT = 250;
 function today() {
   return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
 }
@@ -32832,17 +33006,40 @@ function shortRef(ref) {
 function failWrite(err) {
   setFailed(writeFailureMessage(err));
 }
+function errorText(err) {
+  return redactSecrets(err instanceof Error ? err.message : String(err));
+}
+async function writeJobSummary(text) {
+  try {
+    await summary.addHeading("PolicySemVer", 3).addCodeBlock(text).write();
+  } catch (err) {
+    warning(`could not write the job summary: ${errorText(err)}`);
+  }
+}
+async function existingPaths(cwd, rels) {
+  const checked = await Promise.all(
+    rels.map(async (rel) => {
+      try {
+        await (0, import_promises7.access)(import_node_path.default.join(cwd, rel));
+        return rel;
+      } catch {
+        return null;
+      }
+    })
+  );
+  return checked.filter((rel) => rel !== null);
+}
 async function runAction() {
   const configPath = getInput("config-path") || "versioning.config.json";
   const forceDryRun = getBooleanInput("dry-run");
   const token = process.env.POLICY_SEMVER_TOKEN?.trim() || getInput("token") || process.env.GITHUB_TOKEN || "";
+  if (token) setSecret(token);
   const cwd = process.env.GITHUB_WORKSPACE || process.cwd();
-  const config = await loadConfig(import_node_path.default.join(cwd, configPath));
-  const files = toVersionFiles(config.versionFiles);
+  let config = await loadConfig(import_node_path.default.join(cwd, configPath));
   const payload = context2.payload;
   const pr = payload.pull_request;
   const mergeGroup = payload.merge_group;
-  const isFork = Boolean(pr?.head?.repo?.fork);
+  const isFork = pr !== void 0 && pr.head?.repo?.full_name !== pr.base?.repo?.full_name;
   const baseBranch = pr?.base?.ref ?? (mergeGroup?.base_ref !== void 0 ? shortRef(mergeGroup.base_ref) : shortRef(context2.ref));
   const headBranch = pr?.head?.ref ?? (mergeGroup?.head_ref !== void 0 ? shortRef(mergeGroup.head_ref) : "");
   const labels = (pr?.labels ?? []).map((l) => l.name);
@@ -32858,6 +33055,17 @@ async function runAction() {
     ...pr?.merged !== void 0 ? { merged: pr.merged } : {},
     forceDryRun
   });
+  setOutput("tag", "");
+  setOutput("released", "false");
+  if (decision.mode === "skip") {
+    setOutput("kind", "none");
+    setOutput("next-version", "");
+    setOutput("current-version", "");
+    setOutput("skipped-reason", decision.reason);
+    info(`mode: skip
+skipped: ${decision.reason}`);
+    return;
+  }
   let commits = [];
   const octokit = token ? getOctokit(token) : null;
   if (octokit && pr?.number) {
@@ -32873,30 +33081,15 @@ async function runAction() {
       const body = rest.join("\n").trim();
       return { subject, ...body ? { body } : {} };
     });
-  }
-  if (commits.length === 0) {
-    commits = await loadCommitsFromGit(cwd);
-  }
-  const fromProd = await readVersionAtRef({
-    cwd,
-    ref: `origin/${config.prodBranch}`,
-    files
-  });
-  const currentVersion = fromProd ?? await readVersion({ cwd, files });
-  const envRaw = process.env[config.majorEnv];
-  let envMajor = null;
-  if (envRaw !== void 0 && envRaw !== "") {
-    envMajor = Number.parseInt(envRaw, 10);
-    if (Number.isNaN(envMajor)) {
-      throw new Error(`invalid ${config.majorEnv}=${JSON.stringify(envRaw)}`);
+    if (data.length >= PR_COMMITS_API_LIMIT) {
+      warning(
+        `PR has ${PR_COMMITS_API_LIMIT}+ commits; GitHub lists only the first ${PR_COMMITS_API_LIMIT}, so a later feat: may be missed. Use a feat: PR title.`
+      );
     }
   }
-  let kind = classify({
-    commits,
-    ...pr?.title !== void 0 ? { prTitle: pr.title } : {},
-    currentVersion,
-    envMajor
-  }).kind;
+  if (commits.length === 0) {
+    commits = await loadCommitsSinceLastTag(cwd, config.tagPrefix);
+  }
   const guards = decideBumpGuards({
     isFork,
     baseBranch,
@@ -32914,59 +33107,121 @@ async function runAction() {
     ],
     isMergedToProd: decision.mode === "write"
   });
+  const allowWrite = guards.allowWrite && decision.mode === "write";
+  if (allowWrite && (!token || !octokit)) {
+    setFailed(
+      "Write path needs a token with contents:write (and pull-requests:write for comments). Set input `token`, or secret POLICY_SEMVER_TOKEN / GitHub App installation token when branch protection blocks GITHUB_TOKEN."
+    );
+    return;
+  }
+  if (allowWrite) {
+    try {
+      await syncToRemoteBranch({
+        cwd,
+        branch: config.prodBranch,
+        ...pr?.merge_commit_sha ? { mustContain: pr.merge_commit_sha } : {}
+      });
+      config = await loadConfig(import_node_path.default.join(cwd, configPath));
+      const released = pr ? await findReleaseCommit({
+        cwd,
+        ref: `origin/${config.prodBranch}`,
+        prNumber: pr.number
+      }) : null;
+      if (released) {
+        const done = await reconcileRelease({
+          cwd,
+          commit: released,
+          files: toVersionFiles(config.versionFiles),
+          tagPrefix: config.tagPrefix,
+          changelogPath: config.changelogPath,
+          owner: context2.repo.owner,
+          repo: context2.repo.repo,
+          octokit: toReposOctokit(token),
+          afterRelease: config.hooks.afterRelease
+        });
+        setOutput("kind", released.kind);
+        setOutput("next-version", done.version);
+        setOutput("current-version", done.version);
+        setOutput("skipped-reason", "");
+        setOutput("tag", done.tag);
+        setOutput("released", "true");
+        const finished = `mode: write
+PR already released as ${done.tag}; GitHub Release ${done.releaseCreated ? "created" : "already present"}`;
+        info(finished);
+        await writeJobSummary(finished);
+        return;
+      }
+    } catch (err) {
+      failWrite(err);
+      return;
+    }
+  }
+  const files = toVersionFiles(config.versionFiles);
+  const fromProd = await readVersionAtRef({
+    cwd,
+    ref: `origin/${config.prodBranch}`,
+    files
+  });
+  const currentVersion = fromProd ?? await readVersion({ cwd, files });
+  const envMajor = parseEnvMajor(config.majorEnv, process.env[config.majorEnv]);
+  const classified = classify({
+    commits,
+    ...pr?.title !== void 0 ? { prTitle: pr.title } : {},
+    currentVersion,
+    envMajor
+  });
+  for (const warning2 of classified.warnings) warning(warning2);
+  let kind = classified.kind;
   if (decision.mode === "force-none" || guards.forceKindNone) {
     kind = "none";
   }
   const nextVersion = applyBump({ kind, currentVersion, envMajor });
-  const allowWrite = decision.allowWrite && guards.allowWrite && decision.mode === "write";
   const skippedReason = decision.mode === "write" && allowWrite ? "" : [decision.reason, ...guards.reasons].filter(Boolean).join("; ");
   setOutput("kind", kind);
   setOutput("next-version", kind === "none" ? "" : nextVersion);
+  setOutput("current-version", currentVersion);
   setOutput("skipped-reason", skippedReason);
   const summary2 = [
     `mode: ${decision.mode}`,
     `kind: ${kind}`,
     `current: ${currentVersion}`,
     `next: ${nextVersion}`,
-    skippedReason ? `skipped: ${skippedReason}` : "write: pending/ok"
+    ...skippedReason ? [`skipped: ${skippedReason}`] : []
   ].join("\n");
   if ((decision.mode === "dry-run-comment" || decision.mode === "force-none") && octokit && pr?.number) {
-    await upsertStickyComment({
-      octokit,
-      owner: context2.repo.owner,
-      repo: context2.repo.repo,
-      issueNumber: pr.number,
-      body: `### PolicySemVer (dry-run)
+    try {
+      await upsertStickyComment({
+        octokit,
+        owner: context2.repo.owner,
+        repo: context2.repo.repo,
+        issueNumber: pr.number,
+        body: `### PolicySemVer (dry-run)
 \`\`\`
 ${summary2}
 \`\`\``
-    });
+      });
+    } catch (err) {
+      warning(`could not write the PR comment: ${errorText(err)}`);
+    }
   }
-  if (decision.mode === "skip") {
+  if (!allowWrite || kind === "none") {
     info(summary2);
-    return;
-  }
-  if (!allowWrite) {
-    info(summary2);
-    return;
-  }
-  if (!token || !octokit) {
-    setFailed(
-      "Write path needs a token with contents:write (and pull-requests:write for comments). Set input `token`, or secret POLICY_SEMVER_TOKEN / GitHub App installation token when branch protection blocks GITHUB_TOKEN."
-    );
+    await writeJobSummary(summary2);
     return;
   }
   try {
-    if (kind !== "none") {
-      await runHook({
-        name: "beforeBump",
-        command: config.hooks.beforeBump,
-        cwd,
-        version: nextVersion,
-        kind,
-        dryRun: false
-      });
-    }
+    await assertTagAvailable({
+      cwd,
+      tag: `${config.tagPrefix}${nextVersion}`
+    });
+    await runHook({
+      name: "beforeBump",
+      command: config.hooks.beforeBump,
+      cwd,
+      version: nextVersion,
+      kind,
+      dryRun: false
+    });
     const wrote = await writeVersion({
       cwd,
       nextVersion,
@@ -32980,14 +33235,19 @@ ${summary2}
       version: nextVersion,
       date: today(),
       kind,
-      commits
+      commits,
+      ...pr?.title !== void 0 ? { prTitle: pr.title } : {}
     });
-    const paths = [...config.versionFiles, config.changelogPath].filter(
-      (p, i, a) => a.indexOf(p) === i
+    const paths = await existingPaths(
+      cwd,
+      [...config.versionFiles, config.changelogPath].filter(
+        (p, i, a) => a.indexOf(p) === i
+      )
     );
-    if (kind !== "none" && (wrote.wrote || changelog.wrote)) {
-      await runWriteRelease({
+    if (wrote.wrote || changelog.wrote) {
+      const result = await runWriteRelease({
         kind,
+        ...pr ? { prNumber: pr.number } : {},
         cwd,
         version: nextVersion,
         tagPrefix: config.tagPrefix,
@@ -33002,16 +33262,23 @@ ${summary2}
           afterRelease: config.hooks.afterRelease
         }
       });
+      if (!result.skipped) {
+        setOutput("tag", result.tag);
+        setOutput("released", "true");
+        const released = `${summary2}
+released: ${result.tag}`;
+        info(released);
+        await writeJobSummary(released);
+      }
     }
   } catch (err) {
     failWrite(err);
+    await writeJobSummary(`${summary2}
+failed: ${errorText(err)}`);
   }
 }
 
 // src/index.ts
-async function run() {
-  await runAction();
-}
 if (process.env.GITHUB_ACTIONS === "true") {
   runAction().catch((err) => {
     setFailed(err instanceof Error ? err.message : String(err));
@@ -33026,7 +33293,6 @@ if (process.env.GITHUB_ACTIONS === "true") {
   ACTION_LAYOUT,
   ACTION_RUNTIME,
   ACTION_VERSIONING,
-  run,
   runAction,
   runWriteRelease
 });

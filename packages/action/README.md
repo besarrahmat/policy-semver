@@ -13,7 +13,7 @@ Consumer install (dry-run in under 15 minutes): root [README quickstart](../../R
 | Runtime     | `runs.using: node24` — do **not** regress to `node20`                                                                                                                                     |
 | Bundle      | Runners never `npm install` Action deps → **commit** the bundle                                                                                                                           |
 | Bundler     | **tsup** (esbuild) CJS → root `dist/index.js`. ncc failed (`TS6059` / [ncc#1297](https://github.com/vercel/ncc/issues/1297))                                                              |
-| Versioning  | Consumers pin **commit SHA** (preferred) or a moving major tag (`v0` / `v1`); avoid `@main` / `@dev` in prod                                                                              |
+| Versioning  | Consumers pin **commit SHA** (preferred) or a release tag (`@v1.0.0`); avoid `@main` / `@dev` in prod                                                                                     |
 
 Code locks: [`src/locks.ts`](./src/locks.ts), [`src/marketplace-locks.ts`](./src/marketplace-locks.ts).
 
@@ -35,7 +35,7 @@ See root [`action.yml`](../../action.yml): `config-path`, `dry-run`, `token` →
 
 ## Pin the Action (not npm)
 
-This Action is distributed as **git** (`uses: org/policy-semver@<sha>` preferred, or moving major tag after release). **Do not** `npm install` / `npx` it — npm is the CLI (`policy-semver`), not the Action.
+This Action is distributed as **git** (`uses: org/policy-semver@<sha>` preferred, or a release tag). **Do not** `npm install` / `npx` it — npm is the CLI (`policy-semver`), not the Action.
 
 ## Concurrency (required on write workflows)
 
@@ -45,12 +45,14 @@ Consumer workflows that run a **version write** (merged bump / tag) must set:
 concurrency:
   group: policy-semver-${{ github.repository }}-${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref }}
   cancel-in-progress: false # never cancel mid-write
+  queue: max # never let a newer run replace a pending release
 ```
 
 | Rule                           | Why                                                                                                                                                                               |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Group per repo + **prod base** | Serialize overlapping merges into the same `prodBranch`. Use `pull_request.base.ref` or `merge_group.base_ref` (not `github.ref` — on `pull_request` that is `refs/pull/N/merge`) |
 | `cancel-in-progress: false`    | Cancelling mid-write can leave VERSION / tags half-applied                                                                                                                        |
+| `queue: max`                   | The default keeps one pending run and cancels the rest, which silently drops a release when PRs merge quickly                                                                     |
 
 ### Do not share cancel-friendly groups with lint
 
@@ -78,21 +80,34 @@ Env: `POLICY_SEMVER_VERSION`, `POLICY_SEMVER_KIND`, `POLICY_SEMVER_DRY_RUN` (`tr
 
 ## Audit trail
 
-After a successful GitHub Release (and `hooks.afterRelease`), the Action writes `.policy-semver/last-release.json`:
+Before the bump commit, the Action writes `.policy-semver/last-release.json`, and that commit includes it:
 
 ```json
 {
   "version": "0.1.0",
   "kind": "minor",
-  "gitSha": "...",
   "tag": "v0.1.0",
   "at": "2026-08-08T00:00:00.000Z"
 }
 ```
 
-Then it commits that path with `[skip version]` and pushes the branch (no second tag).
+One release is one commit. To find the commit, resolve `tag`.
 
-**Default: commit this file** in the consumer repo. Do not gitignore `.policy-semver/` unless you explicitly want a local-only trail. This monorepo dogfood-commits the file later.
+**Default: commit this file** in the consumer repo. If you gitignore `.policy-semver/`, the file stays local and the release continues without it.
+
+## Rerunning a failed job
+
+Rerunning is always safe. Each write run first moves to the tip of `prodBranch`, then looks for a bump commit carrying the trailer `Policy-Semver-PR: <number>`:
+
+| What the failed run reached         | What the rerun does                                                     |
+| ----------------------------------- | ----------------------------------------------------------------------- |
+| Before the push                     | Nothing was public, so it releases from scratch                         |
+| Push done, Release missing          | Creates the Release from the `CHANGELOG` section, without a second bump |
+| Release done, `afterRelease` failed | Runs `afterRelease` again                                               |
+
+`git push --atomic` keeps the branch and tag together, so a rejected push leaves no orphan tag. `afterRelease` is at-least-once and must be idempotent. `beforeBump` and `afterTag` run again if the failed run stopped before its push landed.
+
+Requires `fetch-depth: 0` on `actions/checkout`. A shallow checkout fails before anything is written.
 
 ### Token / permissions
 
@@ -101,7 +116,9 @@ Then it commits that path with `[skip version]` and pushes the branch (no second
 | `contents: write`            | Create commit, annotated tag, GitHub Release                                                     |
 | Push to **protected** branch | Token/actor must be allowed (ruleset bypass, or a bot that can push) — otherwise push fails loud |
 
-Wire Octokit via `@actions/github` `getOctokit(token)` (locked in core `GITHUB_RELEASE_CLIENT.action`). Prefer `github.token` or a PAT stored as a secret — never log the token or pre-redact release bodies.
+The Action's `token` input and `POLICY_SEMVER_TOKEN` reach the GitHub API only (Release, PR comment). `git push` uses the credentials of `actions/checkout`, so a push blocked by branch protection is fixed with `token:` on the checkout step.
+
+Wire Octokit via `@actions/github` `getOctokit(token)` (locked in core `GITHUB_RELEASE_CLIENT.action`). Prefer `github.token` or a PAT stored as a secret — never log the token or pre-redact release bodies. Hooks do not receive this token.
 
 ## Permissions (least privilege)
 
@@ -137,18 +154,19 @@ That write token is **not** the checkout PAT used to `uses:` a private Action re
 
 ## Fork / prod / sync (runtime)
 
-| Case                                           | Behavior                                |
-| ---------------------------------------------- | --------------------------------------- |
-| Fork PR                                        | Sticky comment OK · `allowWrite: false` |
-| `base !== prodBranch`                          | Skip write                              |
-| Sync `develop ← prod`                          | `kind: none` · no write                 |
-| `opened` / `synchronize` / `reopened` on prod  | Dry-run + sticky comment                |
-| `closed` + `merged` on prod (or `merge_group`) | Write → tag → release                   |
-| `push` to prod                                 | **Skip** (avoids a double bump)         |
+| Case                                          | Behavior                                |
+| --------------------------------------------- | --------------------------------------- |
+| Fork PR                                       | Sticky comment OK · `allowWrite: false` |
+| `base !== prodBranch`                         | Skip write                              |
+| Sync `develop ← prod`                         | `kind: none` · no write                 |
+| `opened` / `synchronize` / `reopened` on prod | Dry-run + sticky comment                |
+| `closed` + `merged` on prod                   | Write → tag → release                   |
+| `merge_group`                                 | Dry-run only · no write                 |
+| `push` to prod                                | **Skip** (avoids a double bump)         |
 
 ## Merge methods
 
-Classify uses the **final subjects** visible when the job runs: `pulls.listCommits` when there is a PR, otherwise `git log` (`load-commits.ts`) — including `merge_group`.
+Classify uses the **final subjects** visible when the job runs: `pulls.listCommits` when there is a PR, otherwise `git log` since the last tag — including `merge_group`.
 
 | Method           | What is classified                                                                |
 | ---------------- | --------------------------------------------------------------------------------- |
@@ -156,7 +174,7 @@ Classify uses the **final subjects** visible when the job runs: `pulls.listCommi
 | **Squash**       | PR title + squash subject                                                         |
 | **Merge commit** | `Merge pull request…` subjects are ignored; commits inside the PR still aggregate |
 
-`merge_group` is treated as a write. If merge queue **and** `pull_request` `closed+merged` both write, the second job can hit tag-exists. Pick **one** write trigger per consumer.
+`merge_group` only validates, because the queue's SHA may never land. With a merge queue, the release runs on the PR's `closed` + `merged` event like any other merge.
 
 ## Revert
 

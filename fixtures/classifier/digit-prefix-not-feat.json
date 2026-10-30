@@ -1,0 +1,17 @@
+{
+  "name": "digit-prefix-not-feat",
+  "input": {
+    "commits": [
+      {
+        "subject": "123 feat: x"
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "patch",
+    "warnings": []
+  }
+}

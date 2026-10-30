@@ -1,8 +1,17 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import {
+  firstLine,
+  normalizeSubject,
+  subjectType,
+} from "../classify/subject.js";
 import { redactSecrets } from "../github/redact.js";
 import { mapCommitsToSections, renderReleaseSection } from "./map-commits.js";
-import type { WriteChangelogInput, WriteChangelogResult } from "./types.js";
+import type {
+  SectionBuckets,
+  WriteChangelogInput,
+  WriteChangelogResult,
+} from "./types.js";
 
 const DEFAULT_HEADER = `# Changelog
 
@@ -26,14 +35,30 @@ function insertAfterUnreleasedOrHeader(
   const unreleased = /^## \[Unreleased\][^\n]*\n/m;
   const m = unreleased.exec(existing);
   if (m && m.index !== undefined) {
-    const at = m.index + m[0].length;
-    return `${existing.slice(0, at)}\n${section}${existing.slice(at)}`;
+    // Keep hand-written [Unreleased] items out of the section being released.
+    const afterHeading = m.index + m[0].length;
+    const next = existing.slice(afterHeading).search(/^## \[/m);
+    const at = next === -1 ? existing.length : afterHeading + next;
+    const rest = existing.slice(at);
+    return `${existing.slice(0, at).trimEnd()}\n\n${section}${rest ? `\n${rest}` : ""}`;
   }
   const firstRelease = /^## \[/m.exec(existing);
   if (firstRelease && firstRelease.index !== undefined) {
     return `${existing.slice(0, firstRelease.index)}${section}\n${existing.slice(firstRelease.index)}`;
   }
   return `${existing.trimEnd()}\n\n${section}`;
+}
+
+function bucketsFor(input: WriteChangelogInput): SectionBuckets {
+  const buckets = mapCommitsToSections(input.commits);
+  const title = normalizeSubject(firstLine(input.prTitle ?? ""));
+  const titleType = subjectType(title);
+  if (titleType === "feat" || titleType === "fix") {
+    const fromTitle = mapCommitsToSections([{ subject: title }]);
+    if (titleType === "feat") buckets.Added ??= fromTitle.Added ?? [];
+    if (titleType === "fix") buckets.Fixed ??= fromTitle.Fixed ?? [];
+  }
+  return buckets;
 }
 
 /**
@@ -54,11 +79,15 @@ export async function writeChangelog(
     return { wrote: false, reason: "kind-none", path: abs };
   }
 
-  const buckets = mapCommitsToSections(input.commits);
+  const buckets = bucketsFor(input);
   const majorNote =
     input.kind === "major-reset"
       ? `Major reset to ${input.version} via majorEnv`
       : undefined;
+  // A released version always says something, even if only docs commits landed.
+  if (Object.keys(buckets).length === 0 && majorNote === undefined) {
+    buckets.Changed = ["Maintenance release"];
+  }
   const sectionMarkdown = redactSecrets(
     renderReleaseSection({
       version: input.version,
@@ -99,7 +128,7 @@ export async function writeChangelog(
   } catch (err) {
     if (attempt >= 2) {
       throw new Error(
-        `CHANGELOG conflict after retry: ${abs}: ${err instanceof Error ? err.message : String(err)}`,
+        `CHANGELOG write failed after retry: ${abs}: ${err instanceof Error ? err.message : String(err)}`,
       );
     }
     return writeChangelog({ ...input, attempt: 2 });

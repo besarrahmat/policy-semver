@@ -1,14 +1,19 @@
 import path from "node:path";
-import { classify, loadConfig, readVersion } from "@policy-semver/core";
+import {
+  classify,
+  loadConfig,
+  parseEnvMajor,
+  readVersion,
+  toVersionFiles,
+} from "@policy-semver/core";
 import type { GlobalFlags } from "./parse-args.js";
-import { toVersionFiles } from "./version-files.js";
 
 export async function cmdClassify(input: {
   flags: GlobalFlags;
   title?: string;
   commits: { subject: string; body?: string }[];
 }): Promise<void> {
-  const configPath = path.join(input.flags.cwd, input.flags.config);
+  const configPath = path.resolve(input.flags.cwd, input.flags.config);
   const config = await loadConfig(configPath);
   const files = toVersionFiles(config.versionFiles);
   const currentVersion = await readVersion({
@@ -16,14 +21,7 @@ export async function cmdClassify(input: {
     files,
   });
 
-  const envRaw = process.env[config.majorEnv];
-  let envMajor: number | null = null;
-  if (envRaw !== undefined && envRaw !== "") {
-    envMajor = Number.parseInt(envRaw, 10);
-    if (Number.isNaN(envMajor)) {
-      throw new Error(`invalid ${config.majorEnv}=${JSON.stringify(envRaw)}`);
-    }
-  }
+  const envMajor = parseEnvMajor(config.majorEnv, process.env[config.majorEnv]);
 
   const result = classify({
     commits: input.commits,

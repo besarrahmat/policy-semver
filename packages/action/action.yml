@@ -17,7 +17,7 @@ inputs:
     required: false
     default: "false"
   token:
-    description: GitHub token (PAT/App) when GITHUB_TOKEN cannot push
+    description: GitHub token for the API (Release, PR comment). git push uses the credentials of actions/checkout
     required: false
     default: ${{ github.token }}
 outputs:
@@ -25,8 +25,14 @@ outputs:
     description: Classification kind
   next-version:
     description: Computed next version if any
+  current-version:
+    description: Version before this run
   skipped-reason:
     description: Why write was skipped if any
+  tag:
+    description: Tag of the release, if this run released or finished one
+  released:
+    description: "'true' if the release is complete, including the GitHub Release"
 runs:
   using: node24
   main: ../../dist/index.js

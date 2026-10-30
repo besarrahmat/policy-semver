@@ -56,6 +56,7 @@ on:
 concurrency:
   group: policy-semver-${{ github.repository }}-${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref }}
   cancel-in-progress: false
+  queue: max
 
 permissions:
   contents: write
@@ -71,7 +72,7 @@ jobs:
           fetch-depth: 0
       - uses: besarrahmat/policy-semver@<full-commit-sha>
         env:
-          APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR || '0' }}
+          APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR }}
         with:
           config-path: versioning.config.json
 ```
@@ -86,7 +87,7 @@ Use a Conventional subject in the PR title or commits, for example `docs:`, `fix
 
 ### 5. Read the sticky comment
 
-Expect a **PolicySemVer (dry-run)** comment with `kind` and `next-version`. Open / synchronize / reopened is comment-only. A write (VERSION, tag, Release) happens only after merge to `prodBranch` (or `merge_group`).
+Expect a **PolicySemVer (dry-run)** comment with `kind` and `next-version`. Open / synchronize / reopened is comment-only. A write (VERSION, tag, Release) happens only after a PR merges to `prodBranch`.
 
 Full write stub (build → deploy, merge queue; private-fork checkout is commented): [`packages/action/examples/consumer.yml`](./packages/action/examples/consumer.yml).
 
@@ -141,7 +142,7 @@ Publish uses [Trusted publishing](https://docs.npmjs.com/trusted-publishers/) (O
 
 ## GitHub Marketplace
 
-**Live:** [PolicySemVer on GitHub Marketplace](https://github.com/marketplace/actions/policysemver) (Release `v1.0.0`, 2026-09-02; first listed from `v0.1.0` on 2026-09-01). Marketplace is discoverability. Production still pins a commit SHA. Do **not** create a `v0.*` / `v1.*` tag only to refresh the listing — [`.github/workflows/publish.yml`](./.github/workflows/publish.yml) publishes npm on those tags. Later Releases should keep **Publish this Action to the GitHub Marketplace** checked.
+**Live:** [PolicySemVer on GitHub Marketplace](https://github.com/marketplace/actions/policysemver) (Release `v1.0.0`, 2026-09-02; first listed from `v0.1.0` on 2026-09-01). Marketplace is discoverability. Production still pins a commit SHA. Do **not** create a `vX.Y.Z` tag only to refresh the listing — [`.github/workflows/publish.yml`](./.github/workflows/publish.yml) publishes npm on those tags. Later Releases should keep **Publish this Action to the GitHub Marketplace** checked.
 
 | Requirement                                                                                                                          | This repo                                                                                                                                                           |
 | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -218,18 +219,18 @@ Index and comparison table: [`examples/README.md`](./examples/README.md).
 
 Policy lives in **`versioning.config.json`** at the repo root (JSON Schema fail-closed).
 
-| Item        | Default / notes                                                                                                                                                                                                                                                       |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Config path | `versioning.config.json`                                                                                                                                                                                                                                              |
-| Major bumps | Manual only via env named by `majorEnv` (default **`APP_VERSION_MAJOR`**) — set to the next major integer (e.g. `2`) to reset to `N.0.0`; never auto-major from `BREAKING` / `feat!:`                                                                                 |
-| 0.x         | `APP_VERSION_MAJOR=0` until a human raises it. Feat stays minor, fix stays patch, major only via env — 0.x is **not** "any breaking change may be a minor". First public tool release: **0.1.0** (not `0.0.0`). Consumers may seed `VERSION` `0.0.0`.                 |
-| Dependabot  | Subject `Bump …` / `chore(deps):` → **patch**, not minor. This repo does **not** auto-label those PRs `skip-version`. Label `skip-version` still disables the bump when you add it.                                                                                   |
-| Branches    | `prodBranch` = `main`, `developBranch` = `dev` (this repo's dogfood topology)                                                                                                                                                                                         |
-| Dual-source | Default `versionFiles`: **root** `VERSION` + **root** `package.json`. Extra `*.package.json` entries lockstep to the same version (this repo: CLI + core so npm matches the GitHub tag). Not independent per-package bumps.                                           |
-| `tagPrefix` | Default `v` → tag `vX.Y.Z`. A human tag with a missing or wrong prefix is **not** renamed; `verify` checks `{tagPrefix}{VERSION}`                                                                                                                                     |
-| `release/*` | Not production unless `prodBranch` is set to that name; PRs targeting `release/1.2` are ignored                                                                                                                                                                       |
-| Workspaces  | **Option B (v1):** no workspace graph, no path-filter. **Omit** the `workspaces` key — it is not in the schema; `"workspaces": null` or a paths MVP **fail-closed**. A path-filter (and missed-path skipped bumps) is 0.2. Not Changesets-class package graph parity. |
-| Audit       | `.policy-semver/last-release.json` after a successful release — **commit** by default                                                                                                                                                                                 |
+| Item        | Default / notes                                                                                                                                                                                                                                                                      |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Config path | `versioning.config.json`                                                                                                                                                                                                                                                             |
+| Major bumps | Manual only via env named by `majorEnv` (default **`APP_VERSION_MAJOR`**) — set to the next major integer (e.g. `2`) to reset to `N.0.0`; never auto-major from `BREAKING` / `feat!:`                                                                                                |
+| 0.x         | `APP_VERSION_MAJOR=0` until a human raises it. Feat stays minor, fix stays patch, major only via env — 0.x is **not** "any breaking change may be a minor". First public tool release: **0.1.0** (not `0.0.0`). Consumers may seed `VERSION` `0.0.0`.                                |
+| Dependabot  | Subject `Bump …` / `chore(deps):` → **patch**, not minor. This repo does **not** auto-label those PRs `skip-version`. Label `skip-version` still disables the bump when you add it.                                                                                                  |
+| Branches    | `prodBranch` = `main`, `developBranch` = `dev` (this repo's dogfood topology)                                                                                                                                                                                                        |
+| Dual-source | Default `versionFiles`: **root** `VERSION` + **root** `package.json`. Extra `*.package.json` entries lockstep to the same version (this repo: CLI + core so npm matches the GitHub tag). Not independent per-package bumps.                                                          |
+| `tagPrefix` | Default `v` → tag `vX.Y.Z`. A human tag with a missing or wrong prefix is **not** renamed; `verify` checks `{tagPrefix}{VERSION}`                                                                                                                                                    |
+| `release/*` | Not production unless `prodBranch` is set to that name; PRs targeting `release/1.2` are ignored                                                                                                                                                                                      |
+| Workspaces  | **Option B (v1):** no workspace graph, no path-filter. **Omit** the `workspaces` key — it is not in the schema; `"workspaces": null` or a paths MVP **fail-closed**. A path-filter (and missed-path skipped bumps) is not planned for v1. Not Changesets-class package graph parity. |
+| Audit       | `.policy-semver/last-release.json`, part of the bump commit — **commit** by default                                                                                                                                                                                                  |
 
 Unknown keys in the config file are **rejected**. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
@@ -241,6 +242,7 @@ Workflows that **write** versions / tags must use:
 concurrency:
   group: policy-semver-${{ github.repository }}-${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref }}
   cancel-in-progress: false
+  queue: max
 ```
 
 Do not put the write job in the same cancel-friendly concurrency group as flaky lint. Details: [`packages/action/README.md`](./packages/action/README.md).

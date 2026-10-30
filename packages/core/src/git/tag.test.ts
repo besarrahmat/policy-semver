@@ -24,7 +24,7 @@ describe("createAnnotatedTag", () => {
       expect.anything(),
     );
     // must NOT call `git tag -a …`
-    expect(exec.mock.calls.some((c) => c[0]?.[0] === "tag")).toBe(false);
+    expect(exec.mock.calls.some((c) => c[0]?.includes("tag"))).toBe(false);
   });
 
   it("tag missing → create annotated tag", async () => {
@@ -35,7 +35,7 @@ describe("createAnnotatedTag", () => {
       if (args[0] === "ls-remote") {
         return { stdout: "", stderr: "" };
       }
-      if (args[0] === "tag") {
+      if (args.includes("tag")) {
         return { stdout: "", stderr: "" };
       }
       throw new Error(`unexpected git ${args.join(" ")}`);
@@ -49,7 +49,7 @@ describe("createAnnotatedTag", () => {
     });
 
     expect(exec).toHaveBeenCalledWith(
-      ["tag", "-a", "--no-sign", "v1.2.3", "-m", "v1.2.3"],
+      expect.arrayContaining(["tag", "-a", "--no-sign", "v1.2.3"]),
       expect.anything(),
     );
   });
@@ -78,7 +78,7 @@ describe("createAnnotatedTag", () => {
         exec,
       }),
     ).rejects.toThrow(/mirror tag conflict/);
-    expect(exec.mock.calls.some((c) => c[0]?.[0] === "tag")).toBe(false);
+    expect(exec.mock.calls.some((c) => c[0]?.includes("tag"))).toBe(false);
   });
 
   it("remote tag SHA matches HEAD → tag already exists", async () => {
@@ -105,7 +105,7 @@ describe("createAnnotatedTag", () => {
         exec,
       }),
     ).rejects.toThrow(/tag already exists/);
-    expect(exec.mock.calls.some((c) => c[0]?.[0] === "tag")).toBe(false);
+    expect(exec.mock.calls.some((c) => c[0]?.includes("tag"))).toBe(false);
   });
 
   it("ls-remote uses input.remote", async () => {
@@ -119,6 +119,7 @@ describe("createAnnotatedTag", () => {
           "--tags",
           "mirror",
           "refs/tags/v1.2.3",
+          "refs/tags/v1.2.3^{}",
         ]);
         return {
           stdout: "deadbeef\trefs/tags/v1.2.3\n",
@@ -141,29 +142,51 @@ describe("createAnnotatedTag", () => {
     ).rejects.toThrow(/mirror tag conflict/);
   });
 
-  it("no remote (ls-remote throws) → still create", async () => {
+  it("a remote check failure stops the tag instead of hiding it", async () => {
     const exec = vi.fn(async (args: string[]) => {
       if (args[0] === "rev-parse" && args.includes("-q")) {
         throw new Error("not local");
       }
       if (args[0] === "ls-remote") {
-        throw new Error("no remote");
-      }
-      if (args[0] === "tag") {
-        return { stdout: "", stderr: "" };
+        throw new Error("Authentication failed");
       }
       throw new Error(`unexpected git ${args.join(" ")}`);
     });
-    await createAnnotatedTag({
-      cwd: "/tmp",
-      tag: "v1.2.3",
-      message: "v1.2.3",
-      exec,
+    await expect(
+      createAnnotatedTag({
+        cwd: "/tmp",
+        tag: "v1.2.3",
+        message: "v1.2.3",
+        exec,
+      }),
+    ).rejects.toThrow(/Authentication failed/);
+    expect(exec.mock.calls.some((c) => c[0]?.includes("tag"))).toBe(false);
+  });
+
+  it("a peeled annotated tag is compared by its commit", async () => {
+    const exec = vi.fn(async (args: string[]) => {
+      if (args[0] === "rev-parse" && args.includes("-q")) {
+        throw new Error("not local");
+      }
+      if (args[0] === "ls-remote") {
+        return {
+          stdout: "tagobject\trefs/tags/v1.2.3\nabc123\trefs/tags/v1.2.3^{}\n",
+          stderr: "",
+        };
+      }
+      if (args[0] === "rev-parse" && args.includes("HEAD")) {
+        return { stdout: "abc123\n", stderr: "" };
+      }
+      throw new Error(`unexpected git ${args.join(" ")}`);
     });
-    expect(exec).toHaveBeenCalledWith(
-      ["tag", "-a", "--no-sign", "v1.2.3", "-m", "v1.2.3"],
-      expect.anything(),
-    );
+    await expect(
+      createAnnotatedTag({
+        cwd: "/tmp",
+        tag: "v1.2.3",
+        message: "v1.2.3",
+        exec,
+      }),
+    ).rejects.toThrow(/tag already exists/);
   });
 });
 

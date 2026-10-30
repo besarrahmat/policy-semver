@@ -5,7 +5,7 @@ export type SemVerParts = {
   patch: number;
 };
 
-const SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)$/;
+const SEMVER_RE = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 
 /** True when `value` is exactly `MAJOR.MINOR.PATCH` (digits only). */
 export function isSemVerString(value: string): boolean {

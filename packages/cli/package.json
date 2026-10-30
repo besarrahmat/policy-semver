@@ -49,7 +49,6 @@
     "pack:dry": "pnpm build && npm pack --dry-run"
   },
   "dependencies": {
-    "@octokit/rest": "^22.0.1",
     "@policy-semver/core": "workspace:*"
   },
   "devDependencies": {

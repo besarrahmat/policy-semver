@@ -55,7 +55,7 @@ describe("decideActionMode", () => {
         action: "closed",
         merged: true,
       }),
-    ).toMatchObject({ mode: "skip", allowWrite: false });
+    ).toMatchObject({ mode: "skip" });
   });
 
   it("prod PR synchronize → dry-run-comment", () => {
@@ -70,7 +70,7 @@ describe("decideActionMode", () => {
     ).toBe("dry-run-comment");
   });
 
-  it("synchronize → dry-run-comment and allowWrite false", () => {
+  it("synchronize → dry-run-comment", () => {
     expect(
       decideActionMode({
         ...base,
@@ -79,7 +79,7 @@ describe("decideActionMode", () => {
         headBranch: "feat",
         action: "synchronize",
       }),
-    ).toMatchObject({ mode: "dry-run-comment", allowWrite: false });
+    ).toMatchObject({ mode: "dry-run-comment" });
   });
 
   it("prod PR merged → write", () => {
@@ -95,7 +95,7 @@ describe("decideActionMode", () => {
     ).toBe("write");
   });
 
-  it("merge_group → write", () => {
+  it("merge_group → dry-run, never a write", () => {
     expect(
       decideActionMode({
         ...base,
@@ -104,7 +104,7 @@ describe("decideActionMode", () => {
         headBranch: "feat",
         eventName: "merge_group",
       }),
-    ).toMatchObject({ mode: "write", allowWrite: true, reason: "merge_group" });
+    ).toMatchObject({ mode: "dry-run-comment" });
   });
 
   it("push → skip", () => {
@@ -143,13 +143,13 @@ describe("decideActionMode", () => {
       action: "closed",
       merged: false,
     });
-    expect(merged).toMatchObject({ mode: "write", allowWrite: true });
-    expect(push).toMatchObject({ mode: "skip", allowWrite: false });
+    expect(merged).toMatchObject({ mode: "write" });
+    expect(push).toMatchObject({ mode: "skip" });
     expect(closedUnmerged.mode).not.toBe("write");
-    expect(closedUnmerged.allowWrite).toBe(false);
+    expect(closedUnmerged.mode).not.toBe("write");
   });
 
-  it("fork merged still allowWrite false", () => {
+  it("fork merged still no write", () => {
     expect(
       decideActionMode({
         ...base,
@@ -159,7 +159,7 @@ describe("decideActionMode", () => {
         action: "closed",
         merged: true,
       }),
-    ).toMatchObject({ mode: "dry-run-comment", allowWrite: false });
+    ).toMatchObject({ mode: "dry-run-comment" });
   });
 
   it("sync-only merged still force-none", () => {
@@ -174,7 +174,6 @@ describe("decideActionMode", () => {
       }),
     ).toMatchObject({
       mode: "force-none",
-      allowWrite: false,
       reason: "sync-from-prod",
     });
   });
@@ -191,7 +190,6 @@ describe("decideActionMode", () => {
       }),
     ).toMatchObject({
       mode: "skip",
-      allowWrite: false,
       reason: "non-prod base: no write",
     });
   });
@@ -208,7 +206,6 @@ describe("decideActionMode", () => {
       }),
     ).toMatchObject({
       mode: "skip",
-      allowWrite: false,
       reason: "non-prod base: no write",
     });
   });
@@ -224,6 +221,6 @@ describe("decideActionMode", () => {
         action: "closed",
         merged: true,
       }),
-    ).toMatchObject({ mode: "write", allowWrite: true });
+    ).toMatchObject({ mode: "write" });
   });
 });

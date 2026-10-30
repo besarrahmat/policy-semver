@@ -1,0 +1,17 @@
+{
+  "name": "revert-subject-patch",
+  "input": {
+    "commits": [
+      {
+        "subject": "Revert \"feat: add x\""
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "patch",
+    "warnings": []
+  }
+}

@@ -1,3 +1,4 @@
+import { BOT_IDENTITY_ARGS } from "./commit.js";
 import { defaultGitExec } from "./exec.js";
 import type { TagInput } from "./types.js";
 
@@ -16,21 +17,36 @@ export async function tagExists(
   }
 }
 
-/** Annotated tag; fail if tag already exists (no overwrite). */
-export async function createAnnotatedTag(input: TagInput): Promise<void> {
+/** Fail while nothing is written yet if the tag is taken locally or remotely. */
+export async function assertTagAvailable(input: {
+  cwd: string;
+  tag: string;
+  remote?: string;
+  exec?: TagInput["exec"];
+}): Promise<void> {
   const exec = input.exec ?? defaultGitExec;
   if (await tagExists(input.cwd, input.tag, exec)) {
     throw new Error(`tag already exists: ${input.tag}`);
   }
-  await assertRemoteTagCompatible({
-    cwd: input.cwd,
-    tag: input.tag,
-    ...(input.remote !== undefined ? { remote: input.remote } : {}),
-    ...(input.exec !== undefined ? { exec: input.exec } : {}),
-  });
-  await exec(["tag", "-a", "--no-sign", input.tag, "-m", input.message], {
-    cwd: input.cwd,
-  });
+  await assertRemoteTagCompatible(input);
+}
+
+/** Annotated tag; fail if tag already exists (no overwrite). */
+export async function createAnnotatedTag(input: TagInput): Promise<void> {
+  const exec = input.exec ?? defaultGitExec;
+  await assertTagAvailable(input);
+  await exec(
+    [
+      ...BOT_IDENTITY_ARGS,
+      "tag",
+      "-a",
+      "--no-sign",
+      input.tag,
+      "-m",
+      input.message,
+    ],
+    { cwd: input.cwd },
+  );
 }
 
 export async function assertTagMatchesVersion(input: {
@@ -65,6 +81,29 @@ export async function assertTagMatchesVersion(input: {
   }
 }
 
+/** Commit a remote tag points at (peeled for annotated tags), or null if absent. */
+export async function remoteTagSha(input: {
+  cwd: string;
+  tag: string;
+  remote?: string;
+  exec?: TagInput["exec"];
+}): Promise<string | null> {
+  const exec = input.exec ?? defaultGitExec;
+  const remote = input.remote ?? "origin";
+  const ref = `refs/tags/${input.tag}`;
+  const { stdout } = await exec(
+    ["ls-remote", "--tags", remote, ref, `${ref}^{}`],
+    { cwd: input.cwd },
+  );
+  const lines = stdout
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const peeled = lines.find((l) => l.endsWith(`${ref}^{}`));
+  const direct = lines.find((l) => l.endsWith(ref));
+  return (peeled ?? direct)?.split(/\s/)[0] ?? null;
+}
+
 export async function assertRemoteTagCompatible(input: {
   cwd: string;
   tag: string;
@@ -72,26 +111,7 @@ export async function assertRemoteTagCompatible(input: {
   exec?: TagInput["exec"];
 }): Promise<void> {
   const exec = input.exec ?? defaultGitExec;
-  const remote = input.remote ?? "origin";
-  let listed: string;
-  try {
-    listed = (
-      await exec(["ls-remote", "--tags", remote, `refs/tags/${input.tag}`], {
-        cwd: input.cwd,
-      })
-    ).stdout;
-  } catch {
-    return; // no remote / offline → skip (local tagExists still applies)
-  }
-  const lines = listed
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-  if (lines.length === 0) return;
-
-  const peeled = lines.find((l) => l.endsWith(`refs/tags/${input.tag}^{}`));
-  const direct = lines.find((l) => l.endsWith(`refs/tags/${input.tag}`));
-  const remoteSha = (peeled ?? direct)?.split(/[\s\t]/)[0];
+  const remoteSha = await remoteTagSha(input);
   if (!remoteSha) return;
 
   const headSha = (

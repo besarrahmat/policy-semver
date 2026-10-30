@@ -32,3 +32,18 @@ it("treats nested VERSION as the version file", () => {
     packageJson: "app/package.json",
   });
 });
+
+it.each(["manifest.json", "my-package.json", "sub/version.txt"])(
+  "rejects %s instead of dropping it",
+  (entry) => {
+    expect(() => toVersionFiles(["VERSION", entry])).toThrow(
+      /unsupported versionFiles entry/,
+    );
+  },
+);
+
+it("rejects a second VERSION file", () => {
+  expect(() => toVersionFiles(["VERSION", "sub/VERSION"])).toThrow(
+    /one VERSION file/,
+  );
+});

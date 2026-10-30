@@ -154,3 +154,39 @@ describe("bump beforeBump hook", () => {
     expect(await readFile(path.join(cwd, "VERSION"), "utf8")).toBe(beforeV);
   });
 });
+
+describe("flags", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("bump --title counts toward the classification", async () => {
+    const cwd = await makeTempApp({ version: "1.2.3" });
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+
+    await cmdBump({
+      flags: { cwd, config: "versioning.config.json", json: true },
+      dryRun: true,
+      write: false,
+      force: false,
+      commits: [{ subject: "chore: x" }],
+      title: "feat: y",
+    });
+
+    expect(JSON.parse(String(log.mock.calls[0]?.[0])).kind).toBe("minor");
+  });
+
+  it("--config accepts an absolute path", async () => {
+    const cwd = await makeTempApp({ version: "1.2.3" });
+    const elsewhere = await makeTempApp({ version: "1.2.3" });
+    vi.spyOn(console, "log").mockImplementation(() => {});
+
+    const code = await cmdVerify({
+      flags: {
+        cwd,
+        config: path.join(elsewhere, "versioning.config.json"),
+        json: true,
+      },
+    });
+
+    expect(code).toBe(0);
+  });
+});

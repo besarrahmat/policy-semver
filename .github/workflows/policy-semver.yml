@@ -8,6 +8,7 @@ on:
 concurrency:
   group: policy-semver-dogfood-main
   cancel-in-progress: false
+  queue: max
 
 permissions:
   contents: write
@@ -17,14 +18,15 @@ jobs:
   version:
     if: github.event.pull_request.base.ref == 'main'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
           token: ${{ secrets.POLICY_SEMVER_TOKEN || github.token }}
 
       - uses: ./packages/action
         env:
-          APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR || '0' }}
+          APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR }}
         with:
           config-path: versioning.config.json

@@ -26,7 +26,7 @@
  * | Practice | Lock |
  * | --- | --- |
  * | Prefer | Pin commit **SHA** for reproducibility |
- * | Also OK | Moving major tag (`v0`, `v1`) after release tags exist |
+ * | Also OK | Release tag (`v1.0.0`). No moving major tag: `v1.*` triggers npm publish |
  * | Not | Floating `@main` / `@dev` in production consumer workflows |
  *
  * ## Marketplace / layout
@@ -71,7 +71,7 @@ export const ACTION_BUNDLE = {
 
 export const ACTION_VERSIONING = {
   preferPinSha: true,
-  allowMovingMajorTag: true,
+  allowMovingMajorTag: false,
   discourageFloatingBranchRef: true,
 } as const;
 
@@ -80,7 +80,6 @@ export const ACTION_ADAPTER = { thinOnly: true } as const;
 /** Write trigger: merged PR only — not `push` to prod. */
 export const ACTION_EVENT = {
   writeOn: "pull_request_closed_merged",
-  mergeGroupIsWrite: true,
   dryRunActions: ["opened", "synchronize", "reopened"] as const,
   /** Sync check BEFORE prod-base; mermaid nests Sync under prod — unreachable for real sync PRs */
   syncBeforeProdBaseCheck: true,
