@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, it } from "vitest";
@@ -157,5 +157,7 @@ it("standing security checklist stays locked", () => {
   const gitignore = read(".gitignore");
   expect(gitignore).toMatch(/^\.env$/m);
   expect(gitignore).toMatch(/^\.env\.\*$/m);
-  expect(read(".npmrc")).not.toMatch(/_authToken/);
+  if (existsSync(path.join(root, ".npmrc"))) {
+    expect(read(".npmrc")).not.toMatch(/_authToken/);
+  }
 });
