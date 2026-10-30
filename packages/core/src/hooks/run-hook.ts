@@ -5,11 +5,19 @@ import type { HookExec, RunHookInput } from "./types.js";
 
 const execFileAsync = promisify(execFile);
 
+/** A stuck hook must fail the job, not hold the release queue open. */
+const HOOK_TIMEOUT_MS = 10 * 60 * 1000;
+const HOOK_MAX_BUFFER_BYTES = 50 * 1024 * 1024;
+/** Hook commands come from config; they get no ambient write token. */
+const HOOK_ENV_DENYLIST = ["POLICY_SEMVER_TOKEN", "INPUT_TOKEN"];
+
 export const defaultHookExec: HookExec = async (command, opts) => {
   const { stdout, stderr } = await execFileAsync(HOOK_SHELL, ["-c", command], {
     cwd: opts.cwd,
     env: opts.env,
     encoding: "utf8",
+    maxBuffer: HOOK_MAX_BUFFER_BYTES,
+    timeout: HOOK_TIMEOUT_MS,
   });
   return { stdout: String(stdout), stderr: String(stderr) };
 };
@@ -36,8 +44,10 @@ export async function runHook(input: RunHookInput): Promise<void> {
   }
 
   const exec = input.exec ?? defaultHookExec;
+  const inherited = { ...process.env };
+  for (const name of HOOK_ENV_DENYLIST) delete inherited[name];
   const env: NodeJS.ProcessEnv = {
-    ...process.env,
+    ...inherited,
     ...hookEnvVars({
       version: input.version,
       kind: input.kind,

@@ -111,4 +111,29 @@ describe("failing beforeBump never writes / never tags", () => {
     expect(await readFile(path.join(cwd, "VERSION"), "utf8")).toBe("1.0.0\n");
     expect(tag).not.toHaveBeenCalled();
   });
+
+  it("does not pass the Action token to hook commands", async () => {
+    process.env.POLICY_SEMVER_TOKEN = "secret";
+    process.env.INPUT_TOKEN = "secret";
+    process.env.KEEP_ME = "kept";
+    const exec = vi.fn<HookExec>(async () => ({ stdout: "", stderr: "" }));
+
+    await runHook({
+      name: "afterRelease",
+      command: "true",
+      cwd: "/tmp",
+      version: "1.0.0",
+      kind: "patch",
+      dryRun: false,
+      exec,
+    });
+    delete process.env.POLICY_SEMVER_TOKEN;
+    delete process.env.INPUT_TOKEN;
+    delete process.env.KEEP_ME;
+
+    const env = exec.mock.calls[0]?.[1].env;
+    expect(env?.POLICY_SEMVER_TOKEN).toBeUndefined();
+    expect(env?.INPUT_TOKEN).toBeUndefined();
+    expect(env?.KEEP_ME).toBe("kept");
+  });
 });

@@ -11,7 +11,7 @@ export type ActionWriteReleaseInput = Omit<RunReleaseInput, "octokit"> & {
   token: string;
 };
 
-function toReposOctokit(token: string): CreateReleaseInput["octokit"] {
+export function toReposOctokit(token: string): CreateReleaseInput["octokit"] {
   const octokit = getOctokit(token);
   return {
     repos: {

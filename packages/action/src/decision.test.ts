@@ -95,7 +95,7 @@ describe("decideActionMode", () => {
     ).toBe("write");
   });
 
-  it("merge_group → write", () => {
+  it("merge_group → dry-run, never a write", () => {
     expect(
       decideActionMode({
         ...base,
@@ -104,7 +104,7 @@ describe("decideActionMode", () => {
         headBranch: "feat",
         eventName: "merge_group",
       }),
-    ).toMatchObject({ mode: "write", allowWrite: true, reason: "merge_group" });
+    ).toMatchObject({ mode: "dry-run-comment", allowWrite: false });
   });
 
   it("push → skip", () => {

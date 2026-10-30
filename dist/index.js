@@ -27350,6 +27350,7 @@ function info(message) {
 }
 
 // src/run-action.ts
+var import_promises7 = require("fs/promises");
 var import_node_path = __toESM(require("path"), 1);
 
 // ../../node_modules/.pnpm/@actions+github@9.1.1/node_modules/@actions/github/lib/context.js
@@ -31547,7 +31548,6 @@ async function writeLastRelease(input) {
   const record = {
     version: input.version,
     kind: input.kind,
-    gitSha: input.gitSha,
     tag: input.tag,
     at: input.at ?? (/* @__PURE__ */ new Date()).toISOString()
   };
@@ -31587,11 +31587,13 @@ function formatSemVer(parts) {
   return `${parts.major}.${parts.minor}.${parts.patch}`;
 }
 var execFileAsync = (0, import_util.promisify)(import_child_process.execFile);
+var GIT_TIMEOUT_MS = 5 * 60 * 1e3;
 var defaultGitExec = async (args, opts) => {
   const { stdout, stderr } = await execFileAsync("git", args, {
     cwd: opts?.cwd,
     encoding: "utf8",
-    maxBuffer: 10 * 1024 * 1024
+    maxBuffer: 10 * 1024 * 1024,
+    timeout: GIT_TIMEOUT_MS
   });
   return { stdout: String(stdout), stderr: String(stderr) };
 };
@@ -31761,8 +31763,15 @@ function applyBump(input) {
   }
 }
 var BOT_SKIP_TRAILER = "[skip version]";
-function formatBotBumpCommitMessage(nextVersion, tagPrefix = "v") {
-  return `chore(release): ${tagPrefix}${nextVersion} ${BOT_SKIP_TRAILER}`;
+var RELEASE_PR_TRAILER = "Policy-Semver-PR";
+var RELEASE_KIND_TRAILER = "Policy-Semver-Kind";
+function formatBotBumpCommitMessage(nextVersion, tagPrefix = "v", source) {
+  const subject = `chore(release): ${tagPrefix}${nextVersion} ${BOT_SKIP_TRAILER}`;
+  if (source === void 0) return subject;
+  return `${subject}
+
+${RELEASE_PR_TRAILER}: ${source.prNumber}
+${RELEASE_KIND_TRAILER}: ${source.kind}`;
 }
 function decideBumpGuards(ctx) {
   const reasons = [];
@@ -32276,6 +32285,12 @@ function classify(input) {
   if (hasDocs || texts.length === 0) return { kind: "none", warnings };
   return { kind: "none", warnings };
 }
+var CLASSIFY_KINDS = [
+  "major-reset",
+  "minor",
+  "patch",
+  "none"
+];
 var versioning_config_schema_default = {
   $schema: "http://json-schema.org/draft-07/schema#",
   $id: "https://policy-semver.dev/schemas/versioning.config.schema.json",
@@ -32411,7 +32426,7 @@ async function commitBumpFiles(input) {
 async function pushRefs(input) {
   const exec = input.exec ?? defaultGitExec;
   const remote = input.remote ?? "origin";
-  await exec(["push", remote, ...input.refs], { cwd: input.cwd });
+  await exec(["push", "--atomic", remote, ...input.refs], { cwd: input.cwd });
 }
 async function tagExists(cwd, tag, exec = defaultGitExec) {
   try {
@@ -32423,37 +32438,36 @@ async function tagExists(cwd, tag, exec = defaultGitExec) {
     return false;
   }
 }
-async function createAnnotatedTag(input) {
+async function assertTagAvailable(input) {
   const exec = input.exec ?? defaultGitExec;
   if (await tagExists(input.cwd, input.tag, exec)) {
     throw new Error(`tag already exists: ${input.tag}`);
   }
-  await assertRemoteTagCompatible({
-    cwd: input.cwd,
-    tag: input.tag,
-    ...input.remote !== void 0 ? { remote: input.remote } : {},
-    ...input.exec !== void 0 ? { exec: input.exec } : {}
-  });
+  await assertRemoteTagCompatible(input);
+}
+async function createAnnotatedTag(input) {
+  const exec = input.exec ?? defaultGitExec;
+  await assertTagAvailable(input);
   await exec(["tag", "-a", "--no-sign", input.tag, "-m", input.message], {
     cwd: input.cwd
   });
 }
-async function assertRemoteTagCompatible(input) {
+async function remoteTagSha(input) {
   const exec = input.exec ?? defaultGitExec;
   const remote = input.remote ?? "origin";
-  let listed;
-  try {
-    listed = (await exec(["ls-remote", "--tags", remote, `refs/tags/${input.tag}`], {
-      cwd: input.cwd
-    })).stdout;
-  } catch {
-    return;
-  }
-  const lines = listed.split("\n").map((l) => l.trim()).filter(Boolean);
-  if (lines.length === 0) return;
-  const peeled = lines.find((l) => l.endsWith(`refs/tags/${input.tag}^{}`));
-  const direct = lines.find((l) => l.endsWith(`refs/tags/${input.tag}`));
-  const remoteSha = (peeled ?? direct)?.split(/[\s\t]/)[0];
+  const ref = `refs/tags/${input.tag}`;
+  const { stdout } = await exec(
+    ["ls-remote", "--tags", remote, ref, `${ref}^{}`],
+    { cwd: input.cwd }
+  );
+  const lines = stdout.split("\n").map((l) => l.trim()).filter(Boolean);
+  const peeled = lines.find((l) => l.endsWith(`${ref}^{}`));
+  const direct = lines.find((l) => l.endsWith(ref));
+  return (peeled ?? direct)?.split(/\s/)[0] ?? null;
+}
+async function assertRemoteTagCompatible(input) {
+  const exec = input.exec ?? defaultGitExec;
+  const remoteSha = await remoteTagSha(input);
   if (!remoteSha) return;
   const headSha = (await exec(["rev-parse", "HEAD"], { cwd: input.cwd })).stdout.trim();
   if (remoteSha === headSha) {
@@ -32466,20 +32480,22 @@ async function assertRemoteTagCompatible(input) {
 function statusOf(err) {
   return err.status;
 }
-async function createGitHubRelease(input) {
-  const body = redactSecrets(input.body);
-  let releaseExists = false;
+async function releaseExists(input) {
   try {
     await input.octokit.repos.getReleaseByTag({
       owner: input.owner,
       repo: input.repo,
       tag: input.tag
     });
-    releaseExists = true;
+    return true;
   } catch (err) {
     if (statusOf(err) !== 404) throw err;
+    return false;
   }
-  if (releaseExists && TAG_EXISTS_FAILS) {
+}
+async function createGitHubRelease(input) {
+  const body = redactSecrets(input.body);
+  if (await releaseExists(input) && TAG_EXISTS_FAILS) {
     throw new Error(`release already published: ${input.tag}`);
   }
   await input.octokit.repos.createRelease({
@@ -32498,11 +32514,16 @@ var HOOK_ENV = {
 };
 var HOOK_SHELL = "sh";
 var execFileAsync2 = (0, import_util2.promisify)(import_child_process2.execFile);
+var HOOK_TIMEOUT_MS = 10 * 60 * 1e3;
+var HOOK_MAX_BUFFER_BYTES = 50 * 1024 * 1024;
+var HOOK_ENV_DENYLIST = ["POLICY_SEMVER_TOKEN", "INPUT_TOKEN"];
 var defaultHookExec = async (command, opts) => {
   const { stdout, stderr } = await execFileAsync2(HOOK_SHELL, ["-c", command], {
     cwd: opts.cwd,
     env: opts.env,
-    encoding: "utf8"
+    encoding: "utf8",
+    maxBuffer: HOOK_MAX_BUFFER_BYTES,
+    timeout: HOOK_TIMEOUT_MS
   });
   return { stdout: String(stdout), stderr: String(stderr) };
 };
@@ -32518,8 +32539,10 @@ async function runHook(input) {
     return;
   }
   const exec = input.exec ?? defaultHookExec;
+  const inherited = { ...process.env };
+  for (const name of HOOK_ENV_DENYLIST) delete inherited[name];
   const env = {
-    ...process.env,
+    ...inherited,
     ...hookEnvVars({
       version: input.version,
       kind: input.kind,
@@ -32539,6 +32562,95 @@ async function runHook(input) {
     throw new Error(`hook ${input.name} failed (exit ${code}): ${detail}`);
   }
 }
+function extractReleaseSection(changelog, version) {
+  const heading = `## [${version}]`;
+  const start = changelog.split("\n").findIndex((line) => line.startsWith(heading));
+  if (start === -1) return "";
+  const lines = changelog.split("\n").slice(start);
+  const next = lines.findIndex((line, i) => i > 0 && line.startsWith("## ["));
+  const section = next === -1 ? lines : lines.slice(0, next);
+  return `${section.join("\n").trimEnd()}
+`;
+}
+function escapeRegExp2(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+async function findReleaseCommit(input) {
+  const { stdout } = await defaultGitExec(
+    [
+      "log",
+      input.ref,
+      "-n",
+      "1",
+      "-E",
+      `--grep=^${RELEASE_PR_TRAILER}: ${input.prNumber}$`,
+      `--author=${escapeRegExp2(BOT_NAME)}`,
+      "--format=%H%x00%B"
+    ],
+    { cwd: input.cwd }
+  );
+  const [sha, body = ""] = stdout.trim().split("\0");
+  if (!sha) return null;
+  const kind = new RegExp(`^${RELEASE_KIND_TRAILER}: (.+)$`, "m").exec(
+    body
+  )?.[1];
+  if (kind === void 0 || !CLASSIFY_KINDS.includes(kind)) {
+    throw new Error(`release commit ${sha} has no valid kind trailer`);
+  }
+  return { sha, kind };
+}
+async function reconcileRelease(input) {
+  const { sha, kind } = input.commit;
+  const version = await readVersionAtRef({
+    cwd: input.cwd,
+    ref: sha,
+    files: input.files
+  });
+  if (version === null) {
+    throw new Error(`no version files found at release commit ${sha}`);
+  }
+  const tag = `${input.tagPrefix}${version}`;
+  const tagSha = await remoteTagSha({ cwd: input.cwd, tag });
+  if (tagSha === null) {
+    throw new Error(
+      `release commit ${sha} is on the branch but tag ${tag} is missing on the remote; restore the tag, then rerun`
+    );
+  }
+  const target = {
+    owner: input.owner,
+    repo: input.repo,
+    tag,
+    octokit: input.octokit
+  };
+  const releaseCreated = !await releaseExists(target);
+  if (releaseCreated) {
+    const { stdout: changelog } = await defaultGitExec(
+      ["show", `${sha}:${input.changelogPath}`],
+      { cwd: input.cwd }
+    );
+    await createGitHubRelease({
+      ...target,
+      body: extractReleaseSection(changelog, version)
+    });
+  }
+  await runHook({
+    name: "afterRelease",
+    command: input.afterRelease,
+    cwd: input.cwd,
+    version,
+    kind,
+    dryRun: false
+  });
+  return { version, tag, releaseCreated };
+}
+async function isGitIgnored(cwd, rel, exec = defaultGitExec) {
+  try {
+    await exec(["check-ignore", "--quiet", rel], { cwd });
+    return true;
+  } catch {
+    return false;
+  }
+}
 async function runRelease(input) {
   const kind = input.kind;
   if (kind === "none") {
@@ -32546,15 +32658,29 @@ async function runRelease(input) {
   }
   const tagPrefix = input.tagPrefix ?? "v";
   const tag = `${tagPrefix}${input.version}`;
-  const message = formatBotBumpCommitMessage(input.version, tagPrefix);
+  const message = formatBotBumpCommitMessage(
+    input.version,
+    tagPrefix,
+    input.prNumber !== void 0 ? { prNumber: input.prNumber, kind } : void 0
+  );
   const commit = input.commit ?? commitBumpFiles;
   const tagFn = input.tag ?? createAnnotatedTag;
   const push = input.push ?? pushRefs;
   const release = input.release ?? createGitHubRelease;
+  const writeAudit = input.writeAudit ?? writeLastRelease;
+  await writeAudit({
+    cwd: input.cwd,
+    version: input.version,
+    kind,
+    tag,
+    at: (input.now ?? (() => /* @__PURE__ */ new Date()))().toISOString()
+  });
+  const auditPath = lastReleaseRelPath();
+  const auditIgnored = await isGitIgnored(input.cwd, auditPath, input.exec);
   await commit({
     cwd: input.cwd,
     message,
-    paths: input.paths,
+    paths: auditIgnored ? input.paths : [...input.paths, auditPath],
     ...input.exec !== void 0 ? { exec: input.exec } : {}
   });
   await tagFn({
@@ -32600,35 +32726,6 @@ async function runRelease(input) {
       ...input.hookExec !== void 0 ? { exec: input.hookExec } : {}
     });
   }
-  let gitSha = input.gitSha;
-  if (gitSha === void 0) {
-    const gitExec = input.exec ?? defaultGitExec;
-    const { stdout } = await gitExec(["rev-parse", "HEAD"], {
-      cwd: input.cwd
-    });
-    gitSha = stdout.trim();
-  }
-  const writeAudit = input.writeAudit ?? writeLastRelease;
-  await writeAudit({
-    cwd: input.cwd,
-    version: input.version,
-    kind,
-    gitSha,
-    tag,
-    at: (input.now ?? (() => /* @__PURE__ */ new Date()))().toISOString()
-  });
-  await commit({
-    cwd: input.cwd,
-    message: `chore(release): ${tag} last-release ${BOT_SKIP_TRAILER}`,
-    paths: [lastReleaseRelPath()],
-    ...input.exec !== void 0 ? { exec: input.exec } : {}
-  });
-  await push({
-    cwd: input.cwd,
-    refs: [branchRef],
-    ...input.remote !== void 0 ? { remote: input.remote } : {},
-    ...input.exec !== void 0 ? { exec: input.exec } : {}
-  });
   return {
     skipped: false,
     tag,
@@ -32636,6 +32733,35 @@ async function runRelease(input) {
     pushed: true,
     released: true
   };
+}
+async function syncToRemoteBranch(input) {
+  const exec = defaultGitExec;
+  const remote = "origin";
+  const cwd = { cwd: input.cwd };
+  const remoteRef = `${remote}/${input.branch}`;
+  const shallow = await exec(["rev-parse", "--is-shallow-repository"], cwd);
+  if (shallow.stdout.trim() === "true") {
+    throw new Error(
+      "shallow checkout: set `fetch-depth: 0` on actions/checkout so reruns can find earlier releases"
+    );
+  }
+  await exec(
+    ["fetch", remote, `+refs/heads/${input.branch}:refs/remotes/${remoteRef}`],
+    cwd
+  );
+  await exec(["checkout", "--quiet", "--detach", remoteRef], cwd);
+  if (input.mustContain !== void 0) {
+    try {
+      await exec(
+        ["merge-base", "--is-ancestor", input.mustContain, remoteRef],
+        cwd
+      );
+    } catch {
+      throw new Error(
+        `merged commit ${input.mustContain} is not on ${remoteRef}`
+      );
+    }
+  }
 }
 
 // src/locks.ts
@@ -32671,7 +32797,6 @@ var ACTION_VERSIONING = {
 var ACTION_ADAPTER = { thinOnly: true };
 var ACTION_EVENT = {
   writeOn: "pull_request_closed_merged",
-  mergeGroupIsWrite: true,
   dryRunActions: ["opened", "synchronize", "reopened"],
   /** Sync check BEFORE prod-base; mermaid nests Sync under prod — unreachable for real sync PRs */
   syncBeforeProdBaseCheck: true
@@ -32722,8 +32847,12 @@ function decideActionMode(input) {
   if (input.eventName === "pull_request" && action === "closed" && input.merged === true) {
     return { mode: "write", allowWrite: true, reason: "pr merged to prod" };
   }
-  if (ACTION_EVENT.mergeGroupIsWrite && input.eventName === "merge_group") {
-    return { mode: "write", allowWrite: true, reason: "merge_group" };
+  if (input.eventName === "merge_group") {
+    return {
+      mode: "dry-run-comment",
+      allowWrite: false,
+      reason: "merge_group: dry-run only"
+    };
   }
   return { mode: "skip", allowWrite: false, reason: "other event" };
 }
@@ -32832,13 +32961,25 @@ function shortRef(ref) {
 function failWrite(err) {
   setFailed(writeFailureMessage(err));
 }
+async function existingPaths(cwd, rels) {
+  const checked = await Promise.all(
+    rels.map(async (rel) => {
+      try {
+        await (0, import_promises7.access)(import_node_path.default.join(cwd, rel));
+        return rel;
+      } catch {
+        return null;
+      }
+    })
+  );
+  return checked.filter((rel) => rel !== null);
+}
 async function runAction() {
   const configPath = getInput("config-path") || "versioning.config.json";
   const forceDryRun = getBooleanInput("dry-run");
   const token = process.env.POLICY_SEMVER_TOKEN?.trim() || getInput("token") || process.env.GITHUB_TOKEN || "";
   const cwd = process.env.GITHUB_WORKSPACE || process.cwd();
-  const config = await loadConfig(import_node_path.default.join(cwd, configPath));
-  const files = toVersionFiles(config.versionFiles);
+  let config = await loadConfig(import_node_path.default.join(cwd, configPath));
   const payload = context2.payload;
   const pr = payload.pull_request;
   const mergeGroup = payload.merge_group;
@@ -32858,6 +32999,14 @@ async function runAction() {
     ...pr?.merged !== void 0 ? { merged: pr.merged } : {},
     forceDryRun
   });
+  if (decision.mode === "skip") {
+    setOutput("kind", "none");
+    setOutput("next-version", "");
+    setOutput("skipped-reason", decision.reason);
+    info(`mode: skip
+skipped: ${decision.reason}`);
+    return;
+  }
   let commits = [];
   const octokit = token ? getOctokit(token) : null;
   if (octokit && pr?.number) {
@@ -32877,6 +33026,70 @@ async function runAction() {
   if (commits.length === 0) {
     commits = await loadCommitsFromGit(cwd);
   }
+  const guards = decideBumpGuards({
+    isFork,
+    baseBranch,
+    headBranch,
+    prodBranch: config.prodBranch,
+    developBranch: config.developBranch,
+    labels,
+    skipLabels: config.skipLabels,
+    skipTrailers: config.skipTrailers,
+    textsForSkip: [
+      ...commits.map((c) => c.subject),
+      ...commits.map((c) => c.body ?? ""),
+      pr?.title ?? "",
+      pr?.body ?? ""
+    ],
+    isMergedToProd: decision.mode === "write"
+  });
+  const allowWrite = decision.allowWrite && guards.allowWrite && decision.mode === "write";
+  if (allowWrite && (!token || !octokit)) {
+    setFailed(
+      "Write path needs a token with contents:write (and pull-requests:write for comments). Set input `token`, or secret POLICY_SEMVER_TOKEN / GitHub App installation token when branch protection blocks GITHUB_TOKEN."
+    );
+    return;
+  }
+  if (allowWrite) {
+    try {
+      await syncToRemoteBranch({
+        cwd,
+        branch: config.prodBranch,
+        ...pr?.merge_commit_sha ? { mustContain: pr.merge_commit_sha } : {}
+      });
+      config = await loadConfig(import_node_path.default.join(cwd, configPath));
+      const released = pr ? await findReleaseCommit({
+        cwd,
+        ref: `origin/${config.prodBranch}`,
+        prNumber: pr.number
+      }) : null;
+      if (released) {
+        const done = await reconcileRelease({
+          cwd,
+          commit: released,
+          files: toVersionFiles(config.versionFiles),
+          tagPrefix: config.tagPrefix,
+          changelogPath: config.changelogPath,
+          owner: context2.repo.owner,
+          repo: context2.repo.repo,
+          octokit: toReposOctokit(token),
+          afterRelease: config.hooks.afterRelease
+        });
+        setOutput("kind", released.kind);
+        setOutput("next-version", done.version);
+        setOutput("skipped-reason", "");
+        info(
+          `mode: write
+PR already released as ${done.tag}; GitHub Release ${done.releaseCreated ? "created" : "already present"}`
+        );
+        return;
+      }
+    } catch (err) {
+      failWrite(err);
+      return;
+    }
+  }
+  const files = toVersionFiles(config.versionFiles);
   const fromProd = await readVersionAtRef({
     cwd,
     ref: `origin/${config.prodBranch}`,
@@ -32897,28 +33110,10 @@ async function runAction() {
     currentVersion,
     envMajor
   }).kind;
-  const guards = decideBumpGuards({
-    isFork,
-    baseBranch,
-    headBranch,
-    prodBranch: config.prodBranch,
-    developBranch: config.developBranch,
-    labels,
-    skipLabels: config.skipLabels,
-    skipTrailers: config.skipTrailers,
-    textsForSkip: [
-      ...commits.map((c) => c.subject),
-      ...commits.map((c) => c.body ?? ""),
-      pr?.title ?? "",
-      pr?.body ?? ""
-    ],
-    isMergedToProd: decision.mode === "write"
-  });
   if (decision.mode === "force-none" || guards.forceKindNone) {
     kind = "none";
   }
   const nextVersion = applyBump({ kind, currentVersion, envMajor });
-  const allowWrite = decision.allowWrite && guards.allowWrite && decision.mode === "write";
   const skippedReason = decision.mode === "write" && allowWrite ? "" : [decision.reason, ...guards.reasons].filter(Boolean).join("; ");
   setOutput("kind", kind);
   setOutput("next-version", kind === "none" ? "" : nextVersion);
@@ -32942,31 +33137,23 @@ ${summary2}
 \`\`\``
     });
   }
-  if (decision.mode === "skip") {
+  if (!allowWrite || kind === "none") {
     info(summary2);
-    return;
-  }
-  if (!allowWrite) {
-    info(summary2);
-    return;
-  }
-  if (!token || !octokit) {
-    setFailed(
-      "Write path needs a token with contents:write (and pull-requests:write for comments). Set input `token`, or secret POLICY_SEMVER_TOKEN / GitHub App installation token when branch protection blocks GITHUB_TOKEN."
-    );
     return;
   }
   try {
-    if (kind !== "none") {
-      await runHook({
-        name: "beforeBump",
-        command: config.hooks.beforeBump,
-        cwd,
-        version: nextVersion,
-        kind,
-        dryRun: false
-      });
-    }
+    await assertTagAvailable({
+      cwd,
+      tag: `${config.tagPrefix}${nextVersion}`
+    });
+    await runHook({
+      name: "beforeBump",
+      command: config.hooks.beforeBump,
+      cwd,
+      version: nextVersion,
+      kind,
+      dryRun: false
+    });
     const wrote = await writeVersion({
       cwd,
       nextVersion,
@@ -32982,12 +33169,16 @@ ${summary2}
       kind,
       commits
     });
-    const paths = [...config.versionFiles, config.changelogPath].filter(
-      (p, i, a) => a.indexOf(p) === i
+    const paths = await existingPaths(
+      cwd,
+      [...config.versionFiles, config.changelogPath].filter(
+        (p, i, a) => a.indexOf(p) === i
+      )
     );
-    if (kind !== "none" && (wrote.wrote || changelog.wrote)) {
+    if (wrote.wrote || changelog.wrote) {
       await runWriteRelease({
         kind,
+        ...pr ? { prNumber: pr.number } : {},
         cwd,
         version: nextVersion,
         tagPrefix: config.tagPrefix,

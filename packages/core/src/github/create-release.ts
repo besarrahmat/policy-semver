@@ -33,6 +33,22 @@ function statusOf(err: unknown): number | undefined {
   return (err as { status?: number }).status;
 }
 
+export async function releaseExists(
+  input: Pick<CreateReleaseInput, "owner" | "repo" | "tag" | "octokit">,
+): Promise<boolean> {
+  try {
+    await input.octokit.repos.getReleaseByTag({
+      owner: input.owner,
+      repo: input.repo,
+      tag: input.tag,
+    });
+    return true;
+  } catch (err) {
+    if (statusOf(err) !== 404) throw err;
+    return false;
+  }
+}
+
 /**
  * Create a GitHub Release. Body is redacted.
  * If a release for the tag already exists → fail (no overwrite).
@@ -42,19 +58,7 @@ export async function createGitHubRelease(
 ): Promise<void> {
   const body = redactSecrets(input.body);
 
-  let releaseExists = false;
-  try {
-    await input.octokit.repos.getReleaseByTag({
-      owner: input.owner,
-      repo: input.repo,
-      tag: input.tag,
-    });
-    releaseExists = true;
-  } catch (err) {
-    if (statusOf(err) !== 404) throw err;
-  }
-
-  if (releaseExists && TAG_EXISTS_FAILS) {
+  if ((await releaseExists(input)) && TAG_EXISTS_FAILS) {
     throw new Error(`release already published: ${input.tag}`);
   }
 

@@ -7,11 +7,9 @@ import { runRelease } from "./run-release.js";
 
 function auditSeams() {
   return {
-    gitSha: "deadbeef",
     writeAudit: vi.fn(async () => ({
       version: "0.0.0",
       kind: "patch" as const,
-      gitSha: "deadbeef",
       tag: "v0.0.0",
       at: "2026-08-08T00:00:00.000Z",
     })),
@@ -150,28 +148,17 @@ describe("runRelease", () => {
       pushed: true,
       released: true,
     });
-    expect(calls).toEqual([
-      "commit",
-      "tag",
-      "push",
-      "release",
-      "commit",
-      "push",
-    ]);
+    expect(calls).toEqual(["commit", "tag", "push", "release"]);
     expect(commit).toHaveBeenCalledWith(
       expect.objectContaining({
         message: expect.stringContaining("[skip version]"),
-        paths: ["VERSION", "package.json", "CHANGELOG.md"],
+        paths: [
+          "VERSION",
+          "package.json",
+          "CHANGELOG.md",
+          ".policy-semver/last-release.json",
+        ],
       }),
-    );
-    expect(commit).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        paths: [".policy-semver/last-release.json"],
-        message: expect.stringContaining("[skip version]"),
-      }),
-    );
-    expect(push).toHaveBeenLastCalledWith(
-      expect.objectContaining({ refs: ["HEAD:main"] }),
     );
     expect(tag).toHaveBeenCalledWith(
       expect.objectContaining({ tag: "v1.2.3" }),
@@ -191,7 +178,6 @@ describe("runRelease", () => {
       expect.objectContaining({
         version: "1.2.3",
         kind: "minor",
-        gitSha: "deadbeef",
         tag: "v1.2.3",
       }),
     );
@@ -237,6 +223,7 @@ describe("runRelease", () => {
         release,
         hooks: { afterTag: "afterTag-cmd", afterRelease: "afterRelease-cmd" },
         hookExec,
+        ...auditSeams(),
       }),
     ).rejects.toThrow(/hook afterTag failed/);
 
@@ -291,21 +278,18 @@ describe("runRelease", () => {
       "push",
       "release",
       "afterRelease-cmd",
-      "commit",
-      "push",
     ]);
     expect(seams.writeAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         version: "1.0.1",
         kind: "patch",
-        gitSha: "deadbeef",
         tag: "v1.0.1",
       }),
     );
   });
 
-  it("afterRelease failure skips last-release.json", async () => {
-    const writeAudit = vi.fn();
+  it("afterRelease failure comes after the audit is committed", async () => {
+    const writeAudit = auditSeams().writeAudit;
     const hookExec = vi.fn(async () => {
       throw Object.assign(new Error("boom"), { code: 1 });
     });
@@ -326,10 +310,9 @@ describe("runRelease", () => {
         release: vi.fn(),
         hooks: { afterTag: null, afterRelease: "fail" },
         hookExec,
-        gitSha: "deadbeef",
         writeAudit,
       }),
     ).rejects.toThrow(/hook afterRelease failed/);
-    expect(writeAudit).not.toHaveBeenCalled();
+    expect(writeAudit).toHaveBeenCalledOnce();
   });
 });

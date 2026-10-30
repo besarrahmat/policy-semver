@@ -80,7 +80,6 @@ export const ACTION_ADAPTER = { thinOnly: true } as const;
 /** Write trigger: merged PR only — not `push` to prod. */
 export const ACTION_EVENT = {
   writeOn: "pull_request_closed_merged",
-  mergeGroupIsWrite: true,
   dryRunActions: ["opened", "synchronize", "reopened"] as const,
   /** Sync check BEFORE prod-base; mermaid nests Sync under prod — unreachable for real sync PRs */
   syncBeforeProdBaseCheck: true,

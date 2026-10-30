@@ -8,6 +8,7 @@ on:
 concurrency:
   group: policy-semver-${{ github.repository }}-${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref }}
   cancel-in-progress: false
+  queue: max
 
 permissions:
   contents: write
@@ -17,6 +18,7 @@ jobs:
   version:
     if: github.event.pull_request.base.ref == 'main'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
         with:
