@@ -1,0 +1,17 @@
+{
+  "name": "title-plain-docs-commits",
+  "input": {
+    "commits": [
+      {
+        "subject": "docs: x"
+      }
+    ],
+    "prTitle": "Update docs",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "none",
+    "warnings": []
+  }
+}

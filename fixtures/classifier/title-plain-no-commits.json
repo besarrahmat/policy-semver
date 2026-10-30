@@ -1,0 +1,13 @@
+{
+  "name": "title-plain-no-commits",
+  "input": {
+    "commits": [],
+    "prTitle": "Update stuff",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "patch",
+    "warnings": []
+  }
+}

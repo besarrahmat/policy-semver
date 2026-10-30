@@ -3,6 +3,7 @@ export { applyBump } from "./apply-bump.js";
 export { formatBotBumpCommitMessage } from "./bot-message.js";
 export { assertBotCommitMessageSafe, decideBumpGuards } from "./guards.js";
 export { BOT_SKIP_TRAILER, BUMP_SAFETY } from "./locks.js";
+export { parseEnvMajor } from "./parse-env-major.js";
 export {
   formatSemVer,
   isSemVerString,

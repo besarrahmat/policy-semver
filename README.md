@@ -72,7 +72,7 @@ jobs:
           fetch-depth: 0
       - uses: besarrahmat/policy-semver@<full-commit-sha>
         env:
-          APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR || '0' }}
+          APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR }}
         with:
           config-path: versioning.config.json
 ```

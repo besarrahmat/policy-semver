@@ -3,10 +3,10 @@ import {
   assertTagMatchesVersion,
   loadConfig,
   readVersion,
+  toVersionFiles,
 } from "@policy-semver/core";
 import { EXIT_OK } from "./exit.js";
 import type { GlobalFlags } from "./parse-args.js";
-import { toVersionFiles } from "./version-files.js";
 
 /**
  * Schema load (fail-closed) + dual-source match via `readVersion` +

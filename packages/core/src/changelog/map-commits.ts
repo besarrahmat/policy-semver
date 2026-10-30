@@ -1,37 +1,15 @@
+import {
+  firstLine,
+  isMergeSubject,
+  normalizeSubject,
+  subjectType,
+} from "../classify/subject.js";
 import type { ChangelogSection } from "./locks.js";
 import { BUCKET_TO_SECTION } from "./locks.js";
 import type { ChangelogCommit, SectionBuckets } from "./types.js";
 
-function firstLine(text: string): string {
-  return text.split("\n")[0] ?? "";
-}
-
-function normalizeSubject(subject: string): string {
-  return subject
-    .replace(
-      /^(?:\p{Extended_Pictographic}|\p{Emoji_Component}|\uFE0F|\u200D)+\s*/u,
-      "",
-    )
-    .trim();
-}
-
-/** Align with classify buckets; fix: is other in classify — split here for changelog. */
-function subjectBucket(
-  normalized: string,
-): "feat" | "fix" | "docs" | "other" | "ignore" {
-  const s = normalized.trim();
-  if (/^merge (pull request|branch|remote-tracking branch)\b/i.test(s)) {
-    return "ignore";
-  }
-  if (/^feat\s*&\s*fix(\([^)]*\))?!?\s*:/i.test(s)) return "feat";
-  if (/^feat(\([^)]*\))?!?\s*:/i.test(s)) return "feat";
-  if (/^docs(\([^)]*\))?\s*:/i.test(s)) return "docs";
-  if (/^fix(\([^)]*\))?!?\s*:/i.test(s)) return "fix";
-  return "other";
-}
-
 function bulletFromSubject(raw: string): string {
-  const line = firstLine(raw).trim();
+  const line = normalizeSubject(firstLine(raw));
   const cleaned = line.replace(
     /^(?:feat\s*&\s*fix|feat|fix|docs|chore|refactor|test|ci|build|perf|style)(\([^)]*\))?!?\s*:\s*/i,
     "",
@@ -50,9 +28,9 @@ export function mapCommitsToSections(
   };
 
   for (const c of commits) {
-    const bucket = subjectBucket(normalizeSubject(firstLine(c.subject)));
-    if (bucket === "ignore") continue;
-    const section = BUCKET_TO_SECTION[bucket];
+    const normalized = normalizeSubject(firstLine(c.subject));
+    if (isMergeSubject(normalized)) continue;
+    const section = BUCKET_TO_SECTION[subjectType(normalized)];
     if (section === null) continue;
     push(section, bulletFromSubject(c.subject));
   }

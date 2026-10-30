@@ -164,7 +164,7 @@ That write token is **not** the checkout PAT used to `uses:` a private Action re
 
 ## Merge methods
 
-Classify uses the **final subjects** visible when the job runs: `pulls.listCommits` when there is a PR, otherwise `git log` (`load-commits.ts`) — including `merge_group`.
+Classify uses the **final subjects** visible when the job runs: `pulls.listCommits` when there is a PR, otherwise `git log` since the last tag — including `merge_group`.
 
 | Method           | What is classified                                                                |
 | ---------------- | --------------------------------------------------------------------------------- |

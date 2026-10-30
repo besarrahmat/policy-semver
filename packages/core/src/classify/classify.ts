@@ -1,3 +1,12 @@
+import {
+  firstLine,
+  hasBreakingBang,
+  hasBreakingFooter,
+  isConventionalSubject,
+  isMergeSubject,
+  normalizeSubject,
+  subjectType,
+} from "./subject.js";
 import type { ClassifyInput, ClassifyResult } from "./types.js";
 
 function parseMajor(version: string): number {
@@ -8,84 +17,24 @@ function parseMajor(version: string): number {
   return major;
 }
 
-function firstLine(text: string): string {
-  return text.split("\n")[0] ?? "";
-}
+const BREAKING_WARNING =
+  "Breaking change marker detected; major only via APP_VERSION_MAJOR (never auto-major)";
 
-function isMergeSubject(subject: string): boolean {
-  const s = subject.trim();
-  return (
-    /^merge pull request\b/i.test(s) ||
-    /^merge branch\b/i.test(s) ||
-    /^merge remote-tracking branch\b/i.test(s)
-  );
-}
-
-function normalizeSubject(subject: string): string {
-  return subject
-    .replace(
-      /^(?:\p{Extended_Pictographic}|\p{Emoji_Component}|\uFE0F|\u200D)+\s*/u,
-      "",
-    )
-    .trim();
-}
-
-type Bucket = "feat" | "docs" | "other" | "ignore";
-
-function bucketSubject(normalized: string): Bucket {
-  const s = normalized.trim();
-  // feat & fix: / feat&fix: (optional spaces around &)
-  if (/^feat\s*&\s*fix(\([^)]*\))?!?\s*:/i.test(s)) {
-    return "feat";
-  }
-  // feat: / feat(scope): / feat!: / feat(scope)!:
-  if (/^feat(\([^)]*\))?!?\s*:/i.test(s)) {
-    return "feat";
-  }
-  // docs: / docs(scope):
-  if (/^docs(\([^)]*\))?\s*:/i.test(s)) {
-    return "docs";
-  }
-  // feature: typo, fix:, chore:, anything else → other
-  return "other";
-}
-
-function hasFeatBang(normalizedFirstLine: string): boolean {
-  return /^feat(\([^)]*\))?!\s*:/i.test(normalizedFirstLine);
-}
-
-function collectBreakingWarnings(input: ClassifyInput): string[] {
-  const warnings: string[] = [];
-
+function hasBreakingMarker(input: ClassifyInput): boolean {
   const title = input.prTitle?.trim();
-  if (title) {
-    const normalized = normalizeSubject(firstLine(title));
-    if (hasFeatBang(normalized) || /BREAKING CHANGE/i.test(title)) {
-      warnings.push(
-        "Breaking change marker detected; major only via APP_VERSION_MAJOR (never auto-major)",
-      );
-      return warnings;
-    }
+  if (
+    title &&
+    (hasBreakingBang(normalizeSubject(firstLine(title))) ||
+      hasBreakingFooter(title))
+  ) {
+    return true;
   }
-
-  for (const c of input.commits) {
-    const normalized = normalizeSubject(firstLine(c.subject));
-    if (hasFeatBang(normalized)) {
-      warnings.push(
-        "Breaking change marker detected; major only via APP_VERSION_MAJOR (never auto-major)",
-      );
-      return warnings;
-    }
-    // Body may contain BREAKING CHANGE footer; never use body for feat buckets.
-    if (c.body && /BREAKING CHANGE/i.test(c.body)) {
-      warnings.push(
-        "Breaking change marker detected; major only via APP_VERSION_MAJOR (never auto-major)",
-      );
-      return warnings;
-    }
-  }
-
-  return warnings;
+  return input.commits.some(
+    (c) =>
+      hasBreakingBang(normalizeSubject(firstLine(c.subject))) ||
+      // Body may carry the footer; never use body for feat buckets.
+      (c.body !== undefined && hasBreakingFooter(c.body)),
+  );
 }
 
 export function classify(input: ClassifyInput): ClassifyResult {
@@ -113,33 +62,25 @@ export function classify(input: ClassifyInput): ClassifyResult {
   // unset or equal → continue
 
   // 3) normalize title + commit subjects → buckets
-  const texts: string[] = [];
-  const title = input.prTitle?.trim();
-  if (title) texts.push(title);
-  for (const c of input.commits) texts.push(c.subject);
-
-  let hasFeat = false;
-  let hasOther = false;
-  let hasDocs = false;
-
-  for (const raw of texts) {
-    const line = firstLine(raw);
-    if (isMergeSubject(line)) continue;
-    const normalized = normalizeSubject(line);
-    if (normalized.length === 0) continue;
-    const bucket = bucketSubject(normalized);
-    if (bucket === "ignore") continue;
-    if (bucket === "feat") hasFeat = true;
-    else if (bucket === "docs") hasDocs = true;
-    else if (bucket === "other") hasOther = true;
+  const subjects = input.commits
+    .map((c) => normalizeSubject(firstLine(c.subject)))
+    .filter((s) => s.length > 0 && !isMergeSubject(s));
+  const title = normalizeSubject(firstLine(input.prTitle?.trim() ?? ""));
+  // A plain title ("Update docs") says nothing the commits do not say better.
+  if (
+    title.length > 0 &&
+    !isMergeSubject(title) &&
+    (subjects.length === 0 || isConventionalSubject(title))
+  ) {
+    subjects.push(title);
   }
+  const types = subjects.map(subjectType);
 
-  // 4) BREAKING / feat!: → warnings only (never auto-major)
-  warnings.push(...collectBreakingWarnings(input));
+  // 4) BREAKING / type!: → warnings only (never auto-major)
+  if (hasBreakingMarker(input)) warnings.push(BREAKING_WARNING);
 
   // 5) aggregate
-  if (hasFeat) return { kind: "minor", warnings };
-  if (hasOther) return { kind: "patch", warnings };
-  if (hasDocs || texts.length === 0) return { kind: "none", warnings };
+  if (types.includes("feat")) return { kind: "minor", warnings };
+  if (types.some((t) => t !== "docs")) return { kind: "patch", warnings };
   return { kind: "none", warnings };
 }

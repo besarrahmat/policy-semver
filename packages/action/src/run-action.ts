@@ -8,21 +8,24 @@ import {
   classify,
   decideBumpGuards,
   findReleaseCommit,
+  loadCommitsSinceLastTag,
   loadConfig,
+  parseEnvMajor,
   readVersion,
   readVersionAtRef,
   reconcileRelease,
   runHook,
   syncToRemoteBranch,
+  toVersionFiles,
   writeChangelog,
   writeVersion,
 } from "@policy-semver/core";
 import { decideActionMode } from "./decision.js";
-import { loadCommitsFromGit } from "./load-commits.js";
 import { upsertStickyComment } from "./sticky-comment.js";
-import { toVersionFiles } from "./version-files.js";
 import { writeFailureMessage } from "./write-failure.js";
 import { runWriteRelease, toReposOctokit } from "./write-release.js";
+
+const PR_COMMITS_API_LIMIT = 250;
 
 function today(): string {
   return new Date().toISOString().slice(0, 10);
@@ -71,14 +74,17 @@ export async function runAction(): Promise<void> {
       title?: string;
       body?: string | null;
       labels?: { name: string }[];
-      base?: { ref: string };
-      head?: { ref: string; repo?: { fork?: boolean } | null };
+      base?: { ref: string; repo?: { full_name?: string } | null };
+      head?: { ref: string; repo?: { full_name?: string } | null };
     };
     merge_group?: { base_ref?: string; head_ref?: string };
   };
   const pr = payload.pull_request;
   const mergeGroup = payload.merge_group;
-  const isFork = Boolean(pr?.head?.repo?.fork);
+  // Not `head.repo.fork`: that is also true for internal PRs in a repo that is
+  // itself a fork. A deleted head repo is null, and can only have been a fork.
+  const isFork =
+    pr !== undefined && pr.head?.repo?.full_name !== pr.base?.repo?.full_name;
   const baseBranch =
     pr?.base?.ref ??
     (mergeGroup?.base_ref !== undefined
@@ -128,9 +134,14 @@ export async function runAction(): Promise<void> {
       const body = rest.join("\n").trim();
       return { subject, ...(body ? { body } : {}) };
     });
+    if (data.length >= PR_COMMITS_API_LIMIT) {
+      core.warning(
+        `PR has ${PR_COMMITS_API_LIMIT}+ commits; GitHub lists only the first ${PR_COMMITS_API_LIMIT}, so a later feat: may be missed. Use a feat: PR title.`,
+      );
+    }
   }
   if (commits.length === 0) {
-    commits = await loadCommitsFromGit(cwd);
+    commits = await loadCommitsSinceLastTag(cwd, config.tagPrefix);
   }
 
   const guards = decideBumpGuards({
@@ -212,14 +223,7 @@ export async function runAction(): Promise<void> {
     files,
   });
   const currentVersion = fromProd ?? (await readVersion({ cwd, files }));
-  const envRaw = process.env[config.majorEnv];
-  let envMajor: number | null = null;
-  if (envRaw !== undefined && envRaw !== "") {
-    envMajor = Number.parseInt(envRaw, 10);
-    if (Number.isNaN(envMajor)) {
-      throw new Error(`invalid ${config.majorEnv}=${JSON.stringify(envRaw)}`);
-    }
-  }
+  const envMajor = parseEnvMajor(config.majorEnv, process.env[config.majorEnv]);
 
   let kind = classify({
     commits,
@@ -296,6 +300,7 @@ export async function runAction(): Promise<void> {
       date: today(),
       kind,
       commits,
+      ...(pr?.title !== undefined ? { prTitle: pr.title } : {}),
     });
 
     const paths = await existingPaths(

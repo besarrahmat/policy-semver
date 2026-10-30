@@ -1,5 +1,6 @@
 export { commitBumpFiles } from "./commit.js";
 export { defaultGitExec } from "./exec.js";
+export { loadCommitsSinceLastTag } from "./load-commits.js";
 export { pushRefs } from "./push.js";
 export {
   assertRemoteTagCompatible,

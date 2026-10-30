@@ -49,14 +49,15 @@ export function decideBumpGuards(ctx: BumpGuardContext): BumpGuardDecision {
     reasons.push("skip label");
   }
 
-  // [skip version] (or configured trailers) in subject/body/title
+  // [skip version] (or configured trailers) ending a subject/body/title line, so
+  // prose that merely mentions the marker does not cancel a release.
   const trailers = ctx.skipTrailers ?? ["skip version"];
   const patterns = trailers.map(
-    (t) => new RegExp(`\\[${escapeRegExp(t)}\\]`, "i"),
+    (t) => new RegExp(`\\[${escapeRegExp(t)}\\]\\s*$`, "im"),
   );
   const trailerInner = BOT_SKIP_TRAILER.slice(1, -1);
   if (!trailers.some((t) => t.toLowerCase() === trailerInner.toLowerCase())) {
-    patterns.push(new RegExp(`\\[${escapeRegExp(trailerInner)}\\]`, "i"));
+    patterns.push(new RegExp(`\\[${escapeRegExp(trailerInner)}\\]\\s*$`, "im"));
   }
 
   for (const text of ctx.textsForSkip ?? []) {
