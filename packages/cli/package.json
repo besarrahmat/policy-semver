@@ -45,7 +45,7 @@
     "test": "vitest run --config ../../vitest.config.ts",
     "policy-semver": "node ./dist/bin.js",
     "prebuild": "pnpm -w run sync:schema",
-    "build": "tsup",
+    "build": "tsup && tsc -p tsconfig.build.json",
     "pack:dry": "pnpm build && npm pack --dry-run"
   },
   "dependencies": {
