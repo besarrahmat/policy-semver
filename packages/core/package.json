@@ -1,6 +1,6 @@
 {
   "name": "@policy-semver/core",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Policy-first SemVer core (classify, bump, changelog, config)",
   "type": "module",
   "files": [

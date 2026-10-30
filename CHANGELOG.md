@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-10-30
+
+### Changed
+
+- bump typescript from 5.9.3 to 7.0.2
+- bump @biomejs/biome from 2.5.11 to 2.5.14
+- bump vitest from 4.1.11 to 5.0.2
+- bump @types/node from 26.4.0 to 26.6.3
+- bump tsx from 4.23.13 to 4.23.15
+
+### Fixed
+
+- emit .d.ts with tsc for TypeScript 7
+
 ## [1.0.1] - 2026-09-02
 
 ### Changed
