@@ -2,7 +2,7 @@
   "name": "policy-semver-monorepo",
   "version": "1.0.3",
   "private": true,
-  "packageManager": "pnpm@11.20.0",
+  "packageManager": "pnpm@12.16.1",
   "engines": {
     "node": ">=24",
     "pnpm": ">=9"
@@ -21,12 +21,12 @@
     "prebuild": "pnpm sync:schema"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.14",
-    "@types/node": "^26.6.3",
-    "only-allow": "^1.2.1",
-    "tsup": "^8.5.1",
+    "@biomejs/biome": "^2.6.4",
+    "@types/node": "^26.6.6",
+    "only-allow": "^1.2.2",
+    "tsup": "^9.0.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.2"
+    "vitest": "^5.0.5"
   }
 }

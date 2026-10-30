@@ -54,7 +54,6 @@ jobs:
       #     APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR || '0' }}
       #   with:
       #     config-path: versioning.config.json
-
   # never build/deploy if the bump job failed or was skipped.
   build:
     needs: version
