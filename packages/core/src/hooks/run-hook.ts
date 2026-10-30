@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { redactSecrets } from "../github/redact.js";
 import { HOOK_ENV, HOOK_SHELL } from "./locks.js";
 import type { HookExec, RunHookInput } from "./types.js";
 
@@ -60,11 +61,13 @@ export async function runHook(input: RunHookInput): Promise<void> {
       cwd: input.cwd,
       env,
     });
-    if (stdout) process.stdout.write(stdout);
-    if (stderr) process.stderr.write(stderr);
+    if (stdout) process.stdout.write(redactSecrets(stdout));
+    if (stderr) process.stderr.write(redactSecrets(stderr));
   } catch (err) {
     const code = (err as { code?: number | string }).code ?? "unknown";
-    const detail = err instanceof Error ? err.message : String(err);
+    const detail = redactSecrets(
+      err instanceof Error ? err.message : String(err),
+    );
     throw new Error(`hook ${input.name} failed (exit ${code}): ${detail}`);
   }
 }

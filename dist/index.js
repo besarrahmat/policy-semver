@@ -19284,22 +19284,22 @@ var require_lib = __commonJS({
       return new (P || (P = Promise))(function(resolve, reject) {
         function fulfilled(value) {
           try {
-            step(generator.next(value));
+            step2(generator.next(value));
           } catch (e) {
             reject(e);
           }
         }
         function rejected(value) {
           try {
-            step(generator["throw"](value));
+            step2(generator["throw"](value));
           } catch (e) {
             reject(e);
           }
         }
-        function step(result) {
+        function step2(result) {
           result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
         }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
+        step2((generator = generator.apply(thisArg, _arguments || [])).next());
       });
     };
     Object.defineProperty(exports2, "__esModule", { value: true });
@@ -27015,22 +27015,22 @@ var __awaiter = function(thisArg, _arguments, P, generator) {
   return new (P || (P = Promise))(function(resolve, reject) {
     function fulfilled(value) {
       try {
-        step(generator.next(value));
+        step2(generator.next(value));
       } catch (e) {
         reject(e);
       }
     }
     function rejected(value) {
       try {
-        step(generator["throw"](value));
+        step2(generator["throw"](value));
       } catch (e) {
         reject(e);
       }
     }
-    function step(result) {
+    function step2(result) {
       result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
     }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
+    step2((generator = generator.apply(thisArg, _arguments || [])).next());
   });
 };
 var { access, appendFile, writeFile } = import_fs.promises;
@@ -27286,6 +27286,7 @@ var Summary = class {
   }
 };
 var _summary = new Summary();
+var summary = _summary;
 
 // ../../node_modules/.pnpm/@actions+core@3.0.1/node_modules/@actions/core/lib/platform.js
 var import_os2 = __toESM(require("os"), 1);
@@ -27309,6 +27310,9 @@ var ExitCode;
   ExitCode2[ExitCode2["Success"] = 0] = "Success";
   ExitCode2[ExitCode2["Failure"] = 1] = "Failure";
 })(ExitCode || (ExitCode = {}));
+function setSecret(secret) {
+  issueCommand("add-mask", {}, secret);
+}
 function getInput(name, options) {
   const val = process.env[`INPUT_${name.replace(/ /g, "_").toUpperCase()}`] || "";
   if (options && options.required && !val) {
@@ -27419,22 +27423,22 @@ var __awaiter2 = function(thisArg, _arguments, P, generator) {
   return new (P || (P = Promise))(function(resolve, reject) {
     function fulfilled(value) {
       try {
-        step(generator.next(value));
+        step2(generator.next(value));
       } catch (e) {
         reject(e);
       }
     }
     function rejected(value) {
       try {
-        step(generator["throw"](value));
+        step2(generator["throw"](value));
       } catch (e) {
         reject(e);
       }
     }
-    function step(result) {
+    function step2(result) {
       result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
     }
-    step((generator = generator.apply(thisArg, _arguments || [])).next());
+    step2((generator = generator.apply(thisArg, _arguments || [])).next());
   });
 };
 function getAuthString(token, options) {
@@ -32129,11 +32133,18 @@ function renderReleaseSection(input) {
 `;
 }
 var SECRET_REDACT_PATTERNS = [
-  /\bghp_[A-Za-z0-9]{20,}\b/g,
-  /\bgho_[A-Za-z0-9]{20,}\b/g,
+  /\bgh[pousr]_[A-Za-z0-9]{20,}\b/g,
+  /\bgithub_pat_[A-Za-z0-9_]{20,}\b/g,
   /\bnpm_[A-Za-z0-9]{20,}\b/g,
-  /\bAKIA[0-9A-Z]{16}\b/g,
-  /\bBearer\s+[A-Za-z0-9._-]+\b/gi
+  /\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/g,
+  /\bxox[abprs]-[A-Za-z0-9-]{10,}/g,
+  /\bsk-ant-[A-Za-z0-9_-]{20,}/g,
+  /\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]*/g,
+  /\bBearer\s+[A-Za-z0-9._~+/=-]+/gi,
+  // Only as a header: "Basic authentication" is ordinary changelog prose.
+  /\bAuthorization:\s*Basic\s+[A-Za-z0-9+/=]+/gi,
+  // Credentials in a git remote URL, as git prints them in error messages.
+  /(?<=:\/\/)[^\s/:@]+:[^\s/@]+(?=@)/g
 ];
 var SECRET_REDACT_REPLACEMENT = "[REDACTED]";
 var TAG_EXISTS_FAILS = true;
@@ -32304,6 +32315,10 @@ var versioning_config_schema_default = {
   additionalProperties: false,
   required: ["schemaVersion"],
   properties: {
+    $schema: {
+      type: "string",
+      description: "Editor hint only: points at this schema. Ignored at runtime."
+    },
     schemaVersion: {
       type: "string",
       const: "1",
@@ -32340,6 +32355,7 @@ var versioning_config_schema_default = {
     },
     tagPrefix: {
       type: "string",
+      pattern: "^([A-Za-z0-9][A-Za-z0-9._/-]*)?$",
       default: "v"
     },
     skipLabels: {
@@ -32409,8 +32425,14 @@ async function loadConfig(path72) {
     throw new Error(`versioning config is not valid JSON: ${path72}`);
   }
   if (!validate(data)) {
+    const details = (validate.errors ?? []).map(
+      (e) => (
+        // Ajv's own text does not say which key is unknown.
+        e.keyword === "additionalProperties" ? `${ajv.errorsText([e])} (unknown key ${JSON.stringify(e.params.additionalProperty)})` : ajv.errorsText([e])
+      )
+    );
     throw new Error(
-      `invalid versioning config (${path72}): ${ajv.errorsText(validate.errors, { separator: "; " })}`
+      `invalid versioning config (${path72}): ${details.join("; ")}`
     );
   }
   return data;
@@ -32592,11 +32614,13 @@ async function runHook(input) {
       cwd: input.cwd,
       env
     });
-    if (stdout) process.stdout.write(stdout);
-    if (stderr) process.stderr.write(stderr);
+    if (stdout) process.stdout.write(redactSecrets(stdout));
+    if (stderr) process.stderr.write(redactSecrets(stderr));
   } catch (err) {
     const code = err.code ?? "unknown";
-    const detail = err instanceof Error ? err.message : String(err);
+    const detail = redactSecrets(
+      err instanceof Error ? err.message : String(err)
+    );
     throw new Error(`hook ${input.name} failed (exit ${code}): ${detail}`);
   }
 }
@@ -32681,6 +32705,14 @@ async function reconcileRelease(input) {
   });
   return { version, tag, releaseCreated };
 }
+async function step(name, run2) {
+  try {
+    await run2();
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    throw new Error(`${name}: ${detail}`, { cause: err });
+  }
+}
 async function isGitIgnored(cwd, rel, exec = defaultGitExec) {
   try {
     await exec(["check-ignore", "--quiet", rel], { cwd });
@@ -32715,19 +32747,25 @@ async function runRelease(input) {
   });
   const auditPath = lastReleaseRelPath();
   const auditIgnored = await isGitIgnored(input.cwd, auditPath, input.exec);
-  await commit({
-    cwd: input.cwd,
-    message,
-    paths: auditIgnored ? input.paths : [...input.paths, auditPath],
-    ...input.exec !== void 0 ? { exec: input.exec } : {}
-  });
-  await tagFn({
-    cwd: input.cwd,
-    tag,
-    message: tag,
-    ...input.remote !== void 0 ? { remote: input.remote } : {},
-    ...input.exec !== void 0 ? { exec: input.exec } : {}
-  });
+  await step(
+    "commit",
+    () => commit({
+      cwd: input.cwd,
+      message,
+      paths: auditIgnored ? input.paths : [...input.paths, auditPath],
+      ...input.exec !== void 0 ? { exec: input.exec } : {}
+    })
+  );
+  await step(
+    "tag",
+    () => tagFn({
+      cwd: input.cwd,
+      tag,
+      message: tag,
+      ...input.remote !== void 0 ? { remote: input.remote } : {},
+      ...input.exec !== void 0 ? { exec: input.exec } : {}
+    })
+  );
   if (input.hooks) {
     await runHook({
       name: "afterTag",
@@ -32740,19 +32778,25 @@ async function runRelease(input) {
     });
   }
   const branchRef = `HEAD:${input.branch}`;
-  await push({
-    cwd: input.cwd,
-    refs: [branchRef, tag],
-    ...input.remote !== void 0 ? { remote: input.remote } : {},
-    ...input.exec !== void 0 ? { exec: input.exec } : {}
-  });
-  await release({
-    owner: input.owner,
-    repo: input.repo,
-    tag,
-    body: input.sectionMarkdown,
-    octokit: input.octokit
-  });
+  await step(
+    "push",
+    () => push({
+      cwd: input.cwd,
+      refs: [branchRef, tag],
+      ...input.remote !== void 0 ? { remote: input.remote } : {},
+      ...input.exec !== void 0 ? { exec: input.exec } : {}
+    })
+  );
+  await step(
+    "GitHub Release",
+    () => release({
+      owner: input.owner,
+      repo: input.repo,
+      tag,
+      body: input.sectionMarkdown,
+      octokit: input.octokit
+    })
+  );
   if (input.hooks) {
     await runHook({
       name: "afterRelease",
@@ -32829,7 +32873,7 @@ var ACTION_BUNDLE = {
 };
 var ACTION_VERSIONING = {
   preferPinSha: true,
-  allowMovingMajorTag: true,
+  allowMovingMajorTag: false,
   discourageFloatingBranchRef: true
 };
 var ACTION_ADAPTER = { thinOnly: true };
@@ -32926,10 +32970,10 @@ ${input.body}`;
 
 // src/write-failure.ts
 function writeFailureMessage(err) {
-  const msg = err instanceof Error ? err.message : String(err);
+  const msg = redactSecrets(err instanceof Error ? err.message : String(err));
   const pushDenied = /protected branch|GH006|not allowed to push|permission.*denied/i.test(msg);
-  const hint = pushDenied ? " If branch protection blocks github-actions, use POLICY_SEMVER_TOKEN (PAT) or a GitHub App with contents:write bypass." : "";
-  return `Write/push/release failed: ${msg}.${hint}`;
+  const hint = pushDenied ? " If branch protection blocks github-actions, set `token` on actions/checkout to a PAT or GitHub App token with contents:write bypass (git push uses the checkout's credentials)." : "";
+  return `Write/push/release failed: ${msg}.${hint} Rerunning this job is safe: it finishes the release without a second bump.`;
 }
 
 // src/write-release.ts
@@ -32961,6 +33005,16 @@ function shortRef(ref) {
 function failWrite(err) {
   setFailed(writeFailureMessage(err));
 }
+function errorText(err) {
+  return redactSecrets(err instanceof Error ? err.message : String(err));
+}
+async function writeJobSummary(text) {
+  try {
+    await summary.addHeading("PolicySemVer", 3).addCodeBlock(text).write();
+  } catch (err) {
+    warning(`could not write the job summary: ${errorText(err)}`);
+  }
+}
 async function existingPaths(cwd, rels) {
   const checked = await Promise.all(
     rels.map(async (rel) => {
@@ -32978,6 +33032,7 @@ async function runAction() {
   const configPath = getInput("config-path") || "versioning.config.json";
   const forceDryRun = getBooleanInput("dry-run");
   const token = process.env.POLICY_SEMVER_TOKEN?.trim() || getInput("token") || process.env.GITHUB_TOKEN || "";
+  if (token) setSecret(token);
   const cwd = process.env.GITHUB_WORKSPACE || process.cwd();
   let config = await loadConfig(import_node_path.default.join(cwd, configPath));
   const payload = context2.payload;
@@ -32999,9 +33054,12 @@ async function runAction() {
     ...pr?.merged !== void 0 ? { merged: pr.merged } : {},
     forceDryRun
   });
+  setOutput("tag", "");
+  setOutput("released", "false");
   if (decision.mode === "skip") {
     setOutput("kind", "none");
     setOutput("next-version", "");
+    setOutput("current-version", "");
     setOutput("skipped-reason", decision.reason);
     info(`mode: skip
 skipped: ${decision.reason}`);
@@ -33082,11 +33140,14 @@ skipped: ${decision.reason}`);
         });
         setOutput("kind", released.kind);
         setOutput("next-version", done.version);
+        setOutput("current-version", done.version);
         setOutput("skipped-reason", "");
-        info(
-          `mode: write
-PR already released as ${done.tag}; GitHub Release ${done.releaseCreated ? "created" : "already present"}`
-        );
+        setOutput("tag", done.tag);
+        setOutput("released", "true");
+        const finished = `mode: write
+PR already released as ${done.tag}; GitHub Release ${done.releaseCreated ? "created" : "already present"}`;
+        info(finished);
+        await writeJobSummary(finished);
         return;
       }
     } catch (err) {
@@ -33102,12 +33163,14 @@ PR already released as ${done.tag}; GitHub Release ${done.releaseCreated ? "crea
   });
   const currentVersion = fromProd ?? await readVersion({ cwd, files });
   const envMajor = parseEnvMajor(config.majorEnv, process.env[config.majorEnv]);
-  let kind = classify({
+  const classified = classify({
     commits,
     ...pr?.title !== void 0 ? { prTitle: pr.title } : {},
     currentVersion,
     envMajor
-  }).kind;
+  });
+  for (const warning2 of classified.warnings) warning(warning2);
+  let kind = classified.kind;
   if (decision.mode === "force-none" || guards.forceKindNone) {
     kind = "none";
   }
@@ -33115,28 +33178,34 @@ PR already released as ${done.tag}; GitHub Release ${done.releaseCreated ? "crea
   const skippedReason = decision.mode === "write" && allowWrite ? "" : [decision.reason, ...guards.reasons].filter(Boolean).join("; ");
   setOutput("kind", kind);
   setOutput("next-version", kind === "none" ? "" : nextVersion);
+  setOutput("current-version", currentVersion);
   setOutput("skipped-reason", skippedReason);
   const summary2 = [
     `mode: ${decision.mode}`,
     `kind: ${kind}`,
     `current: ${currentVersion}`,
     `next: ${nextVersion}`,
-    skippedReason ? `skipped: ${skippedReason}` : "write: pending/ok"
+    ...skippedReason ? [`skipped: ${skippedReason}`] : []
   ].join("\n");
   if ((decision.mode === "dry-run-comment" || decision.mode === "force-none") && octokit && pr?.number) {
-    await upsertStickyComment({
-      octokit,
-      owner: context2.repo.owner,
-      repo: context2.repo.repo,
-      issueNumber: pr.number,
-      body: `### PolicySemVer (dry-run)
+    try {
+      await upsertStickyComment({
+        octokit,
+        owner: context2.repo.owner,
+        repo: context2.repo.repo,
+        issueNumber: pr.number,
+        body: `### PolicySemVer (dry-run)
 \`\`\`
 ${summary2}
 \`\`\``
-    });
+      });
+    } catch (err) {
+      warning(`could not write the PR comment: ${errorText(err)}`);
+    }
   }
   if (!allowWrite || kind === "none") {
     info(summary2);
+    await writeJobSummary(summary2);
     return;
   }
   try {
@@ -33175,7 +33244,7 @@ ${summary2}
       )
     );
     if (wrote.wrote || changelog.wrote) {
-      await runWriteRelease({
+      const result = await runWriteRelease({
         kind,
         ...pr ? { prNumber: pr.number } : {},
         cwd,
@@ -33192,9 +33261,19 @@ ${summary2}
           afterRelease: config.hooks.afterRelease
         }
       });
+      if (!result.skipped) {
+        setOutput("tag", result.tag);
+        setOutput("released", "true");
+        const released = `${summary2}
+released: ${result.tag}`;
+        info(released);
+        await writeJobSummary(released);
+      }
     }
   } catch (err) {
     failWrite(err);
+    await writeJobSummary(`${summary2}
+failed: ${errorText(err)}`);
   }
 }
 

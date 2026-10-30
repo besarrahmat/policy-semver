@@ -37,8 +37,14 @@ export async function loadConfig(path: string): Promise<VersioningConfig> {
   }
 
   if (!validate(data)) {
+    const details = (validate.errors ?? []).map((e) =>
+      // Ajv's own text does not say which key is unknown.
+      e.keyword === "additionalProperties"
+        ? `${ajv.errorsText([e])} (unknown key ${JSON.stringify(e.params.additionalProperty)})`
+        : ajv.errorsText([e]),
+    );
     throw new Error(
-      `invalid versioning config (${path}): ${ajv.errorsText(validate.errors, { separator: "; " })}`,
+      `invalid versioning config (${path}): ${details.join("; ")}`,
     );
   }
 

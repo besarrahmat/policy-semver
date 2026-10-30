@@ -7,11 +7,12 @@ Commands:
   verify     Config schema + dual-source + tag↔VERSION (skip if no tags)
   test       Run fixtures/classifier goldens
   --help     This message
+  --version  Print the CLI version
 
 Flags:
   --config <path>  default versioning.config.json
   --cwd <path>     repo root
-  --title <text>   classify PR title
+  --title <text>   classify / bump: PR title
   --json           machine-readable (compact JSON)
   --dry-run        bump: no write
   --write          bump: write (clean tree unless --force)

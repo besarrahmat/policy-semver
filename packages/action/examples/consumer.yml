@@ -38,7 +38,7 @@ jobs:
           APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR }}
         with:
           config-path: versioning.config.json
-          # token: ${{ secrets.POLICY_SEMVER_TOKEN }}  # contents:write on THIS repo if github-actions[bot] cannot push
+          # token: ${{ secrets.POLICY_SEMVER_TOKEN }}  # GitHub API only (Release, PR comment); git push uses the checkout token above
 
       # Private fork: `uses: owner/policy-semver@ref` 404s from another repo.
       # Replace the uses: step above with a checkout + local uses:

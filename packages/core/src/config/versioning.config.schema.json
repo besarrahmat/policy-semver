@@ -6,6 +6,10 @@
   "additionalProperties": false,
   "required": ["schemaVersion"],
   "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Editor hint only: points at this schema. Ignored at runtime."
+    },
     "schemaVersion": {
       "type": "string",
       "const": "1",
@@ -42,6 +46,7 @@
     },
     "tagPrefix": {
       "type": "string",
+      "pattern": "^([A-Za-z0-9][A-Za-z0-9._/-]*)?$",
       "default": "v"
     },
     "skipLabels": {
