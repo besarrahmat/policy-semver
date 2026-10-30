@@ -1,14 +1,19 @@
+import { access } from "node:fs/promises";
 import path from "node:path";
 import * as core from "@actions/core";
 import { context, getOctokit } from "@actions/github";
 import {
   applyBump,
+  assertTagAvailable,
   classify,
   decideBumpGuards,
+  findReleaseCommit,
   loadConfig,
   readVersion,
   readVersionAtRef,
+  reconcileRelease,
   runHook,
+  syncToRemoteBranch,
   writeChangelog,
   writeVersion,
 } from "@policy-semver/core";
@@ -17,7 +22,7 @@ import { loadCommitsFromGit } from "./load-commits.js";
 import { upsertStickyComment } from "./sticky-comment.js";
 import { toVersionFiles } from "./version-files.js";
 import { writeFailureMessage } from "./write-failure.js";
-import { runWriteRelease } from "./write-release.js";
+import { runWriteRelease, toReposOctokit } from "./write-release.js";
 
 function today(): string {
   return new Date().toISOString().slice(0, 10);
@@ -31,6 +36,21 @@ function failWrite(err: unknown): void {
   core.setFailed(writeFailureMessage(err));
 }
 
+/** `versionFiles` may name a file the repo does not have; `git add` would refuse it. */
+async function existingPaths(cwd: string, rels: string[]): Promise<string[]> {
+  const checked = await Promise.all(
+    rels.map(async (rel) => {
+      try {
+        await access(path.join(cwd, rel));
+        return rel;
+      } catch {
+        return null;
+      }
+    }),
+  );
+  return checked.filter((rel) => rel !== null);
+}
+
 export async function runAction(): Promise<void> {
   const configPath = core.getInput("config-path") || "versioning.config.json";
   const forceDryRun = core.getBooleanInput("dry-run");
@@ -41,13 +61,13 @@ export async function runAction(): Promise<void> {
     "";
 
   const cwd = process.env.GITHUB_WORKSPACE || process.cwd();
-  const config = await loadConfig(path.join(cwd, configPath));
-  const files = toVersionFiles(config.versionFiles);
+  let config = await loadConfig(path.join(cwd, configPath));
 
   const payload = context.payload as {
     pull_request?: {
       number: number;
       merged?: boolean;
+      merge_commit_sha?: string | null;
       title?: string;
       body?: string | null;
       labels?: { name: string }[];
@@ -85,6 +105,14 @@ export async function runAction(): Promise<void> {
     forceDryRun,
   });
 
+  if (decision.mode === "skip") {
+    core.setOutput("kind", "none");
+    core.setOutput("next-version", "");
+    core.setOutput("skipped-reason", decision.reason);
+    core.info(`mode: skip\nskipped: ${decision.reason}`);
+    return;
+  }
+
   let commits: { subject: string; body?: string }[] = [];
   const octokit = token ? getOctokit(token) : null;
   if (octokit && pr?.number) {
@@ -105,6 +133,79 @@ export async function runAction(): Promise<void> {
     commits = await loadCommitsFromGit(cwd);
   }
 
+  const guards = decideBumpGuards({
+    isFork,
+    baseBranch,
+    headBranch,
+    prodBranch: config.prodBranch,
+    developBranch: config.developBranch,
+    labels,
+    skipLabels: config.skipLabels,
+    skipTrailers: config.skipTrailers,
+    textsForSkip: [
+      ...commits.map((c) => c.subject),
+      ...commits.map((c) => c.body ?? ""),
+      pr?.title ?? "",
+      pr?.body ?? "",
+    ],
+    isMergedToProd: decision.mode === "write",
+  });
+
+  const allowWrite =
+    decision.allowWrite && guards.allowWrite && decision.mode === "write";
+
+  if (allowWrite && (!token || !octokit)) {
+    core.setFailed(
+      "Write path needs a token with contents:write (and pull-requests:write for comments). " +
+        "Set input `token`, or secret POLICY_SEMVER_TOKEN / GitHub App installation token when " +
+        "branch protection blocks GITHUB_TOKEN.",
+    );
+    return;
+  }
+
+  if (allowWrite) {
+    try {
+      await syncToRemoteBranch({
+        cwd,
+        branch: config.prodBranch,
+        ...(pr?.merge_commit_sha ? { mustContain: pr.merge_commit_sha } : {}),
+      });
+      config = await loadConfig(path.join(cwd, configPath));
+
+      const released = pr
+        ? await findReleaseCommit({
+            cwd,
+            ref: `origin/${config.prodBranch}`,
+            prNumber: pr.number,
+          })
+        : null;
+      if (released) {
+        const done = await reconcileRelease({
+          cwd,
+          commit: released,
+          files: toVersionFiles(config.versionFiles),
+          tagPrefix: config.tagPrefix,
+          changelogPath: config.changelogPath,
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          octokit: toReposOctokit(token),
+          afterRelease: config.hooks.afterRelease,
+        });
+        core.setOutput("kind", released.kind);
+        core.setOutput("next-version", done.version);
+        core.setOutput("skipped-reason", "");
+        core.info(
+          `mode: write\nPR already released as ${done.tag}; GitHub Release ${done.releaseCreated ? "created" : "already present"}`,
+        );
+        return;
+      }
+    } catch (err) {
+      failWrite(err);
+      return;
+    }
+  }
+
+  const files = toVersionFiles(config.versionFiles);
   const fromProd = await readVersionAtRef({
     cwd,
     ref: `origin/${config.prodBranch}`,
@@ -127,31 +228,11 @@ export async function runAction(): Promise<void> {
     envMajor,
   }).kind;
 
-  const guards = decideBumpGuards({
-    isFork,
-    baseBranch,
-    headBranch,
-    prodBranch: config.prodBranch,
-    developBranch: config.developBranch,
-    labels,
-    skipLabels: config.skipLabels,
-    skipTrailers: config.skipTrailers,
-    textsForSkip: [
-      ...commits.map((c) => c.subject),
-      ...commits.map((c) => c.body ?? ""),
-      pr?.title ?? "",
-      pr?.body ?? "",
-    ],
-    isMergedToProd: decision.mode === "write",
-  });
-
   if (decision.mode === "force-none" || guards.forceKindNone) {
     kind = "none";
   }
 
   const nextVersion = applyBump({ kind, currentVersion, envMajor });
-  const allowWrite =
-    decision.allowWrite && guards.allowWrite && decision.mode === "write";
   const skippedReason =
     decision.mode === "write" && allowWrite
       ? ""
@@ -183,36 +264,24 @@ export async function runAction(): Promise<void> {
     });
   }
 
-  if (decision.mode === "skip") {
+  if (!allowWrite || kind === "none") {
     core.info(summary);
-    return;
-  }
-
-  if (!allowWrite) {
-    core.info(summary);
-    return;
-  }
-
-  if (!token || !octokit) {
-    core.setFailed(
-      "Write path needs a token with contents:write (and pull-requests:write for comments). " +
-        "Set input `token`, or secret POLICY_SEMVER_TOKEN / GitHub App installation token when " +
-        "branch protection blocks GITHUB_TOKEN.",
-    );
     return;
   }
 
   try {
-    if (kind !== "none") {
-      await runHook({
-        name: "beforeBump",
-        command: config.hooks.beforeBump,
-        cwd,
-        version: nextVersion,
-        kind,
-        dryRun: false,
-      });
-    }
+    await assertTagAvailable({
+      cwd,
+      tag: `${config.tagPrefix}${nextVersion}`,
+    });
+    await runHook({
+      name: "beforeBump",
+      command: config.hooks.beforeBump,
+      cwd,
+      version: nextVersion,
+      kind,
+      dryRun: false,
+    });
     const wrote = await writeVersion({
       cwd,
       nextVersion,
@@ -229,13 +298,17 @@ export async function runAction(): Promise<void> {
       commits,
     });
 
-    const paths = [...config.versionFiles, config.changelogPath].filter(
-      (p, i, a) => a.indexOf(p) === i,
+    const paths = await existingPaths(
+      cwd,
+      [...config.versionFiles, config.changelogPath].filter(
+        (p, i, a) => a.indexOf(p) === i,
+      ),
     );
 
-    if (kind !== "none" && (wrote.wrote || changelog.wrote)) {
+    if (wrote.wrote || changelog.wrote) {
       await runWriteRelease({
         kind,
+        ...(pr ? { prNumber: pr.number } : {}),
         cwd,
         version: nextVersion,
         tagPrefix: config.tagPrefix,

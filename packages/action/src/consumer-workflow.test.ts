@@ -14,6 +14,8 @@ const yaml = readFileSync(
 it("serialize on prod base and never cancel in progress", () => {
   expect(yaml).toMatch(/concurrency:/);
   expect(yaml).toMatch(/cancel-in-progress:\s*false/);
+  // Without it a newer run silently replaces a pending release.
+  expect(yaml).toMatch(/queue:\s*max/);
   expect(yaml).toMatch(/fetch-depth:\s*0/);
   expect(yaml).toMatch(/github\.event\.pull_request\.base\.ref/);
   expect(yaml).not.toMatch(/\$\{\{\s*github\.ref\s*\}\}/); // refs/pull/N/merge

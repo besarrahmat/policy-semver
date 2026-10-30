@@ -56,6 +56,7 @@ on:
 concurrency:
   group: policy-semver-${{ github.repository }}-${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref }}
   cancel-in-progress: false
+  queue: max
 
 permissions:
   contents: write
@@ -86,7 +87,7 @@ Use a Conventional subject in the PR title or commits, for example `docs:`, `fix
 
 ### 5. Read the sticky comment
 
-Expect a **PolicySemVer (dry-run)** comment with `kind` and `next-version`. Open / synchronize / reopened is comment-only. A write (VERSION, tag, Release) happens only after merge to `prodBranch` (or `merge_group`).
+Expect a **PolicySemVer (dry-run)** comment with `kind` and `next-version`. Open / synchronize / reopened is comment-only. A write (VERSION, tag, Release) happens only after a PR merges to `prodBranch`.
 
 Full write stub (build → deploy, merge queue; private-fork checkout is commented): [`packages/action/examples/consumer.yml`](./packages/action/examples/consumer.yml).
 
@@ -229,7 +230,7 @@ Policy lives in **`versioning.config.json`** at the repo root (JSON Schema fail-
 | `tagPrefix` | Default `v` → tag `vX.Y.Z`. A human tag with a missing or wrong prefix is **not** renamed; `verify` checks `{tagPrefix}{VERSION}`                                                                                                                                     |
 | `release/*` | Not production unless `prodBranch` is set to that name; PRs targeting `release/1.2` are ignored                                                                                                                                                                       |
 | Workspaces  | **Option B (v1):** no workspace graph, no path-filter. **Omit** the `workspaces` key — it is not in the schema; `"workspaces": null` or a paths MVP **fail-closed**. A path-filter (and missed-path skipped bumps) is 0.2. Not Changesets-class package graph parity. |
-| Audit       | `.policy-semver/last-release.json` after a successful release — **commit** by default                                                                                                                                                                                 |
+| Audit       | `.policy-semver/last-release.json`, part of the bump commit — **commit** by default                                                                                                                                                                                   |
 
 Unknown keys in the config file are **rejected**. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
@@ -241,6 +242,7 @@ Workflows that **write** versions / tags must use:
 concurrency:
   group: policy-semver-${{ github.repository }}-${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref }}
   cancel-in-progress: false
+  queue: max
 ```
 
 Do not put the write job in the same cancel-friendly concurrency group as flaky lint. Details: [`packages/action/README.md`](./packages/action/README.md).

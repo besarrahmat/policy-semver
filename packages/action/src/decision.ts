@@ -77,8 +77,14 @@ export function decideActionMode(input: DecisionInput): Decision {
     return { mode: "write", allowWrite: true, reason: "pr merged to prod" };
   }
 
-  if (ACTION_EVENT.mergeGroupIsWrite && input.eventName === "merge_group") {
-    return { mode: "write", allowWrite: true, reason: "merge_group" };
+  // The queue's SHA is speculative: it may never land. The release happens on
+  // the PR's closed+merged event; here the group only gets validated.
+  if (input.eventName === "merge_group") {
+    return {
+      mode: "dry-run-comment",
+      allowWrite: false,
+      reason: "merge_group: dry-run only",
+    };
   }
 
   // push / other → skip (locked: no push-to-prod write)

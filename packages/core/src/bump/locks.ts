@@ -13,7 +13,7 @@
  * | Single-bump guarantee | One write path per release; idempotent if already at `nextVersion`; serialize overlapping work |
  * | Sync-from-prod must not bump | PR base = develop **and** head/source = prod (or sync label) → force `none` / no write |
  * | Prod-PR trigger only | Only merge/write when base = `prodBranch`; feature/non-prod base → no write |
- * | Concurrency lock | Workflow `concurrency` group per repo + **prod base** (not PR `github.ref`); **`cancel-in-progress: false`** |
+ * | Concurrency lock | Workflow `concurrency` group per repo + **prod base** (not PR `github.ref`); **`cancel-in-progress: false`**, **`queue: max`** |
  * | Fork never write | Forks: comment/dry-run OK; `allowWrite: false` always |
  *
  * ## Related locks
@@ -36,9 +36,12 @@
  * concurrency:
  *   group: policy-semver-${{ github.repository }}-${{ github.event.pull_request.base.ref }}
  *   cancel-in-progress: false
+ *   queue: max
  * ```
  * Key the group on the **base / prod branch**. `github.ref` on `pull_request` is
  * `refs/pull/N/merge`, so two PRs merging to the same base would not serialize.
+ * `queue: max` keeps every pending run; the default keeps one and cancels the
+ * rest, which would drop a release without any failure to notice.
  */
 export const BUMP_SAFETY = {
   singleBump: true,

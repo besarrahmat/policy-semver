@@ -3,7 +3,7 @@ import { defaultGitExec } from "./exec.js";
 import type { CommitBumpInput } from "./types.js";
 
 /** GitHub Actions runner has no user.identity — commit would fail with empty ident. */
-const BOT_NAME = "github-actions[bot]";
+export const BOT_NAME = "github-actions[bot]";
 const BOT_EMAIL = "41898282+github-actions[bot]@users.noreply.github.com";
 
 export async function commitBumpFiles(input: CommitBumpInput): Promise<void> {

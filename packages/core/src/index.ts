@@ -84,6 +84,7 @@ export {
 export type { CommitBumpInput, PushInput, TagInput } from "./git/index.js";
 export {
   assertRemoteTagCompatible,
+  assertTagAvailable,
   assertTagMatchesVersion,
   commitBumpFiles,
   createAnnotatedTag,
@@ -110,4 +111,9 @@ export {
   runHook,
 } from "./hooks/index.js";
 export type { RunReleaseInput, RunReleaseResult } from "./release/index.js";
-export { runRelease } from "./release/index.js";
+export {
+  findReleaseCommit,
+  reconcileRelease,
+  runRelease,
+  syncToRemoteBranch,
+} from "./release/index.js";

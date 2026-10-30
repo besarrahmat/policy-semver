@@ -3,6 +3,7 @@ export { defaultGitExec } from "./exec.js";
 export { pushRefs } from "./push.js";
 export {
   assertRemoteTagCompatible,
+  assertTagAvailable,
   assertTagMatchesVersion,
   createAnnotatedTag,
   tagExists,

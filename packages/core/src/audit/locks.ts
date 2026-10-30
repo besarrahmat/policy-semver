@@ -1,12 +1,11 @@
 /**
- * Audit trail. Write only after GitHub Release succeeds (after
- * `afterRelease`). Default: **commit** `.policy-semver/last-release.json`.
- * Do not gitignore unless a consumer wants a local-only trail.
+ * Audit trail. Written before the bump commit and committed with it, so one
+ * release is one commit: a second commit + push could fail after the Release
+ * was already public. Default: **commit** `.policy-semver/last-release.json`.
+ * If a consumer gitignores it, the file stays local and the release goes on.
  *
- * gitSha = `git rev-parse HEAD` after the bump commit (tagged commit).
- * The file cannot live in that commit — persist with a follow-up
- * `[skip version]` commit + push of the branch only (do not retag).
- * Dogfood commit of this path in the tool repo is later (not this step).
+ * The commit is not recorded in the file (it cannot contain its own sha):
+ * resolve it from `tag`.
  */
 export const AUDIT_DIR = ".policy-semver" as const;
 export const AUDIT_FILE = "last-release.json" as const;
