@@ -1,7 +1,7 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.3",
   "kind": "patch",
-  "gitSha": "f0de80f36802e5af9bb467d0719ecadc6df1be9f",
-  "tag": "v1.0.2",
-  "at": "2026-10-30T07:15:27.664Z"
+  "gitSha": "b380ce89a46a1c0cf8e38b3cb37b1bad0d42a356",
+  "tag": "v1.0.3",
+  "at": "2026-10-30T07:31:38.493Z"
 }
