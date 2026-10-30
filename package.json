@@ -1,6 +1,6 @@
 {
   "name": "policy-semver-monorepo",
-  "version": "1.0.4",
+  "version": "2.0.0",
   "private": true,
   "packageManager": "pnpm@12.16.1",
   "engines": {

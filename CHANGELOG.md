@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-10-30
+
+### Added
+
+- redact logs and report release results
+
+### Changed
+
+- Major reset to 2.0.0 via majorEnv
+- pin release behaviour with real git remotes
+- remove dead code and harden CI and publish
+
+### Fixed
+
+- make release reruns safe and pushes atomic
+- classify and record commits more accurately
+
 ## [1.0.4] - 2026-10-30
 
 ### Changed
