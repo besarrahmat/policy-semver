@@ -18,7 +18,8 @@ async function writePackageJsonVersion(
   const raw = await readFile(p, "utf8");
   const pkg = JSON.parse(raw) as Record<string, unknown>;
   pkg.version = nextVersion;
-  await writeFile(p, `${JSON.stringify(pkg, null, 2)}\n`, "utf8");
+  const indent = /^[ \t]+(?=")/m.exec(raw)?.[0] ?? 2;
+  await writeFile(p, `${JSON.stringify(pkg, null, indent)}\n`, "utf8");
 }
 
 export type WriteBothInput = {

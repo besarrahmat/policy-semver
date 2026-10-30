@@ -1,0 +1,17 @@
+{
+  "name": "merge-sha-ignored",
+  "input": {
+    "commits": [
+      {
+        "subject": "Merge abc1234 into def5678"
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "none",
+    "warnings": []
+  }
+}

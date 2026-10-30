@@ -1,0 +1,17 @@
+{
+  "name": "merge-tag-ignored",
+  "input": {
+    "commits": [
+      {
+        "subject": "Merge tag 'v1.0.0'"
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "none",
+    "warnings": []
+  }
+}

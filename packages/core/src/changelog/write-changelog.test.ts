@@ -124,7 +124,7 @@ describe("writeChangelog", () => {
         commits: [{ subject: "fix: x" }],
         writeFile: writeFn as typeof writeFile,
       }),
-    ).rejects.toThrow(/CHANGELOG conflict after retry/);
+    ).rejects.toThrow(/CHANGELOG write failed after retry/);
     expect(writeFn).toHaveBeenCalledTimes(2);
   });
 
@@ -145,5 +145,78 @@ describe("writeChangelog", () => {
     });
     expect(r.wrote).toBe(true);
     expect(writeFn).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps [Unreleased] items out of the released section", async () => {
+    const cwd = await tmp();
+    await writeFile(
+      path.join(cwd, "CHANGELOG.md"),
+      "# Changelog\n\n## [Unreleased]\n\n- work in progress\n\n## [1.0.0] - 2026-01-01\n\n- old\n",
+    );
+    const r = await writeChangelog({
+      cwd,
+      changelogPath: "CHANGELOG.md",
+      version: "1.1.0",
+      date: "2026-08-08",
+      kind: "minor",
+      commits: [{ subject: "feat: x" }],
+    });
+    const text = await readFile(path.join(cwd, "CHANGELOG.md"), "utf8");
+    expect(text.indexOf("work in progress")).toBeLessThan(
+      text.indexOf("## [1.1.0]"),
+    );
+    expect(text.indexOf("## [1.1.0]")).toBeLessThan(text.indexOf("## [1.0.0]"));
+    expect(r.sectionMarkdown).not.toContain("work in progress");
+  });
+
+  it("adds a feat title that no commit subject mentions", async () => {
+    const r = await writeChangelog({
+      cwd: await tmp(),
+      changelogPath: "CHANGELOG.md",
+      version: "1.1.0",
+      date: "2026-08-08",
+      kind: "minor",
+      commits: [{ subject: "chore: wip" }],
+      prTitle: "feat(ui): new page",
+    });
+    expect(r.sectionMarkdown).toContain("### Added\n\n- new page");
+  });
+
+  it("does not repeat a title a commit already covers", async () => {
+    const r = await writeChangelog({
+      cwd: await tmp(),
+      changelogPath: "CHANGELOG.md",
+      version: "1.1.0",
+      date: "2026-08-08",
+      kind: "minor",
+      commits: [{ subject: "feat: new page" }],
+      prTitle: "feat: new page",
+    });
+    expect(r.sectionMarkdown?.match(/new page/g)).toHaveLength(1);
+  });
+
+  it("never renders an empty section", async () => {
+    const r = await writeChangelog({
+      cwd: await tmp(),
+      changelogPath: "CHANGELOG.md",
+      version: "1.0.1",
+      date: "2026-08-08",
+      kind: "patch",
+      commits: [{ subject: "docs: readme" }],
+    });
+    expect(r.sectionMarkdown).toContain("- Maintenance release");
+  });
+
+  it("strips an emoji from the bullet", async () => {
+    const r = await writeChangelog({
+      cwd: await tmp(),
+      changelogPath: "CHANGELOG.md",
+      version: "1.1.0",
+      date: "2026-08-08",
+      kind: "minor",
+      commits: [{ subject: "✨ feat: add x" }],
+    });
+    expect(r.sectionMarkdown).toContain("- add x");
+    expect(r.sectionMarkdown).not.toContain("✨");
   });
 });

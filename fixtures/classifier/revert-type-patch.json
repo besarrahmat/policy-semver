@@ -1,0 +1,17 @@
+{
+  "name": "revert-type-patch",
+  "input": {
+    "commits": [
+      {
+        "subject": "revert: feat: add x"
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "patch",
+    "warnings": []
+  }
+}

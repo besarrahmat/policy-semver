@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
     setOutput: vi.fn(),
     setFailed: vi.fn(),
     info: vi.fn(),
+    warning: vi.fn(),
   },
   context: {
     eventName: "pull_request",
@@ -83,8 +84,8 @@ function pullRequest(
     title: "feat: add thing",
     body: "",
     labels: [],
-    base: { ref: "main" },
-    head: { ref: "feature", repo: { fork: false } },
+    base: { ref: "main", repo: { full_name: "o/r" } },
+    head: { ref: "feature", repo: { full_name: "o/r" } },
     ...overrides,
   };
 }
@@ -131,7 +132,10 @@ describe("runAction", { timeout: 30_000 }, () => {
   it("skips a PR that does not target prod", async () => {
     const remote = await makeRemote();
     await workspace(remote);
-    setEvent("opened", pullRequest({ base: { ref: "dev" } }));
+    setEvent(
+      "opened",
+      pullRequest({ base: { ref: "dev", repo: { full_name: "o/r" } } }),
+    );
 
     await runAction();
 
@@ -160,7 +164,7 @@ describe("runAction", { timeout: 30_000 }, () => {
       "closed",
       pullRequest({
         merged: true,
-        head: { ref: "feature", repo: { fork: true } },
+        head: { ref: "feature", repo: { full_name: "someone/r" } },
       }),
     );
 
@@ -168,6 +172,44 @@ describe("runAction", { timeout: 30_000 }, () => {
 
     expect(await remoteTags(remote)).toEqual([]);
     expect(mocks.octokit.rest.repos.createRelease).not.toHaveBeenCalled();
+  });
+
+  it("releases an internal PR in a repo that is itself a fork", async () => {
+    const remote = await makeRemote();
+    await workspace(remote);
+    setEvent(
+      "closed",
+      pullRequest({
+        merged: true,
+        head: { ref: "feature", repo: { full_name: "o/r", fork: true } },
+      }),
+    );
+
+    await runAction();
+
+    expect(await remoteTags(remote)).toEqual(["v1.1.0"]);
+  });
+
+  it("warns when the PR reaches GitHub's commit listing limit", async () => {
+    const remote = await makeRemote();
+    await workspace(remote);
+    mocks.octokit.paginate.mockResolvedValue(
+      Array.from({ length: 250 }, () => ({ commit: { message: "fix: x" } })),
+    );
+    setEvent("opened", pullRequest());
+
+    await runAction();
+
+    expect(mocks.core.warning).toHaveBeenCalledOnce();
+  });
+
+  it("rejects a typo in the major env var", async () => {
+    const remote = await makeRemote();
+    await workspace(remote);
+    process.env.APP_VERSION_MAJOR = "2abc";
+    setEvent("opened", pullRequest());
+
+    await expect(runAction()).rejects.toThrow(/invalid APP_VERSION_MAJOR/);
   });
 
   it("releases a merged PR", async () => {
@@ -347,15 +389,12 @@ describe("runAction", { timeout: 30_000 }, () => {
     expect(await remoteTags(remote)).toEqual([]);
   });
 
-  it("does nothing for a docs-only merge", async () => {
+  it("does nothing for a docs-only merge with a plain title", async () => {
     const remote = await makeRemote();
     mocks.octokit.paginate.mockResolvedValue([
       { commit: { message: "docs: readme" } },
     ]);
-    setEvent(
-      "closed",
-      pullRequest({ merged: true, title: "docs: update readme" }),
-    );
+    setEvent("closed", pullRequest({ merged: true, title: "Update readme" }));
     await workspace(remote);
     await runAction();
 

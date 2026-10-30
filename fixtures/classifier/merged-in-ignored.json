@@ -1,0 +1,17 @@
+{
+  "name": "merged-in-ignored",
+  "input": {
+    "commits": [
+      {
+        "subject": "Merged in feature/x (pull request #1)"
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "none",
+    "warnings": []
+  }
+}

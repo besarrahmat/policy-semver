@@ -1,0 +1,17 @@
+{
+  "name": "emoji-merge-ignored",
+  "input": {
+    "commits": [
+      {
+        "subject": "🔀 Merge branch 'x'"
+      }
+    ],
+    "prTitle": "",
+    "currentVersion": "1.2.3",
+    "envMajor": null
+  },
+  "expected": {
+    "kind": "none",
+    "warnings": []
+  }
+}

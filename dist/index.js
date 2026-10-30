@@ -11117,7 +11117,7 @@ var require_mock_interceptor = __commonJS({
 var require_mock_client = __commonJS({
   "../../node_modules/.pnpm/undici@6.29.1/node_modules/undici/lib/mock/mock-client.js"(exports2, module2) {
     "use strict";
-    var { promisify: promisify4 } = require("util");
+    var { promisify: promisify3 } = require("util");
     var Client = require_client();
     var { buildMockDispatch } = require_mock_utils();
     var {
@@ -11157,7 +11157,7 @@ var require_mock_client = __commonJS({
         return new MockInterceptor(opts, this[kDispatches]);
       }
       async [kClose]() {
-        await promisify4(this[kOriginalClose])();
+        await promisify3(this[kOriginalClose])();
         this[kConnected] = 0;
         this[kMockAgent][Symbols.kClients].delete(this[kOrigin]);
       }
@@ -11170,7 +11170,7 @@ var require_mock_client = __commonJS({
 var require_mock_pool = __commonJS({
   "../../node_modules/.pnpm/undici@6.29.1/node_modules/undici/lib/mock/mock-pool.js"(exports2, module2) {
     "use strict";
-    var { promisify: promisify4 } = require("util");
+    var { promisify: promisify3 } = require("util");
     var Pool = require_pool();
     var { buildMockDispatch } = require_mock_utils();
     var {
@@ -11210,7 +11210,7 @@ var require_mock_pool = __commonJS({
         return new MockInterceptor(opts, this[kDispatches]);
       }
       async [kClose]() {
-        await promisify4(this[kOriginalClose])();
+        await promisify3(this[kOriginalClose])();
         this[kConnected] = 0;
         this[kMockAgent][Symbols.kClients].delete(this[kOrigin]);
       }
@@ -27345,6 +27345,9 @@ function setFailed(message) {
 function error(message, properties = {}) {
   issueCommand("error", toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
+function warning(message, properties = {}) {
+  issueCommand("warning", toCommandProperties(properties), message instanceof Error ? message.toString() : message);
+}
 function info(message) {
   process.stdout.write(message + os4.EOL);
 }
@@ -31567,7 +31570,7 @@ function assertDualSourceMatch(versionFileVersion, packageJsonVersion) {
     );
   }
 }
-var SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)$/;
+var SEMVER_RE = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 function isSemVerString(value) {
   return SEMVER_RE.test(value.trim());
 }
@@ -31683,7 +31686,8 @@ async function writePackageJsonVersion(cwd, rel, nextVersion) {
   const raw = await (0, import_promises3.readFile)(p, "utf8");
   const pkg = JSON.parse(raw);
   pkg.version = nextVersion;
-  await (0, import_promises3.writeFile)(p, `${JSON.stringify(pkg, null, 2)}
+  const indent = /^[ \t]+(?=")/m.exec(raw)?.[0] ?? 2;
+  await (0, import_promises3.writeFile)(p, `${JSON.stringify(pkg, null, indent)}
 `, "utf8");
 }
 async function snapshotFiles(cwd, rels) {
@@ -31808,11 +31812,11 @@ function decideBumpGuards(ctx) {
   }
   const trailers = ctx.skipTrailers ?? ["skip version"];
   const patterns = trailers.map(
-    (t) => new RegExp(`\\[${escapeRegExp(t)}\\]`, "i")
+    (t) => new RegExp(`\\[${escapeRegExp(t)}\\]\\s*$`, "im")
   );
   const trailerInner = BOT_SKIP_TRAILER.slice(1, -1);
   if (!trailers.some((t) => t.toLowerCase() === trailerInner.toLowerCase())) {
-    patterns.push(new RegExp(`\\[${escapeRegExp(trailerInner)}\\]`, "i"));
+    patterns.push(new RegExp(`\\[${escapeRegExp(trailerInner)}\\]\\s*$`, "im"));
   }
   for (const text of ctx.textsForSkip ?? []) {
     if (patterns.some((re) => re.test(text))) {
@@ -31826,6 +31830,13 @@ function decideBumpGuards(ctx) {
 }
 function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function parseEnvMajor(name, raw) {
+  if (raw === void 0 || raw === "") return null;
+  if (!/^\d+$/.test(raw)) {
+    throw new Error(`invalid ${name}=${JSON.stringify(raw)}`);
+  }
+  return Number(raw);
 }
 async function readPrimaryVersion(input) {
   const { cwd, files } = input;
@@ -31902,6 +31913,30 @@ async function readVersion(input) {
     version
   );
   return version;
+}
+function toVersionFiles(versionFiles) {
+  const isVersionFile = (f) => /(^|\/)VERSION$/.test(f);
+  const isPackageJson = (f) => /(^|\/)package\.json$/.test(f);
+  const unsupported = versionFiles.find(
+    (f) => !isVersionFile(f) && !isPackageJson(f)
+  );
+  if (unsupported !== void 0) {
+    throw new Error(
+      `unsupported versionFiles entry ${JSON.stringify(unsupported)}: use a VERSION or package.json path`
+    );
+  }
+  const [versionFile, secondVersionFile] = versionFiles.filter(isVersionFile);
+  if (secondVersionFile !== void 0) {
+    throw new Error(
+      `versionFiles allows one VERSION file: ${versionFile}, ${secondVersionFile}`
+    );
+  }
+  const [packageJson, ...extraPackageJson] = versionFiles.filter(isPackageJson);
+  return {
+    ...versionFile !== void 0 ? { versionFile } : {},
+    ...packageJson !== void 0 ? { packageJson } : {},
+    ...extraPackageJson.length > 0 ? { extraPackageJson } : {}
+  };
 }
 async function writeVersionFile2(cwd, rel, nextVersion) {
   await (0, import_promises4.writeFile)(import_path5.default.join(cwd, rel), `${nextVersion}
@@ -32019,23 +32054,34 @@ function firstLine(text) {
 }
 function normalizeSubject(subject) {
   return subject.replace(
-    new RegExp("^(?:\\p{Extended_Pictographic}|\\p{Emoji_Component}|\\uFE0F|\\u200D)+\\s*", "u"),
+    new RegExp("^(?:\\p{Extended_Pictographic}|\\p{Emoji_Modifier}|\\p{Regional_Indicator}|\\uFE0F|\\u200D)+\\s*", "u"),
     ""
   ).trim();
 }
-function subjectBucket(normalized) {
-  const s = normalized.trim();
-  if (/^merge (pull request|branch|remote-tracking branch)\b/i.test(s)) {
-    return "ignore";
+function isMergeSubject(normalized) {
+  return /^merge (?:pull request|branch|remote-tracking branch|tag)\b/i.test(
+    normalized
+  ) || /^merge [0-9a-f]{7,40} into\b/i.test(normalized) || /^merged in\b/i.test(normalized);
+}
+function subjectType(normalized) {
+  if (/^feat(?:\s*&\s*fix)?(?:\s*\([^)]*\))?!?\s*:/i.test(normalized)) {
+    return "feat";
   }
-  if (/^feat\s*&\s*fix(\([^)]*\))?!?\s*:/i.test(s)) return "feat";
-  if (/^feat(\([^)]*\))?!?\s*:/i.test(s)) return "feat";
-  if (/^docs(\([^)]*\))?\s*:/i.test(s)) return "docs";
-  if (/^fix(\([^)]*\))?!?\s*:/i.test(s)) return "fix";
+  if (/^docs(?:\s*\([^)]*\))?\s*:/i.test(normalized)) return "docs";
+  if (/^fix(?:\s*\([^)]*\))?!?\s*:/i.test(normalized)) return "fix";
   return "other";
 }
+function isConventionalSubject(normalized) {
+  return /^[a-z]+(?:\s*&\s*[a-z]+)?(?:\s*\([^)]*\))?!?\s*:/i.test(normalized);
+}
+function hasBreakingBang(normalized) {
+  return /^[a-z]+(?:\s*&\s*[a-z]+)?(?:\s*\([^)]*\))?!\s*:/i.test(normalized);
+}
+function hasBreakingFooter(text) {
+  return /^BREAKING[ -]CHANGE:/im.test(text);
+}
 function bulletFromSubject(raw) {
-  const line = firstLine(raw).trim();
+  const line = normalizeSubject(firstLine(raw));
   const cleaned = line.replace(
     /^(?:feat\s*&\s*fix|feat|fix|docs|chore|refactor|test|ci|build|perf|style)(\([^)]*\))?!?\s*:\s*/i,
     ""
@@ -32050,9 +32096,9 @@ function mapCommitsToSections(commits) {
     out[section] = list;
   };
   for (const c of commits) {
-    const bucket = subjectBucket(normalizeSubject(firstLine(c.subject)));
-    if (bucket === "ignore") continue;
-    const section = BUCKET_TO_SECTION[bucket];
+    const normalized = normalizeSubject(firstLine(c.subject));
+    if (isMergeSubject(normalized)) continue;
+    const section = BUCKET_TO_SECTION[subjectType(normalized)];
     if (section === null) continue;
     push(section, bulletFromSubject(c.subject));
   }
@@ -32115,9 +32161,14 @@ function insertAfterUnreleasedOrHeader(existing, section) {
   const unreleased = /^## \[Unreleased\][^\n]*\n/m;
   const m = unreleased.exec(existing);
   if (m && m.index !== void 0) {
-    const at = m.index + m[0].length;
-    return `${existing.slice(0, at)}
-${section}${existing.slice(at)}`;
+    const afterHeading = m.index + m[0].length;
+    const next = existing.slice(afterHeading).search(/^## \[/m);
+    const at = next === -1 ? existing.length : afterHeading + next;
+    const rest = existing.slice(at);
+    return `${existing.slice(0, at).trimEnd()}
+
+${section}${rest ? `
+${rest}` : ""}`;
   }
   const firstRelease = /^## \[/m.exec(existing);
   if (firstRelease && firstRelease.index !== void 0) {
@@ -32128,6 +32179,17 @@ ${existing.slice(firstRelease.index)}`;
 
 ${section}`;
 }
+function bucketsFor(input) {
+  const buckets = mapCommitsToSections(input.commits);
+  const title = normalizeSubject(firstLine(input.prTitle ?? ""));
+  const titleType = subjectType(title);
+  if (titleType === "feat" || titleType === "fix") {
+    const fromTitle = mapCommitsToSections([{ subject: title }]);
+    if (titleType === "feat") buckets.Added ??= fromTitle.Added ?? [];
+    if (titleType === "fix") buckets.Fixed ??= fromTitle.Fixed ?? [];
+  }
+  return buckets;
+}
 async function writeChangelog(input) {
   const rel = input.changelogPath;
   const abs = import_path6.default.join(input.cwd, rel);
@@ -32135,8 +32197,11 @@ async function writeChangelog(input) {
   if (input.kind === "none") {
     return { wrote: false, reason: "kind-none", path: abs };
   }
-  const buckets = mapCommitsToSections(input.commits);
+  const buckets = bucketsFor(input);
   const majorNote = input.kind === "major-reset" ? `Major reset to ${input.version} via majorEnv` : void 0;
+  if (Object.keys(buckets).length === 0 && majorNote === void 0) {
+    buckets.Changed = ["Maintenance release"];
+  }
   const sectionMarkdown = redactSecrets(
     renderReleaseSection({
       version: input.version,
@@ -32169,7 +32234,7 @@ async function writeChangelog(input) {
   } catch (err) {
     if (attempt >= 2) {
       throw new Error(
-        `CHANGELOG conflict after retry: ${abs}: ${err instanceof Error ? err.message : String(err)}`
+        `CHANGELOG write failed after retry: ${abs}: ${err instanceof Error ? err.message : String(err)}`
       );
     }
     return writeChangelog({ ...input, attempt: 2 });
@@ -32188,63 +32253,16 @@ function parseMajor(version) {
   }
   return major;
 }
-function firstLine2(text) {
-  return text.split("\n")[0] ?? "";
-}
-function isMergeSubject(subject) {
-  const s = subject.trim();
-  return /^merge pull request\b/i.test(s) || /^merge branch\b/i.test(s) || /^merge remote-tracking branch\b/i.test(s);
-}
-function normalizeSubject2(subject) {
-  return subject.replace(
-    new RegExp("^(?:\\p{Extended_Pictographic}|\\p{Emoji_Component}|\\uFE0F|\\u200D)+\\s*", "u"),
-    ""
-  ).trim();
-}
-function bucketSubject(normalized) {
-  const s = normalized.trim();
-  if (/^feat\s*&\s*fix(\([^)]*\))?!?\s*:/i.test(s)) {
-    return "feat";
-  }
-  if (/^feat(\([^)]*\))?!?\s*:/i.test(s)) {
-    return "feat";
-  }
-  if (/^docs(\([^)]*\))?\s*:/i.test(s)) {
-    return "docs";
-  }
-  return "other";
-}
-function hasFeatBang(normalizedFirstLine) {
-  return /^feat(\([^)]*\))?!\s*:/i.test(normalizedFirstLine);
-}
-function collectBreakingWarnings(input) {
-  const warnings = [];
+var BREAKING_WARNING = "Breaking change marker detected; major only via APP_VERSION_MAJOR (never auto-major)";
+function hasBreakingMarker(input) {
   const title = input.prTitle?.trim();
-  if (title) {
-    const normalized = normalizeSubject2(firstLine2(title));
-    if (hasFeatBang(normalized) || /BREAKING CHANGE/i.test(title)) {
-      warnings.push(
-        "Breaking change marker detected; major only via APP_VERSION_MAJOR (never auto-major)"
-      );
-      return warnings;
-    }
+  if (title && (hasBreakingBang(normalizeSubject(firstLine(title))) || hasBreakingFooter(title))) {
+    return true;
   }
-  for (const c of input.commits) {
-    const normalized = normalizeSubject2(firstLine2(c.subject));
-    if (hasFeatBang(normalized)) {
-      warnings.push(
-        "Breaking change marker detected; major only via APP_VERSION_MAJOR (never auto-major)"
-      );
-      return warnings;
-    }
-    if (c.body && /BREAKING CHANGE/i.test(c.body)) {
-      warnings.push(
-        "Breaking change marker detected; major only via APP_VERSION_MAJOR (never auto-major)"
-      );
-      return warnings;
-    }
-  }
-  return warnings;
+  return input.commits.some(
+    (c) => hasBreakingBang(normalizeSubject(firstLine(c.subject))) || // Body may carry the footer; never use body for feat buckets.
+    c.body !== void 0 && hasBreakingFooter(c.body)
+  );
 }
 function classify(input) {
   const warnings = [];
@@ -32261,28 +32279,15 @@ function classify(input) {
   if (envMajor != null && envMajor > currentMajor) {
     return { kind: "major-reset", warnings };
   }
-  const texts = [];
-  const title = input.prTitle?.trim();
-  if (title) texts.push(title);
-  for (const c of input.commits) texts.push(c.subject);
-  let hasFeat = false;
-  let hasOther = false;
-  let hasDocs = false;
-  for (const raw of texts) {
-    const line = firstLine2(raw);
-    if (isMergeSubject(line)) continue;
-    const normalized = normalizeSubject2(line);
-    if (normalized.length === 0) continue;
-    const bucket = bucketSubject(normalized);
-    if (bucket === "ignore") continue;
-    if (bucket === "feat") hasFeat = true;
-    else if (bucket === "docs") hasDocs = true;
-    else if (bucket === "other") hasOther = true;
+  const subjects = input.commits.map((c) => normalizeSubject(firstLine(c.subject))).filter((s) => s.length > 0 && !isMergeSubject(s));
+  const title = normalizeSubject(firstLine(input.prTitle?.trim() ?? ""));
+  if (title.length > 0 && !isMergeSubject(title) && (subjects.length === 0 || isConventionalSubject(title))) {
+    subjects.push(title);
   }
-  warnings.push(...collectBreakingWarnings(input));
-  if (hasFeat) return { kind: "minor", warnings };
-  if (hasOther) return { kind: "patch", warnings };
-  if (hasDocs || texts.length === 0) return { kind: "none", warnings };
+  const types = subjects.map(subjectType);
+  if (hasBreakingMarker(input)) warnings.push(BREAKING_WARNING);
+  if (types.includes("feat")) return { kind: "minor", warnings };
+  if (types.some((t) => t !== "docs")) return { kind: "patch", warnings };
   return { kind: "none", warnings };
 }
 var CLASSIFY_KINDS = [
@@ -32422,6 +32427,39 @@ async function commitBumpFiles(input) {
   await exec(["config", "user.email", BOT_EMAIL], cwd);
   await exec(["add", "--", ...input.paths], cwd);
   await exec(["commit", "-m", input.message], cwd);
+}
+var MAX_COMMITS = 1e3;
+async function lastTag(cwd, tagPrefix, exec) {
+  try {
+    const { stdout } = await exec(
+      ["describe", "--tags", "--abbrev=0", `--match=${tagPrefix}[0-9]*`],
+      { cwd }
+    );
+    return stdout.trim() || null;
+  } catch {
+    return null;
+  }
+}
+async function loadCommitsSinceLastTag(cwd, tagPrefix, exec = defaultGitExec) {
+  const tag = await lastTag(cwd, tagPrefix, exec);
+  const { stdout } = await exec(
+    [
+      "log",
+      `--max-count=${MAX_COMMITS}`,
+      "--pretty=format:%s%x00%b%x1e",
+      ...tag !== null ? [`${tag}..HEAD`] : []
+    ],
+    { cwd }
+  );
+  return stdout.split("").map((chunk) => chunk.replace(/^\n+/, "").trimEnd()).filter(Boolean).map((chunk) => {
+    const [subjectRaw, bodyRaw = ""] = chunk.split("\0");
+    const subject = (subjectRaw ?? "").trim();
+    const body = bodyRaw.trim();
+    return {
+      subject,
+      ...body.length > 0 ? { body } : {}
+    };
+  }).filter((c) => c.subject.length > 0);
 }
 async function pushRefs(input) {
   const exec = input.exec ?? defaultGitExec;
@@ -32857,31 +32895,6 @@ function decideActionMode(input) {
   return { mode: "skip", allowWrite: false, reason: "other event" };
 }
 
-// src/load-commits.ts
-var import_node_child_process = require("child_process");
-var import_node_util = require("util");
-var execFileAsync3 = (0, import_node_util.promisify)(import_node_child_process.execFile);
-async function loadCommitsFromGit(cwd) {
-  try {
-    const { stdout } = await execFileAsync3(
-      "git",
-      ["log", "-n", "50", "--pretty=format:%s%x00%b%x1e"],
-      { cwd, encoding: "utf8" }
-    );
-    return stdout.split("").map((chunk) => chunk.replace(/^\n+/, "").trimEnd()).filter(Boolean).map((chunk) => {
-      const [subjectRaw, bodyRaw = ""] = chunk.split("\0");
-      const subject = (subjectRaw ?? "").trim();
-      const body = bodyRaw.trim();
-      return {
-        subject,
-        ...body.length > 0 ? { body } : {}
-      };
-    }).filter((c) => c.subject.length > 0);
-  } catch {
-    return [];
-  }
-}
-
 // src/sticky-comment.ts
 async function upsertStickyComment(input) {
   const marker = ACTION_COMMENT.marker;
@@ -32911,20 +32924,6 @@ ${input.body}`;
   });
 }
 
-// src/version-files.ts
-function toVersionFiles(versionFiles) {
-  const versionFile = versionFiles.find(
-    (f) => f === "VERSION" || /(^|\/)VERSION$/.test(f)
-  );
-  const packageJsons = versionFiles.filter((f) => f.endsWith("package.json"));
-  const [packageJson, ...extraPackageJson] = packageJsons;
-  return {
-    ...versionFile !== void 0 ? { versionFile } : {},
-    ...packageJson !== void 0 ? { packageJson } : {},
-    ...extraPackageJson.length > 0 ? { extraPackageJson } : {}
-  };
-}
-
 // src/write-failure.ts
 function writeFailureMessage(err) {
   const msg = err instanceof Error ? err.message : String(err);
@@ -32952,6 +32951,7 @@ async function runWriteRelease(input) {
 }
 
 // src/run-action.ts
+var PR_COMMITS_API_LIMIT = 250;
 function today() {
   return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
 }
@@ -32983,7 +32983,7 @@ async function runAction() {
   const payload = context2.payload;
   const pr = payload.pull_request;
   const mergeGroup = payload.merge_group;
-  const isFork = Boolean(pr?.head?.repo?.fork);
+  const isFork = pr !== void 0 && pr.head?.repo?.full_name !== pr.base?.repo?.full_name;
   const baseBranch = pr?.base?.ref ?? (mergeGroup?.base_ref !== void 0 ? shortRef(mergeGroup.base_ref) : shortRef(context2.ref));
   const headBranch = pr?.head?.ref ?? (mergeGroup?.head_ref !== void 0 ? shortRef(mergeGroup.head_ref) : "");
   const labels = (pr?.labels ?? []).map((l) => l.name);
@@ -33022,9 +33022,14 @@ skipped: ${decision.reason}`);
       const body = rest.join("\n").trim();
       return { subject, ...body ? { body } : {} };
     });
+    if (data.length >= PR_COMMITS_API_LIMIT) {
+      warning(
+        `PR has ${PR_COMMITS_API_LIMIT}+ commits; GitHub lists only the first ${PR_COMMITS_API_LIMIT}, so a later feat: may be missed. Use a feat: PR title.`
+      );
+    }
   }
   if (commits.length === 0) {
-    commits = await loadCommitsFromGit(cwd);
+    commits = await loadCommitsSinceLastTag(cwd, config.tagPrefix);
   }
   const guards = decideBumpGuards({
     isFork,
@@ -33096,14 +33101,7 @@ PR already released as ${done.tag}; GitHub Release ${done.releaseCreated ? "crea
     files
   });
   const currentVersion = fromProd ?? await readVersion({ cwd, files });
-  const envRaw = process.env[config.majorEnv];
-  let envMajor = null;
-  if (envRaw !== void 0 && envRaw !== "") {
-    envMajor = Number.parseInt(envRaw, 10);
-    if (Number.isNaN(envMajor)) {
-      throw new Error(`invalid ${config.majorEnv}=${JSON.stringify(envRaw)}`);
-    }
-  }
+  const envMajor = parseEnvMajor(config.majorEnv, process.env[config.majorEnv]);
   let kind = classify({
     commits,
     ...pr?.title !== void 0 ? { prTitle: pr.title } : {},
@@ -33167,7 +33165,8 @@ ${summary2}
       version: nextVersion,
       date: today(),
       kind,
-      commits
+      commits,
+      ...pr?.title !== void 0 ? { prTitle: pr.title } : {}
     });
     const paths = await existingPaths(
       cwd,

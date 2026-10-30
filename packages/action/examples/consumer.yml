@@ -35,7 +35,7 @@ jobs:
       # Canonical Action repo is public (Marketplace layout A). Pin a 40-character SHA.
       - uses: besarrahmat/policy-semver@<full-commit-sha>
         env:
-          APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR || '0' }}
+          APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR }}
         with:
           config-path: versioning.config.json
           # token: ${{ secrets.POLICY_SEMVER_TOKEN }}  # contents:write on THIS repo if github-actions[bot] cannot push
@@ -53,7 +53,7 @@ jobs:
       # - name: PolicySemVer
       #   uses: ./.github/actions/policy-semver
       #   env:
-      #     APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR || '0' }}
+      #     APP_VERSION_MAJOR: ${{ vars.APP_VERSION_MAJOR }}
       #   with:
       #     config-path: versioning.config.json
   # never build/deploy if the bump job failed or was skipped.

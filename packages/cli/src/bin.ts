@@ -1,11 +1,21 @@
+import path from "node:path";
+import {
+  type ClassifyCommit,
+  loadCommitsSinceLastTag,
+  loadConfig,
+} from "@policy-semver/core";
 import { cmdBump } from "./cmd-bump.js";
 import { cmdClassify } from "./cmd-classify.js";
 import { printHelp } from "./cmd-help.js";
 import { cmdTest } from "./cmd-test.js";
 import { cmdVerify } from "./cmd-verify.js";
 import { EXIT_OK, EXIT_POLICY, EXIT_USAGE } from "./exit.js";
-import { loadCommits } from "./load-commits.js";
-import { parseArgs } from "./parse-args.js";
+import { type GlobalFlags, parseArgs } from "./parse-args.js";
+
+async function loadCommits(flags: GlobalFlags): Promise<ClassifyCommit[]> {
+  const config = await loadConfig(path.join(flags.cwd, flags.config));
+  return loadCommitsSinceLastTag(flags.cwd, config.tagPrefix);
+}
 
 async function main(): Promise<number> {
   try {
@@ -16,7 +26,7 @@ async function main(): Promise<number> {
         return EXIT_OK;
       }
       case "classify": {
-        const commits = await loadCommits(parsed.flags.cwd);
+        const commits = await loadCommits(parsed.flags);
         await cmdClassify({
           flags: parsed.flags,
           commits,
@@ -25,7 +35,7 @@ async function main(): Promise<number> {
         return EXIT_OK;
       }
       case "bump": {
-        const commits = await loadCommits(parsed.flags.cwd);
+        const commits = await loadCommits(parsed.flags);
         return await cmdBump({
           flags: parsed.flags,
           dryRun: parsed.dryRun,

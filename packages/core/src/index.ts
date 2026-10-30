@@ -34,6 +34,7 @@ export {
   formatBotBumpCommitMessage,
   formatSemVer,
   isSemVerString,
+  parseEnvMajor,
   parseSemVer,
   readVersion,
   toVersionFiles,
@@ -89,6 +90,7 @@ export {
   commitBumpFiles,
   createAnnotatedTag,
   defaultGitExec,
+  loadCommitsSinceLastTag,
   pushRefs,
   tagExists,
 } from "./git/index.js";
