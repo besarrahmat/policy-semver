@@ -12,13 +12,14 @@ permissions:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         # Reads version from root package.json "packageManager"
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -29,7 +30,8 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm test:fixtures
-      - name: Action dist up to date
+      # The build above regenerates both; a stale commit shows up as a change.
+      - name: Action dist and schema embed up to date
         run: |
-          pnpm --filter @policy-semver/action run build
-          git diff --exit-code dist/
+          git diff --exit-code dist/ packages/core/src/config/versioning.config.schema.json
+          test -z "$(git status --porcelain dist/)"

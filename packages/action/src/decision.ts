@@ -15,16 +15,15 @@ export type DecisionInput = {
 };
 
 export type Decision =
-  | { mode: "dry-run-comment"; allowWrite: false; reason: string }
-  | { mode: "skip"; allowWrite: false; reason: string }
-  | { mode: "force-none"; allowWrite: false; reason: "sync-from-prod" }
-  | { mode: "write"; allowWrite: true; reason: string };
+  | { mode: "dry-run-comment"; reason: string }
+  | { mode: "skip"; reason: string }
+  | { mode: "force-none"; reason: "sync-from-prod" }
+  | { mode: "write"; reason: string };
 
 export function decideActionMode(input: DecisionInput): Decision {
   if (input.isFork) {
     return {
       mode: "dry-run-comment",
-      allowWrite: false,
       reason: "fork: dry-run + comment only",
     };
   }
@@ -36,7 +35,6 @@ export function decideActionMode(input: DecisionInput): Decision {
   ) {
     return {
       mode: "force-none",
-      allowWrite: false,
       reason: "sync-from-prod",
     };
   }
@@ -44,7 +42,6 @@ export function decideActionMode(input: DecisionInput): Decision {
   if (input.baseBranch !== input.prodBranch) {
     return {
       mode: "skip",
-      allowWrite: false,
       reason: "non-prod base: no write",
     };
   }
@@ -52,7 +49,6 @@ export function decideActionMode(input: DecisionInput): Decision {
   if (input.forceDryRun) {
     return {
       mode: "dry-run-comment",
-      allowWrite: false,
       reason: "input dry-run=true",
     };
   }
@@ -64,7 +60,6 @@ export function decideActionMode(input: DecisionInput): Decision {
   ) {
     return {
       mode: "dry-run-comment",
-      allowWrite: false,
       reason: "pr opened/synchronize/reopened",
     };
   }
@@ -74,7 +69,7 @@ export function decideActionMode(input: DecisionInput): Decision {
     action === "closed" &&
     input.merged === true
   ) {
-    return { mode: "write", allowWrite: true, reason: "pr merged to prod" };
+    return { mode: "write", reason: "pr merged to prod" };
   }
 
   // The queue's SHA is speculative: it may never land. The release happens on
@@ -82,11 +77,10 @@ export function decideActionMode(input: DecisionInput): Decision {
   if (input.eventName === "merge_group") {
     return {
       mode: "dry-run-comment",
-      allowWrite: false,
       reason: "merge_group: dry-run only",
     };
   }
 
   // push / other → skip (locked: no push-to-prod write)
-  return { mode: "skip", allowWrite: false, reason: "other event" };
+  return { mode: "skip", reason: "other event" };
 }

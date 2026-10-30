@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-async function writeVersionFile(
+export async function writeVersionFile(
   cwd: string,
   rel: string,
   nextVersion: string,

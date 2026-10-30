@@ -2,7 +2,7 @@ name: Publish npm
 
 on:
   push:
-    tags: ["v0.*", "v1.*"]
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
   workflow_dispatch:
 
 permissions:
@@ -12,21 +12,22 @@ permissions:
 jobs:
   publish:
     if: github.repository == 'besarrahmat/policy-semver'
-    runs-on: ubuntu-latest # GitHub-hosted required; self-hosted is not supported
+    runs-on: ubuntu-latest
+    timeout-minutes: 15 # GitHub-hosted required; self-hosted is not supported
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         # Reads version from root package.json "packageManager"
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version-file: .node-version # must resolve to Node 24+
           cache: pnpm
           # Do NOT set registry-url when using Trusted Publishing without NODE_AUTH_TOKEN.
           # setup-node writes _authToken=${NODE_AUTH_TOKEN}; empty token → ENEEDAUTH.
 
-      - run: npm install -g npm@latest # ensure npm CLI >= 11.5.1
+      - run: npm install -g npm@12.2.1 # trusted publishing needs npm CLI >= 11.5.1
 
       - run: pnpm install --frozen-lockfile
 
@@ -44,11 +45,28 @@ jobs:
           fi
 
       - run: pnpm build
+      - run: pnpm test
+      - run: pnpm test:fixtures
 
-      - run: pnpm --filter '@policy-semver/core' publish --access public --no-git-checks
+      # Versions are immutable, so a rerun after a partial publish skips what landed.
+      - name: Publish @policy-semver/core
+        run: |
+          VERSION=$(tr -d '[:space:]' < VERSION)
+          if npm view "@policy-semver/core@$VERSION" version >/dev/null 2>&1; then
+            echo "@policy-semver/core@$VERSION is already published"
+          else
+            pnpm --filter '@policy-semver/core' publish --access public --no-git-checks
+          fi
         env:
           NPM_CONFIG_PROVENANCE: "true"
 
-      - run: pnpm --filter policy-semver publish --access public --no-git-checks
+      - name: Publish policy-semver
+        run: |
+          VERSION=$(tr -d '[:space:]' < VERSION)
+          if npm view "policy-semver@$VERSION" version >/dev/null 2>&1; then
+            echo "policy-semver@$VERSION is already published"
+          else
+            pnpm --filter policy-semver publish --access public --no-git-checks
+          fi
         env:
           NPM_CONFIG_PROVENANCE: "true"

@@ -1,21 +1,14 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import {
   tryReadPackageJsonVersion,
   tryReadVersionFile,
   writeBothAtomically,
   writePackageJsonFilesAtomically,
+  writeVersionFile,
 } from "../dual-source/index.js";
 import { extrasNeedWrite, readPrimaryVersion } from "./read-version.js";
 import type { WriteVersionInput, WriteVersionResult } from "./types.js";
-
-async function writeVersionFile(
-  cwd: string,
-  rel: string,
-  nextVersion: string,
-): Promise<void> {
-  await writeFile(path.join(cwd, rel), `${nextVersion}\n`, "utf8");
-}
 
 async function writeSingleSource(
   cwd: string,

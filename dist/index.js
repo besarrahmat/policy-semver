@@ -26840,7 +26840,6 @@ __export(index_exports, {
   ACTION_LAYOUT: () => ACTION_LAYOUT,
   ACTION_RUNTIME: () => ACTION_RUNTIME,
   ACTION_VERSIONING: () => ACTION_VERSIONING,
-  run: () => run,
   runAction: () => runAction,
   runWriteRelease: () => runWriteRelease
 });
@@ -31942,10 +31941,6 @@ function toVersionFiles(versionFiles) {
     ...extraPackageJson.length > 0 ? { extraPackageJson } : {}
   };
 }
-async function writeVersionFile2(cwd, rel, nextVersion) {
-  await (0, import_promises4.writeFile)(import_path5.default.join(cwd, rel), `${nextVersion}
-`, "utf8");
-}
 async function writeSingleSource(cwd, nextVersion, kind, rel, extras) {
   const extrasStale = await extrasNeedWrite(cwd, extras, nextVersion);
   if (kind === "versionFile") {
@@ -31959,7 +31954,7 @@ async function writeSingleSource(cwd, nextVersion, kind, rel, extras) {
       return { nextVersion, wrote: false, reason: "already-current" };
     }
     if (current !== nextVersion) {
-      await writeVersionFile2(cwd, rel, nextVersion);
+      await writeVersionFile(cwd, rel, nextVersion);
     }
     await writePackageJsonFilesAtomically({
       cwd,
@@ -32147,7 +32142,6 @@ var SECRET_REDACT_PATTERNS = [
   /(?<=:\/\/)[^\s/:@]+:[^\s/@]+(?=@)/g
 ];
 var SECRET_REDACT_REPLACEMENT = "[REDACTED]";
-var TAG_EXISTS_FAILS = true;
 function redactSecrets(text) {
   let out = text;
   for (const re of SECRET_REDACT_PATTERNS) {
@@ -32439,16 +32433,20 @@ async function loadConfig(path72) {
 }
 var BOT_NAME = "github-actions[bot]";
 var BOT_EMAIL = "41898282+github-actions[bot]@users.noreply.github.com";
+var BOT_IDENTITY_ARGS = [
+  "-c",
+  `user.name=${BOT_NAME}`,
+  "-c",
+  `user.email=${BOT_EMAIL}`
+];
 async function commitBumpFiles(input) {
   if (!input.message.includes(BOT_SKIP_TRAILER)) {
     throw new Error(`commit message missing ${BOT_SKIP_TRAILER}`);
   }
   const exec = input.exec ?? defaultGitExec;
   const cwd = { cwd: input.cwd };
-  await exec(["config", "user.name", BOT_NAME], cwd);
-  await exec(["config", "user.email", BOT_EMAIL], cwd);
   await exec(["add", "--", ...input.paths], cwd);
-  await exec(["commit", "-m", input.message], cwd);
+  await exec([...BOT_IDENTITY_ARGS, "commit", "-m", input.message], cwd);
 }
 var MAX_COMMITS = 1e3;
 async function lastTag(cwd, tagPrefix, exec) {
@@ -32508,9 +32506,18 @@ async function assertTagAvailable(input) {
 async function createAnnotatedTag(input) {
   const exec = input.exec ?? defaultGitExec;
   await assertTagAvailable(input);
-  await exec(["tag", "-a", "--no-sign", input.tag, "-m", input.message], {
-    cwd: input.cwd
-  });
+  await exec(
+    [
+      ...BOT_IDENTITY_ARGS,
+      "tag",
+      "-a",
+      "--no-sign",
+      input.tag,
+      "-m",
+      input.message
+    ],
+    { cwd: input.cwd }
+  );
 }
 async function remoteTagSha(input) {
   const exec = input.exec ?? defaultGitExec;
@@ -32555,7 +32562,7 @@ async function releaseExists(input) {
 }
 async function createGitHubRelease(input) {
   const body = redactSecrets(input.body);
-  if (await releaseExists(input) && TAG_EXISTS_FAILS) {
+  if (await releaseExists(input)) {
     throw new Error(`release already published: ${input.tag}`);
   }
   await input.octokit.repos.createRelease({
@@ -32705,9 +32712,9 @@ async function reconcileRelease(input) {
   });
   return { version, tag, releaseCreated };
 }
-async function step(name, run2) {
+async function step(name, run) {
   try {
-    await run2();
+    await run();
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     throw new Error(`${name}: ${detail}`, { cause: err });
@@ -32893,28 +32900,24 @@ function decideActionMode(input) {
   if (input.isFork) {
     return {
       mode: "dry-run-comment",
-      allowWrite: false,
       reason: "fork: dry-run + comment only"
     };
   }
   if (input.baseBranch === input.developBranch && input.headBranch === input.prodBranch) {
     return {
       mode: "force-none",
-      allowWrite: false,
       reason: "sync-from-prod"
     };
   }
   if (input.baseBranch !== input.prodBranch) {
     return {
       mode: "skip",
-      allowWrite: false,
       reason: "non-prod base: no write"
     };
   }
   if (input.forceDryRun) {
     return {
       mode: "dry-run-comment",
-      allowWrite: false,
       reason: "input dry-run=true"
     };
   }
@@ -32922,21 +32925,19 @@ function decideActionMode(input) {
   if (input.eventName === "pull_request" && ACTION_EVENT.dryRunActions.includes(action)) {
     return {
       mode: "dry-run-comment",
-      allowWrite: false,
       reason: "pr opened/synchronize/reopened"
     };
   }
   if (input.eventName === "pull_request" && action === "closed" && input.merged === true) {
-    return { mode: "write", allowWrite: true, reason: "pr merged to prod" };
+    return { mode: "write", reason: "pr merged to prod" };
   }
   if (input.eventName === "merge_group") {
     return {
       mode: "dry-run-comment",
-      allowWrite: false,
       reason: "merge_group: dry-run only"
     };
   }
-  return { mode: "skip", allowWrite: false, reason: "other event" };
+  return { mode: "skip", reason: "other event" };
 }
 
 // src/sticky-comment.ts
@@ -33106,7 +33107,7 @@ skipped: ${decision.reason}`);
     ],
     isMergedToProd: decision.mode === "write"
   });
-  const allowWrite = decision.allowWrite && guards.allowWrite && decision.mode === "write";
+  const allowWrite = guards.allowWrite && decision.mode === "write";
   if (allowWrite && (!token || !octokit)) {
     setFailed(
       "Write path needs a token with contents:write (and pull-requests:write for comments). Set input `token`, or secret POLICY_SEMVER_TOKEN / GitHub App installation token when branch protection blocks GITHUB_TOKEN."
@@ -33278,9 +33279,6 @@ failed: ${errorText(err)}`);
 }
 
 // src/index.ts
-async function run() {
-  await runAction();
-}
 if (process.env.GITHUB_ACTIONS === "true") {
   runAction().catch((err) => {
     setFailed(err instanceof Error ? err.message : String(err));
@@ -33295,7 +33293,6 @@ if (process.env.GITHUB_ACTIONS === "true") {
   ACTION_LAYOUT,
   ACTION_RUNTIME,
   ACTION_VERSIONING,
-  run,
   runAction,
   runWriteRelease
 });

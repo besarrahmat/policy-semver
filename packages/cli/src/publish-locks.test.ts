@@ -90,7 +90,8 @@ it("publish.yml is OIDC on tags (plus dispatch); CI builds before tests", () => 
     path.join(root, ".github/workflows/publish.yml"),
     "utf8",
   );
-  expect(publish).toMatch(/tags:\s*\["v0\.\*", "v1\.\*"\]/);
+  // Not per-major: v2.0.0 must publish too.
+  expect(publish).toMatch(/tags:\s*\["v\[0-9\]\+\.\[0-9\]\+\.\[0-9\]\+"\]/);
   expect(publish).toMatch(/workflow_dispatch:/);
   expect(publish).toMatch(/Assert GitHub VERSION and npm packages match/);
   expect(publish).toMatch(/id-token: write/);
@@ -98,6 +99,7 @@ it("publish.yml is OIDC on tags (plus dispatch); CI builds before tests", () => 
   expect(publish).toMatch(/--filter '@policy-semver\/core' publish/);
   expect(publish).toMatch(/--filter policy-semver publish/);
   expect(publish).toMatch(/run: pnpm build/);
+  expect(publish).toMatch(/run: pnpm test\n/);
   expect(publish).not.toMatch(/^\s+registry-url:/m);
   expect(publish).not.toMatch(/secrets\.(NPM_TOKEN|NODE_AUTH_TOKEN)/);
   expect(publish).not.toMatch(/branches:\s*\[/);

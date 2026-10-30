@@ -16,12 +16,7 @@ export {
   runWriteRelease,
 } from "./write-release.js";
 
-/** @deprecated use runAction */
-export async function run(): Promise<void> {
-  await runAction();
-}
-
-// ncc entry: only when GitHub Actions executes the bundle
+// Bundle entry: only when GitHub Actions executes the bundle
 if (process.env.GITHUB_ACTIONS === "true") {
   runAction().catch((err) => {
     core.setFailed(err instanceof Error ? err.message : String(err));
