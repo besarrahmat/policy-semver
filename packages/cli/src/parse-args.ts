@@ -6,6 +6,7 @@ export type GlobalFlags = {
 
 export type ParsedCli =
   | { command: "help" }
+  | { command: "version" }
   | { command: "classify"; flags: GlobalFlags; title?: string }
   | {
       command: "bump";
@@ -13,6 +14,7 @@ export type ParsedCli =
       dryRun: boolean;
       write: boolean;
       force: boolean;
+      title?: string;
     }
   | { command: "verify"; flags: GlobalFlags }
   | { command: "test"; flags: GlobalFlags };
@@ -31,6 +33,9 @@ export function parseArgs(argv: string[]): ParsedCli {
   const args = argv.slice(2).filter((a) => a !== "--");
   if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
     return { command: "help" };
+  }
+  if (args[0] === "--version" || args[0] === "-V") {
+    return { command: "version" };
   }
   const command = args[0];
   const rest = args.slice(1);
@@ -70,7 +75,14 @@ export function parseArgs(argv: string[]): ParsedCli {
       ...(title !== undefined ? { title } : {}),
     };
   if (command === "bump")
-    return { command: "bump", flags, dryRun, write, force };
+    return {
+      command: "bump",
+      flags,
+      dryRun,
+      write,
+      force,
+      ...(title !== undefined ? { title } : {}),
+    };
   if (command === "verify") return { command: "verify", flags };
   if (command === "test") return { command: "test", flags };
   if (command === "help") return { command: "help" };

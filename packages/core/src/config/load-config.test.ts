@@ -1,3 +1,5 @@
+import { mkdtemp, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -12,7 +14,40 @@ function fixture(...parts: string[]): string {
   return path.join(repoRoot, "fixtures", "config", ...parts);
 }
 
+async function configFile(content: object): Promise<string> {
+  const dir = await mkdtemp(path.join(tmpdir(), "ps-config-"));
+  const file = path.join(dir, "versioning.config.json");
+  await writeFile(file, JSON.stringify(content));
+  return file;
+}
+
 describe("loadConfig", () => {
+  it("names the unknown key", async () => {
+    await expect(
+      loadConfig(await configFile({ schemaVersion: "1", prodBranchh: "x" })),
+    ).rejects.toThrow(/unknown key "prodBranchh"/);
+  });
+
+  it("allows $schema so editors can validate the file", async () => {
+    const config = await loadConfig(
+      await configFile({ $schema: "./schema.json", schemaVersion: "1" }),
+    );
+    expect(config.schemaVersion).toBe("1");
+  });
+
+  it.each(["-x", "v 1"])("rejects tagPrefix %j", async (tagPrefix) => {
+    await expect(
+      loadConfig(await configFile({ schemaVersion: "1", tagPrefix })),
+    ).rejects.toThrow(/tagPrefix/);
+  });
+
+  it.each(["", "v", "release/v"])("allows tagPrefix %j", async (tagPrefix) => {
+    const config = await loadConfig(
+      await configFile({ schemaVersion: "1", tagPrefix }),
+    );
+    expect(config.tagPrefix).toBe(tagPrefix);
+  });
+
   it("loads minimal config and applies defaults", async () => {
     const config = await loadConfig(fixture("valid", "minimal.json"));
 

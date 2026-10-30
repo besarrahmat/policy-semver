@@ -14,6 +14,7 @@ import {
   readVersion,
   readVersionAtRef,
   reconcileRelease,
+  redactSecrets,
   runHook,
   syncToRemoteBranch,
   toVersionFiles,
@@ -39,6 +40,19 @@ function failWrite(err: unknown): void {
   core.setFailed(writeFailureMessage(err));
 }
 
+function errorText(err: unknown): string {
+  return redactSecrets(err instanceof Error ? err.message : String(err));
+}
+
+/** Reporting must not fail a job whose release already succeeded. */
+async function writeJobSummary(text: string): Promise<void> {
+  try {
+    await core.summary.addHeading("PolicySemVer", 3).addCodeBlock(text).write();
+  } catch (err) {
+    core.warning(`could not write the job summary: ${errorText(err)}`);
+  }
+}
+
 /** `versionFiles` may name a file the repo does not have; `git add` would refuse it. */
 async function existingPaths(cwd: string, rels: string[]): Promise<string[]> {
   const checked = await Promise.all(
@@ -62,6 +76,7 @@ export async function runAction(): Promise<void> {
     core.getInput("token") ||
     process.env.GITHUB_TOKEN ||
     "";
+  if (token) core.setSecret(token);
 
   const cwd = process.env.GITHUB_WORKSPACE || process.cwd();
   let config = await loadConfig(path.join(cwd, configPath));
@@ -111,9 +126,13 @@ export async function runAction(): Promise<void> {
     forceDryRun,
   });
 
+  core.setOutput("tag", "");
+  core.setOutput("released", "false");
+
   if (decision.mode === "skip") {
     core.setOutput("kind", "none");
     core.setOutput("next-version", "");
+    core.setOutput("current-version", "");
     core.setOutput("skipped-reason", decision.reason);
     core.info(`mode: skip\nskipped: ${decision.reason}`);
     return;
@@ -204,10 +223,13 @@ export async function runAction(): Promise<void> {
         });
         core.setOutput("kind", released.kind);
         core.setOutput("next-version", done.version);
+        core.setOutput("current-version", done.version);
         core.setOutput("skipped-reason", "");
-        core.info(
-          `mode: write\nPR already released as ${done.tag}; GitHub Release ${done.releaseCreated ? "created" : "already present"}`,
-        );
+        core.setOutput("tag", done.tag);
+        core.setOutput("released", "true");
+        const finished = `mode: write\nPR already released as ${done.tag}; GitHub Release ${done.releaseCreated ? "created" : "already present"}`;
+        core.info(finished);
+        await writeJobSummary(finished);
         return;
       }
     } catch (err) {
@@ -225,12 +247,14 @@ export async function runAction(): Promise<void> {
   const currentVersion = fromProd ?? (await readVersion({ cwd, files }));
   const envMajor = parseEnvMajor(config.majorEnv, process.env[config.majorEnv]);
 
-  let kind = classify({
+  const classified = classify({
     commits,
     ...(pr?.title !== undefined ? { prTitle: pr.title } : {}),
     currentVersion,
     envMajor,
-  }).kind;
+  });
+  for (const warning of classified.warnings) core.warning(warning);
+  let kind = classified.kind;
 
   if (decision.mode === "force-none" || guards.forceKindNone) {
     kind = "none";
@@ -244,6 +268,7 @@ export async function runAction(): Promise<void> {
 
   core.setOutput("kind", kind);
   core.setOutput("next-version", kind === "none" ? "" : nextVersion);
+  core.setOutput("current-version", currentVersion);
   core.setOutput("skipped-reason", skippedReason);
 
   const summary = [
@@ -251,7 +276,7 @@ export async function runAction(): Promise<void> {
     `kind: ${kind}`,
     `current: ${currentVersion}`,
     `next: ${nextVersion}`,
-    skippedReason ? `skipped: ${skippedReason}` : "write: pending/ok",
+    ...(skippedReason ? [`skipped: ${skippedReason}`] : []),
   ].join("\n");
 
   if (
@@ -259,17 +284,23 @@ export async function runAction(): Promise<void> {
     octokit &&
     pr?.number
   ) {
-    await upsertStickyComment({
-      octokit,
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      issueNumber: pr.number,
-      body: `### PolicySemVer (dry-run)\n\`\`\`\n${summary}\n\`\`\``,
-    });
+    // Fork PRs get a read-only token, so a dry-run must survive a refused comment.
+    try {
+      await upsertStickyComment({
+        octokit,
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        issueNumber: pr.number,
+        body: `### PolicySemVer (dry-run)\n\`\`\`\n${summary}\n\`\`\``,
+      });
+    } catch (err) {
+      core.warning(`could not write the PR comment: ${errorText(err)}`);
+    }
   }
 
   if (!allowWrite || kind === "none") {
     core.info(summary);
+    await writeJobSummary(summary);
     return;
   }
 
@@ -311,7 +342,7 @@ export async function runAction(): Promise<void> {
     );
 
     if (wrote.wrote || changelog.wrote) {
-      await runWriteRelease({
+      const result = await runWriteRelease({
         kind,
         ...(pr ? { prNumber: pr.number } : {}),
         cwd,
@@ -328,8 +359,16 @@ export async function runAction(): Promise<void> {
           afterRelease: config.hooks.afterRelease,
         },
       });
+      if (!result.skipped) {
+        core.setOutput("tag", result.tag);
+        core.setOutput("released", "true");
+        const released = `${summary}\nreleased: ${result.tag}`;
+        core.info(released);
+        await writeJobSummary(released);
+      }
     }
   } catch (err) {
     failWrite(err);
+    await writeJobSummary(`${summary}\nfailed: ${errorText(err)}`);
   }
 }

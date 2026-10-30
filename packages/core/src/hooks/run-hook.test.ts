@@ -136,4 +136,33 @@ describe("failing beforeBump never writes / never tags", () => {
     expect(env?.INPUT_TOKEN).toBeUndefined();
     expect(env?.KEEP_ME).toBe("kept");
   });
+
+  it("redacts secrets in hook output and failures", async () => {
+    const secret = `ghp_${"a".repeat(36)}`;
+    const write = vi.spyOn(process.stdout, "write").mockReturnValue(true);
+    const base = {
+      name: "afterRelease" as const,
+      command: "x",
+      cwd: "/tmp",
+      version: "1.0.0",
+      kind: "patch" as const,
+      dryRun: false,
+    };
+
+    await runHook({
+      ...base,
+      exec: async () => ({ stdout: `leak ${secret}`, stderr: "" }),
+    });
+    expect(write).toHaveBeenCalledWith("leak [REDACTED]");
+    write.mockRestore();
+
+    await expect(
+      runHook({
+        ...base,
+        exec: async () => {
+          throw new Error(`boom ${secret}`);
+        },
+      }),
+    ).rejects.toThrow("boom [REDACTED]");
+  });
 });

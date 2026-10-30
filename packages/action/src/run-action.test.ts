@@ -14,6 +14,12 @@ const mocks = vi.hoisted(() => ({
     setFailed: vi.fn(),
     info: vi.fn(),
     warning: vi.fn(),
+    setSecret: vi.fn(),
+    summary: {
+      addHeading: vi.fn().mockReturnThis(),
+      addCodeBlock: vi.fn().mockReturnThis(),
+      write: vi.fn(),
+    },
   },
   context: {
     eventName: "pull_request",
@@ -95,7 +101,9 @@ function setEvent(action: string, pr: Record<string, unknown>): void {
 }
 
 function output(name: string): unknown {
-  return mocks.core.setOutput.mock.calls.find((c) => c[0] === name)?.[1];
+  return mocks.core.setOutput.mock.calls
+    .filter((c) => c[0] === name)
+    .at(-1)?.[1];
 }
 
 async function remoteTags(remote: string): Promise<string[]> {
@@ -106,6 +114,8 @@ async function remoteTags(remote: string): Promise<string[]> {
 describe("runAction", { timeout: 30_000 }, () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.core.summary.addHeading.mockReturnThis();
+    mocks.core.summary.addCodeBlock.mockReturnThis();
     delete process.env.POLICY_SEMVER_TOKEN;
     delete process.env.APP_VERSION_MAJOR;
     delete process.env.MARKER;
@@ -223,6 +233,72 @@ describe("runAction", { timeout: 30_000 }, () => {
     expect(await git(remote, "show", "main:VERSION")).toBe("1.1.0");
     expect(await remoteTags(remote)).toEqual(["v1.1.0"]);
     expect(mocks.octokit.rest.repos.createRelease).toHaveBeenCalledOnce();
+    expect(output("tag")).toBe("v1.1.0");
+    expect(output("released")).toBe("true");
+    expect(output("current-version")).toBe("1.0.0");
+    expect(mocks.core.setSecret).toHaveBeenCalledWith("test-token");
+    expect(mocks.core.summary.addCodeBlock.mock.lastCall?.[0]).toContain(
+      "released: v1.1.0",
+    );
+  });
+
+  it("reports a failed release in the outputs and summary", async () => {
+    const remote = await makeRemote();
+    await workspace(remote);
+    mocks.octokit.rest.repos.createRelease.mockRejectedValueOnce(
+      new Error("502"),
+    );
+    setEvent("closed", pullRequest({ merged: true }));
+
+    await runAction();
+
+    expect(output("released")).toBe("false");
+    expect(mocks.core.setFailed.mock.calls[0]?.[0]).toContain(
+      "GitHub Release: 502",
+    );
+    expect(mocks.core.summary.addCodeBlock.mock.lastCall?.[0]).toContain(
+      "failed: GitHub Release: 502",
+    );
+  });
+
+  it("still succeeds when the job summary cannot be written", async () => {
+    const remote = await makeRemote();
+    await workspace(remote);
+    mocks.core.summary.write.mockRejectedValueOnce(new Error("no file"));
+    setEvent("closed", pullRequest({ merged: true }));
+
+    await runAction();
+
+    expect(mocks.core.setFailed).not.toHaveBeenCalled();
+    expect(mocks.core.warning).toHaveBeenCalledOnce();
+    expect(output("released")).toBe("true");
+  });
+
+  it("surfaces a breaking marker as a warning", async () => {
+    const remote = await makeRemote();
+    await workspace(remote);
+    setEvent("opened", pullRequest({ title: "feat!: drop thing" }));
+
+    await runAction();
+
+    expect(mocks.core.warning.mock.calls[0]?.[0]).toMatch(/Breaking change/);
+  });
+
+  it("keeps a dry-run green when the PR comment is refused", async () => {
+    const remote = await makeRemote();
+    await workspace(remote);
+    mocks.octokit.rest.issues.listComments.mockRejectedValueOnce(
+      new Error("Resource not accessible by integration"),
+    );
+    setEvent(
+      "opened",
+      pullRequest({ head: { ref: "f", repo: { full_name: "someone/r" } } }),
+    );
+
+    await runAction();
+
+    expect(mocks.core.setFailed).not.toHaveBeenCalled();
+    expect(mocks.core.warning.mock.calls[0]?.[0]).toMatch(/PR comment/);
   });
 
   it("forces none for a skip label", async () => {

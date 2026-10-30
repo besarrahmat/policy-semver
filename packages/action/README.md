@@ -13,7 +13,7 @@ Consumer install (dry-run in under 15 minutes): root [README quickstart](../../R
 | Runtime     | `runs.using: node24` — do **not** regress to `node20`                                                                                                                                     |
 | Bundle      | Runners never `npm install` Action deps → **commit** the bundle                                                                                                                           |
 | Bundler     | **tsup** (esbuild) CJS → root `dist/index.js`. ncc failed (`TS6059` / [ncc#1297](https://github.com/vercel/ncc/issues/1297))                                                              |
-| Versioning  | Consumers pin **commit SHA** (preferred) or a moving major tag (`v0` / `v1`); avoid `@main` / `@dev` in prod                                                                              |
+| Versioning  | Consumers pin **commit SHA** (preferred) or a release tag (`@v1.0.0`); avoid `@main` / `@dev` in prod                                                                                     |
 
 Code locks: [`src/locks.ts`](./src/locks.ts), [`src/marketplace-locks.ts`](./src/marketplace-locks.ts).
 
@@ -35,7 +35,7 @@ See root [`action.yml`](../../action.yml): `config-path`, `dry-run`, `token` →
 
 ## Pin the Action (not npm)
 
-This Action is distributed as **git** (`uses: org/policy-semver@<sha>` preferred, or moving major tag after release). **Do not** `npm install` / `npx` it — npm is the CLI (`policy-semver`), not the Action.
+This Action is distributed as **git** (`uses: org/policy-semver@<sha>` preferred, or a release tag). **Do not** `npm install` / `npx` it — npm is the CLI (`policy-semver`), not the Action.
 
 ## Concurrency (required on write workflows)
 
@@ -116,7 +116,9 @@ Requires `fetch-depth: 0` on `actions/checkout`. A shallow checkout fails before
 | `contents: write`            | Create commit, annotated tag, GitHub Release                                                     |
 | Push to **protected** branch | Token/actor must be allowed (ruleset bypass, or a bot that can push) — otherwise push fails loud |
 
-Wire Octokit via `@actions/github` `getOctokit(token)` (locked in core `GITHUB_RELEASE_CLIENT.action`). Prefer `github.token` or a PAT stored as a secret — never log the token or pre-redact release bodies.
+The Action's `token` input and `POLICY_SEMVER_TOKEN` reach the GitHub API only (Release, PR comment). `git push` uses the credentials of `actions/checkout`, so a push blocked by branch protection is fixed with `token:` on the checkout step.
+
+Wire Octokit via `@actions/github` `getOctokit(token)` (locked in core `GITHUB_RELEASE_CLIENT.action`). Prefer `github.token` or a PAT stored as a secret — never log the token or pre-redact release bodies. Hooks do not receive this token.
 
 ## Permissions (least privilege)
 

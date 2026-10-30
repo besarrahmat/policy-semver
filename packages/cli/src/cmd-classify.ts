@@ -13,7 +13,7 @@ export async function cmdClassify(input: {
   title?: string;
   commits: { subject: string; body?: string }[];
 }): Promise<void> {
-  const configPath = path.join(input.flags.cwd, input.flags.config);
+  const configPath = path.resolve(input.flags.cwd, input.flags.config);
   const config = await loadConfig(configPath);
   const files = toVersionFiles(config.versionFiles);
   const currentVersion = await readVersion({

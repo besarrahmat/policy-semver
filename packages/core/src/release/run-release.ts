@@ -61,6 +61,16 @@ export type RunReleaseResult =
       released: true;
     };
 
+/** Name the failed step: an API error alone ("502") does not say what was happening. */
+async function step(name: string, run: () => Promise<void>): Promise<void> {
+  try {
+    await run();
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    throw new Error(`${name}: ${detail}`, { cause: err });
+  }
+}
+
 /** A consumer may gitignore the audit file; `git add` would refuse it. */
 async function isGitIgnored(
   cwd: string,
@@ -117,20 +127,24 @@ export async function runRelease(
   const auditPath = lastReleaseRelPath();
   const auditIgnored = await isGitIgnored(input.cwd, auditPath, input.exec);
 
-  await commit({
-    cwd: input.cwd,
-    message,
-    paths: auditIgnored ? input.paths : [...input.paths, auditPath],
-    ...(input.exec !== undefined ? { exec: input.exec } : {}),
-  });
+  await step("commit", () =>
+    commit({
+      cwd: input.cwd,
+      message,
+      paths: auditIgnored ? input.paths : [...input.paths, auditPath],
+      ...(input.exec !== undefined ? { exec: input.exec } : {}),
+    }),
+  );
 
-  await tagFn({
-    cwd: input.cwd,
-    tag,
-    message: tag,
-    ...(input.remote !== undefined ? { remote: input.remote } : {}),
-    ...(input.exec !== undefined ? { exec: input.exec } : {}),
-  });
+  await step("tag", () =>
+    tagFn({
+      cwd: input.cwd,
+      tag,
+      message: tag,
+      ...(input.remote !== undefined ? { remote: input.remote } : {}),
+      ...(input.exec !== undefined ? { exec: input.exec } : {}),
+    }),
+  );
 
   if (input.hooks) {
     await runHook({
@@ -148,20 +162,24 @@ export async function runRelease(
   // branch name would miss the bump commit.
   const branchRef = `HEAD:${input.branch}`;
 
-  await push({
-    cwd: input.cwd,
-    refs: [branchRef, tag],
-    ...(input.remote !== undefined ? { remote: input.remote } : {}),
-    ...(input.exec !== undefined ? { exec: input.exec } : {}),
-  });
+  await step("push", () =>
+    push({
+      cwd: input.cwd,
+      refs: [branchRef, tag],
+      ...(input.remote !== undefined ? { remote: input.remote } : {}),
+      ...(input.exec !== undefined ? { exec: input.exec } : {}),
+    }),
+  );
 
-  await release({
-    owner: input.owner,
-    repo: input.repo,
-    tag,
-    body: input.sectionMarkdown,
-    octokit: input.octokit,
-  });
+  await step("GitHub Release", () =>
+    release({
+      owner: input.owner,
+      repo: input.repo,
+      tag,
+      body: input.sectionMarkdown,
+      octokit: input.octokit,
+    }),
+  );
 
   if (input.hooks) {
     await runHook({

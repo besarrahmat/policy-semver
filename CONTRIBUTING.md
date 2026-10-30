@@ -56,11 +56,14 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) subject lines, 
 ## Before you push
 
 ```bash
+pnpm build
 pnpm test
 pnpm test:fixtures
 pnpm typecheck
 pnpm lint
 ```
+
+Build first: tests import `@policy-semver/core` from its `dist/`, so a clean clone fails without it.
 
 CI (`.github/workflows/ci.yml`) runs the same unit + golden layers on every PR to `dev` (and `main`).
 
@@ -78,7 +81,7 @@ Keep these layers green on every PR to `dev`. Do not delete files under `fixture
 
 ## Config
 
-`versioning.config.json` is fail-closed: **unknown keys fail validation**. v1 **omits** `workspaces` (no path-filter, no package graph) — that key fails closed until a 0.2 schema update. Breaking config changes bump `schemaVersion` (currently `"1"`) and document the migration here and in the README Configuration table. Extend `schemas/versioning.config.schema.json` (then sync the package embed) before adding new keys. Never "warn and continue" on unknown policy fields.
+`versioning.config.json` is fail-closed: **unknown keys fail validation**. v1 **omits** `workspaces` (no path-filter, no package graph) — that key fails closed until a schema update adds it. Breaking config changes bump `schemaVersion` (currently `"1"`) and document the migration here and in the README Configuration table. Extend `schemas/versioning.config.schema.json` (then sync the package embed) before adding new keys. Never "warn and continue" on unknown policy fields.
 
 ## Schema embed
 
@@ -92,12 +95,14 @@ diff schemas/versioning.config.schema.json packages/core/src/config/versioning.c
 
 Expect empty `diff` (exit 0).
 
-**Pick (locked):** wire **both** `prebuild` hooks — do not rely on CI-only sync:
+**Pick (locked):** wire a `prebuild` hook everywhere the schema is used — do not rely on CI-only sync:
 
-| Hook                                    | Where               | When it runs                                |
-| --------------------------------------- | ------------------- | ------------------------------------------- |
-| `"prebuild": "pnpm sync:schema"`        | root `package.json` | Before root `pnpm build`                    |
-| `"prebuild": "pnpm -w run sync:schema"` | `packages/cli`      | Before `pnpm --filter ./packages/cli build` |
+| Hook                                    | Where               | When it runs                                   |
+| --------------------------------------- | ------------------- | ---------------------------------------------- |
+| `"prebuild": "pnpm sync:schema"`        | root `package.json` | Before root `pnpm build`                       |
+| `"prebuild": "pnpm -w run sync:schema"` | `packages/cli`      | Before `pnpm --filter ./packages/cli build`    |
+| `"prebuild": "pnpm -w run sync:schema"` | `packages/core`     | Before `pnpm --filter ./packages/core build`   |
+| `"prebuild": "pnpm -w run sync:schema"` | `packages/action`   | Before `pnpm --filter ./packages/action build` |
 
 Root script `"sync:schema"` copies canonical → embed. Always run sync (or a build that triggers `prebuild`) after editing the schema.
 
