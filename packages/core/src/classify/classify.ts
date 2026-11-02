@@ -4,6 +4,7 @@ import {
   hasBreakingFooter,
   isConventionalSubject,
   isMergeSubject,
+  looksLikeFeat,
   normalizeSubject,
   subjectType,
 } from "./subject.js";
@@ -81,6 +82,11 @@ export function classify(input: ClassifyInput): ClassifyResult {
 
   // 5) aggregate
   if (types.includes("feat")) return { kind: "minor", warnings };
+  for (const s of subjects.filter(looksLikeFeat)) {
+    warnings.push(
+      `"${s}" looks like a feature but is not a conventional feat: subject; it counts as a patch`,
+    );
+  }
   if (types.some((t) => t !== "docs")) return { kind: "patch", warnings };
   return { kind: "none", warnings };
 }

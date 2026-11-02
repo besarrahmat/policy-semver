@@ -179,3 +179,30 @@ describe("classify", () => {
     ).toThrow(/envMajor 0 is below current major 1/);
   });
 });
+
+describe("subjects that look like a feature", () => {
+  it.each([":sparkles: feat: x", "[JIRA-1] feat: x", "feat(a)(b): x"])(
+    "warns about %j and keeps it a patch",
+    (subject) => {
+      const result = classify({
+        commits: [{ subject }],
+        currentVersion: "1.0.0",
+        envMajor: null,
+      });
+      expect(result.kind).toBe("patch");
+      expect(result.warnings.join()).toContain("looks like a feature");
+    },
+  );
+
+  it.each(["chore: feat: x", 'Revert "feat: x"', "defeat: x", "wip"])(
+    "does not warn about %j",
+    (subject) => {
+      const { warnings } = classify({
+        commits: [{ subject }],
+        currentVersion: "1.0.0",
+        envMajor: null,
+      });
+      expect(warnings).toEqual([]);
+    },
+  );
+});

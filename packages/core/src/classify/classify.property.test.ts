@@ -49,7 +49,7 @@ describe("classify invariants", () => {
     );
   });
 
-  it.fails("whitespace and emoji around a subject do not change its type", () => {
+  it("whitespace and emoji around a subject do not change its type", () => {
     const decoration = fc.constantFrom(
       "",
       " ",

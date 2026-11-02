@@ -94,6 +94,11 @@ export async function reconcileRelease(input: ReconcileInput): Promise<{
       `release commit ${sha} is on the branch but tag ${tag} is missing on the remote; restore the tag, then rerun`,
     );
   }
+  if (tagSha !== sha) {
+    throw new Error(
+      `tag ${tag} points at ${tagSha}, not release commit ${sha}; a human must decide which is right`,
+    );
+  }
 
   const target = {
     owner: input.owner,
@@ -107,10 +112,13 @@ export async function reconcileRelease(input: ReconcileInput): Promise<{
       ["show", `${sha}:${input.changelogPath}`],
       { cwd: input.cwd },
     );
-    await createGitHubRelease({
-      ...target,
-      body: extractReleaseSection(changelog, version),
-    });
+    const body = extractReleaseSection(changelog, version);
+    if (body === "") {
+      throw new Error(
+        `${input.changelogPath} at ${sha} has no section for ${version}; refusing an empty Release`,
+      );
+    }
+    await createGitHubRelease({ ...target, body });
   }
 
   await runHook({

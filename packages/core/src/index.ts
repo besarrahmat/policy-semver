@@ -83,6 +83,7 @@ export {
   commitBumpFiles,
   createAnnotatedTag,
   defaultGitExec,
+  highestTagMajor,
   loadCommitsSinceLastTag,
   pushRefs,
   tagExists,

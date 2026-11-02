@@ -50,14 +50,18 @@ export function decideBumpGuards(ctx: BumpGuardContext): BumpGuardDecision {
   }
 
   // [skip version] (or configured trailers) ending a subject/body/title line, so
-  // prose that merely mentions the marker does not cancel a release.
+  // prose that merely mentions the marker does not cancel a release. GitHub's
+  // squash suffix may follow it; an unticked checkbox is an option, not a request.
   const trailers = ctx.skipTrailers ?? ["skip version"];
-  const patterns = trailers.map(
-    (t) => new RegExp(`\\[${escapeRegExp(t)}\\]\\s*$`, "im"),
-  );
+  const skipPattern = (marker: string) =>
+    new RegExp(
+      `^(?!\\s*[-*+]\\s+\\[ \\]\\s).*\\[${escapeRegExp(marker)}\\](?:\\s+\\(#\\d+\\))?\\s*$`,
+      "im",
+    );
+  const patterns = trailers.map(skipPattern);
   const trailerInner = BOT_SKIP_TRAILER.slice(1, -1);
   if (!trailers.some((t) => t.toLowerCase() === trailerInner.toLowerCase())) {
-    patterns.push(new RegExp(`\\[${escapeRegExp(trailerInner)}\\]\\s*$`, "im"));
+    patterns.push(skipPattern(trailerInner));
   }
 
   for (const text of ctx.textsForSkip ?? []) {

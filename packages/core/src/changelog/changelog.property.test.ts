@@ -64,7 +64,7 @@ describe("changelog invariants", () => {
     );
   });
 
-  it.fails("a release never disturbs the earlier ones or the next release", async () => {
+  it("a release never disturbs the earlier ones or the next release", async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.array(subject, { maxLength: 3 }),

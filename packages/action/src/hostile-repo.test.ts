@@ -273,7 +273,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
       expect(failure()).not.toContain("Rerunning this job is safe");
     });
 
-    it.fails("a PR that edits VERSION to a new major does not release without the env (I3)", async () => {
+    it("a PR that edits VERSION to a new major does not release without the env (I3)", async () => {
       const remote = await makeRemote(app());
       await git(remote, "tag", "v1.0.0", "main");
       await land(remote, { VERSION: "5.0.0\n" });
@@ -327,7 +327,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
       await git(seed, "push", "--quiet", "origin", "main");
     }
 
-    it.fails("refuses a tag that points away from the bump commit", async () => {
+    it("refuses a tag that points away from the bump commit", async () => {
       const remote = await makeRemote(app());
       await git(remote, "tag", "v1.1.0", "main");
       await botCommit(remote, {
@@ -340,7 +340,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
       expect(mocks.octokit.rest.repos.createRelease).not.toHaveBeenCalled();
     });
 
-    it.fails("refuses to publish an empty Release (I5)", async () => {
+    it("refuses to publish an empty Release (I5)", async () => {
       const remote = await makeRemote(app());
       await botCommit(remote, {
         VERSION: "1.1.0\n",
@@ -355,7 +355,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
   });
 
   describe("text that reaches the changelog", () => {
-    it.fails("a subject quoting the next heading still writes the section", async () => {
+    it("a subject quoting the next heading still writes the section", async () => {
       const remote = await makeRemote(app());
       const cwd = await workspace(remote);
       await land(remote, {
@@ -369,7 +369,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
       );
     });
 
-    it.fails("a subject quoting conflict markers does not block the next release", async () => {
+    it("a subject quoting conflict markers does not block the next release", async () => {
       const remote = await makeRemote(app());
       await workspace(remote);
       commitsAre("fix: handle <<<<<<< and >>>>>>> in input");
@@ -407,7 +407,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
   });
 
   describe("skip markers and signals", () => {
-    it.fails("an unticked checkbox in the PR body does not cancel the release", async () => {
+    it("an unticked checkbox in the PR body does not cancel the release", async () => {
       const remote = await makeRemote(app());
       await workspace(remote);
       await merged({ body: "## Options\n- [ ] [skip version]\n" });
@@ -422,7 +422,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
       expect(await remoteTags(remote)).toEqual([]);
     });
 
-    it.fails("a squash suffix after the marker still skips", async () => {
+    it("a squash suffix after the marker still skips", async () => {
       const remote = await makeRemote(app());
       await workspace(remote);
       commitsAre("chore: x [skip version] (#12)");
@@ -430,7 +430,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
       expect(await remoteTags(remote)).toEqual([]);
     });
 
-    it.fails("a merged fork PR warns that it was not released (I7)", async () => {
+    it("a merged fork PR warns that it was not released (I7)", async () => {
       const remote = await makeRemote(app());
       await workspace(remote);
       await merged({

@@ -7,6 +7,7 @@ export function firstLine(text: string): string {
 export function normalizeSubject(subject: string): string {
   // Not \p{Emoji_Component}: it includes digits and `#`, so `123 feat: x` would read as feat.
   return subject
+    .trimStart()
     .replace(
       /^(?:\p{Extended_Pictographic}|\p{Emoji_Modifier}|\p{Regional_Indicator}|\uFE0F|\u200D)+\s*/u,
       "",
@@ -40,6 +41,14 @@ export function subjectType(normalized: string): SubjectType {
 /** `type:`, `type(scope):`, `type!:`. Expects a normalized subject. */
 export function isConventionalSubject(normalized: string): boolean {
   return /^[a-z]+(?:\s*&\s*[a-z]+)?(?:\s*\([^)]*\))?!?\s*:/i.test(normalized);
+}
+
+/** Reads as `other`, but its author probably meant a feature. Never changes the kind. */
+export function looksLikeFeat(normalized: string): boolean {
+  return (
+    !isConventionalSubject(normalized) &&
+    /(?:^|[\]:]\s*)feat\b[^:]*:/i.test(normalized)
+  );
 }
 
 export function hasBreakingBang(normalized: string): boolean {

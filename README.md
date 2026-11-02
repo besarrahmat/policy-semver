@@ -182,7 +182,7 @@ These are the rules that surprise people coming from other release bots. Classif
 | Sync prod → develop | `kind: none` — no bump, no tag (for example `main` → `dev`).                                                                                                                  |
 | 0.x                 | `APP_VERSION_MAJOR=0` until a human raises it. Feat stays minor, fix stays patch.                                                                                             |
 | Docs-only           | `docs:` / `docs(scope):` → `kind: none`.                                                                                                                                      |
-| Fork PR             | Sticky comment only — never write.                                                                                                                                            |
+| Fork PR             | Sticky comment only — never write. Merged: a warning, no release, and later releases do not include its commits.                                                              |
 
 ## Permissions and forks
 

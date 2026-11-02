@@ -31814,12 +31814,14 @@ function decideBumpGuards(ctx) {
     reasons.push("skip label");
   }
   const trailers = ctx.skipTrailers ?? ["skip version"];
-  const patterns = trailers.map(
-    (t) => new RegExp(`\\[${escapeRegExp(t)}\\]\\s*$`, "im")
+  const skipPattern = (marker) => new RegExp(
+    `^(?!\\s*[-*+]\\s+\\[ \\]\\s).*\\[${escapeRegExp(marker)}\\](?:\\s+\\(#\\d+\\))?\\s*$`,
+    "im"
   );
+  const patterns = trailers.map(skipPattern);
   const trailerInner = BOT_SKIP_TRAILER.slice(1, -1);
   if (!trailers.some((t) => t.toLowerCase() === trailerInner.toLowerCase())) {
-    patterns.push(new RegExp(`\\[${escapeRegExp(trailerInner)}\\]\\s*$`, "im"));
+    patterns.push(skipPattern(trailerInner));
   }
   for (const text of ctx.textsForSkip ?? []) {
     if (patterns.some((re) => re.test(text))) {
@@ -32052,7 +32054,7 @@ function firstLine(text) {
   return text.split("\n")[0] ?? "";
 }
 function normalizeSubject(subject) {
-  return subject.replace(
+  return subject.trimStart().replace(
     new RegExp("^(?:\\p{Extended_Pictographic}|\\p{Emoji_Modifier}|\\p{Regional_Indicator}|\\uFE0F|\\u200D)+\\s*", "u"),
     ""
   ).trim();
@@ -32073,6 +32075,9 @@ function subjectType(normalized) {
 function isConventionalSubject(normalized) {
   return /^[a-z]+(?:\s*&\s*[a-z]+)?(?:\s*\([^)]*\))?!?\s*:/i.test(normalized);
 }
+function looksLikeFeat(normalized) {
+  return !isConventionalSubject(normalized) && /(?:^|[\]:]\s*)feat\b[^:]*:/i.test(normalized);
+}
 function hasBreakingBang(normalized) {
   return /^[a-z]+(?:\s*&\s*[a-z]+)?(?:\s*\([^)]*\))?!\s*:/i.test(normalized);
 }
@@ -32080,7 +32085,10 @@ function hasBreakingFooter(text) {
   return /^BREAKING[ -]CHANGE:/im.test(text);
 }
 function bulletFromSubject(raw) {
-  const line = normalizeSubject(firstLine(raw));
+  const line = normalizeSubject(firstLine(raw)).replace(
+    /[\r\u2028\u2029]+/g,
+    " "
+  );
   const cleaned = line.replace(
     /^(?:feat\s*&\s*fix|feat|fix|docs|chore|refactor|test|ci|build|perf|style)(\([^)]*\))?!?\s*:\s*/i,
     ""
@@ -32221,7 +32229,8 @@ async function writeChangelog(input) {
   } catch (err) {
     if (err.code !== "ENOENT") throw err;
   }
-  if (previous?.includes(headingFor(input.version))) {
+  const heading = headingFor(input.version);
+  if (previous?.split(/\r?\n/).some((line) => line.startsWith(heading))) {
     return {
       wrote: false,
       reason: "already-present",
@@ -32230,7 +32239,7 @@ async function writeChangelog(input) {
     };
   }
   const next = previous === null ? DEFAULT_HEADER + sectionMarkdown : insertAfterUnreleasedOrHeader(previous, sectionMarkdown);
-  if (previous?.includes("<<<<<<<") || previous?.includes(">>>>>>>")) {
+  if (previous !== null && /^(?:<{7}|>{7})(?: |\r?$)/m.test(previous)) {
     throw new Error(`CHANGELOG conflict markers in ${abs}`);
   }
   const write = input.writeFile ?? import_promises5.writeFile;
@@ -32292,6 +32301,11 @@ function classify(input) {
   const types = subjects.map(subjectType);
   if (hasBreakingMarker(input)) warnings.push(BREAKING_WARNING);
   if (types.includes("feat")) return { kind: "minor", warnings };
+  for (const s of subjects.filter(looksLikeFeat)) {
+    warnings.push(
+      `"${s}" looks like a feature but is not a conventional feat: subject; it counts as a patch`
+    );
+  }
   if (types.some((t) => t !== "docs")) return { kind: "patch", warnings };
   return { kind: "none", warnings };
 }
@@ -32496,6 +32510,14 @@ async function tagExists(cwd, tag, exec = defaultGitExec) {
     return false;
   }
 }
+async function highestTagMajor(input) {
+  const { stdout } = await defaultGitExec(
+    ["tag", "-l", `${input.tagPrefix}[0-9]*`],
+    { cwd: input.cwd }
+  );
+  const majors = stdout.split("\n").map((tag) => tag.trim().slice(input.tagPrefix.length)).filter(isSemVerString).map((version) => parseSemVer(version).major);
+  return majors.length > 0 ? Math.max(...majors) : null;
+}
 async function assertTagAvailable(input) {
   const exec = input.exec ?? defaultGitExec;
   if (await tagExists(input.cwd, input.tag, exec)) {
@@ -32685,6 +32707,11 @@ async function reconcileRelease(input) {
       `release commit ${sha} is on the branch but tag ${tag} is missing on the remote; restore the tag, then rerun`
     );
   }
+  if (tagSha !== sha) {
+    throw new Error(
+      `tag ${tag} points at ${tagSha}, not release commit ${sha}; a human must decide which is right`
+    );
+  }
   const target = {
     owner: input.owner,
     repo: input.repo,
@@ -32697,10 +32724,13 @@ async function reconcileRelease(input) {
       ["show", `${sha}:${input.changelogPath}`],
       { cwd: input.cwd }
     );
-    await createGitHubRelease({
-      ...target,
-      body: extractReleaseSection(changelog, version)
-    });
+    const body = extractReleaseSection(changelog, version);
+    if (body === "") {
+      throw new Error(
+        `${input.changelogPath} at ${sha} has no section for ${version}; refusing an empty Release`
+      );
+    }
+    await createGitHubRelease({ ...target, body });
   }
   await runHook({
     name: "afterRelease",
@@ -33057,6 +33087,11 @@ async function runAction() {
   });
   setOutput("tag", "");
   setOutput("released", "false");
+  if (isFork && pr?.merged === true) {
+    warning(
+      `Fork PR #${pr.number} was merged but not released: a fork PR run has read-only access, and later releases will not include its commits. Follow up with a PR from this repository.`
+    );
+  }
   if (decision.mode === "skip") {
     setOutput("kind", "none");
     setOutput("next-version", "");
@@ -33210,6 +33245,16 @@ ${summary2}
     return;
   }
   try {
+    const tagMajor = await highestTagMajor({
+      cwd,
+      tagPrefix: config.tagPrefix
+    });
+    const currentMajor = parseSemVer(currentVersion).major;
+    if (envMajor === null && tagMajor !== null && currentMajor > tagMajor) {
+      throw new Error(
+        `version ${currentVersion} is a higher major than the latest tags (${tagMajor}.x), and a major only rises through ${config.majorEnv}. Set ${config.majorEnv}=${currentMajor} to accept it, or restore the version files`
+      );
+    }
     await assertTagAvailable({
       cwd,
       tag: `${config.tagPrefix}${nextVersion}`
