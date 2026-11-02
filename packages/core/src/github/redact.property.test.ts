@@ -32,7 +32,7 @@ const around = fc.constantFrom(
 );
 
 describe("redactSecrets invariants (I6)", () => {
-  it.fails("no token survives, whatever punctuation surrounds it", () => {
+  it("no token survives, whatever punctuation surrounds it", () => {
     fc.assert(
       fc.property(
         fc.string({ maxLength: 10 }),
@@ -67,7 +67,7 @@ describe("redactSecrets invariants (I6)", () => {
     );
   });
 
-  it.fails("leaves ordinary changelog prose alone", () => {
+  it("leaves ordinary changelog prose alone", () => {
     for (const prose of [
       "- Fixed Basic authentication",
       "- Bearer tokens are documented",

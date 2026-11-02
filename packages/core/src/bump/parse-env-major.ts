@@ -8,7 +8,8 @@ export function parseEnvMajor(
 ): number | null {
   if (raw === undefined || raw === "") return null;
   if (!/^\d+$/.test(raw)) {
-    throw new Error(`invalid ${name}=${JSON.stringify(raw)}`);
+    // Not the value: config picks `name`, so it could be any variable, even a secret.
+    throw new Error(`invalid ${name}: expected digits only`);
   }
   return Number(raw);
 }

@@ -32,11 +32,13 @@ export const SECRET_REDACT_PATTERNS: readonly RegExp[] = [
   /\bnpm_[A-Za-z0-9]{20,}\b/g,
   /\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/g,
   /\bxox[abprs]-[A-Za-z0-9-]{10,}/g,
-  /\bsk-ant-[A-Za-z0-9_-]{20,}/g,
+  /\bglpat-[A-Za-z0-9_-]{20,}/g,
+  /\bsk-[A-Za-z0-9_-]{20,}/g,
   /\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]*/g,
-  /\bBearer\s+[A-Za-z0-9._~+/=-]+/gi,
-  // Only as a header: "Basic authentication" is ordinary changelog prose.
-  /\bAuthorization:\s*Basic\s+[A-Za-z0-9+/=]+/gi,
+  // Token-shaped only: "Bearer tokens are documented" is ordinary changelog prose.
+  /\bBearer\s+(?:[A-Za-z.]*[0-9_~+/=-][A-Za-z0-9._~+/=-]*|[A-Za-z]{20,})/gi,
+  // Any value counts as a header: "Basic authentication" alone is prose.
+  /\bAuthorization:\s*(?:Basic|Bearer|token)\s+[A-Za-z0-9._~+/=-]+/gi,
   // Credentials in a git remote URL, as git prints them in error messages.
   /(?<=:\/\/)[^\s/:@]+:[^\s/@]+(?=@)/g,
 ];
