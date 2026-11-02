@@ -161,7 +161,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
   describe("version files", () => {
     const PKG = ["package.json"];
 
-    it.fails("keeps CRLF line endings in package.json", async () => {
+    it("keeps CRLF line endings in package.json", async () => {
       const raw = '{\r\n  "name": "a",\r\n  "version": "1.0.0"\r\n}\r\n';
       const remote = await makeRemote(
         app({ versionFiles: PKG }, { "package.json": raw }),
@@ -174,7 +174,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
       );
     });
 
-    it.fails("changes only the version in package.json", async () => {
+    it("changes only the version in package.json", async () => {
       const raw =
         '{\n\t"name": "caf\\u00e9",\n\t"version": "1.0.0",\n\t"2": "b",\n\t"1": "a"\n}';
       const remote = await makeRemote(
@@ -188,7 +188,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
       );
     });
 
-    it.fails("reads a package.json with a BOM", async () => {
+    it("reads a package.json with a BOM", async () => {
       const remote = await makeRemote(
         app(
           { versionFiles: PKG },
@@ -392,7 +392,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
       expect(failure()).toContain("conflict markers");
     });
 
-    it.fails("keeps CRLF line endings in the changelog", async () => {
+    it("keeps CRLF line endings in the changelog", async () => {
       const raw = "# Changelog\r\n\r\n## [1.0.0] - 2026-01-01\r\n\r\n- a\r\n";
       const remote = await makeRemote(app({}, { "CHANGELOG.md": raw }));
       const cwd = await workspace(remote);

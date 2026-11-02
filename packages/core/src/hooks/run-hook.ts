@@ -71,10 +71,17 @@ export async function runHook(input: RunHookInput): Promise<void> {
     if (stdout) process.stdout.write(redactSecrets(stdout));
     if (stderr) process.stderr.write(redactSecrets(stderr));
   } catch (err) {
-    const code = (err as { code?: number | string }).code ?? "unknown";
+    const { code, killed, stdout } = err as {
+      code?: number | string | null;
+      killed?: boolean;
+      stdout?: string;
+    };
+    // execFile's message already holds stderr, but not stdout.
+    if (stdout) process.stdout.write(redactSecrets(stdout));
     const detail = redactSecrets(
       err instanceof Error ? err.message : String(err),
     );
-    throw new Error(`hook ${input.name} failed (exit ${code}): ${detail}`);
+    const how = killed ? "timed out" : `exit ${code ?? "unknown"}`;
+    throw new Error(`hook ${input.name} failed (${how}): ${detail}`);
   }
 }

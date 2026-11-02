@@ -27414,11 +27414,15 @@ function parseSemVer(version) {
   if (!m) {
     throw new Error(`malformed version: ${JSON.stringify(version)}`);
   }
-  return {
+  const parts = {
     major: Number(m[1]),
     minor: Number(m[2]),
     patch: Number(m[3])
   };
+  if (!Object.values(parts).every(Number.isSafeInteger)) {
+    throw new Error(`version out of range: ${JSON.stringify(version)}`);
+  }
+  return parts;
 }
 function formatSemVer(parts) {
   return `${parts.major}.${parts.minor}.${parts.patch}`;
@@ -27434,6 +27438,46 @@ var defaultGitExec = async (args, opts) => {
   });
   return { stdout: String(stdout), stderr: String(stderr) };
 };
+function parsePackageJson(raw) {
+  return JSON.parse(raw.replace(/^\uFEFF/, ""));
+}
+async function tryReadVersionFile(cwd, rel) {
+  const p = import_path2.default.join(cwd, rel);
+  try {
+    const raw = (await (0, import_promises2.readFile)(p, "utf8")).trim();
+    if (!isSemVerString(raw)) {
+      throw new Error(`malformed VERSION at ${p}: ${JSON.stringify(raw)}`);
+    }
+    return formatSemVer(parseSemVer(raw));
+  } catch (err) {
+    if (err.code === "ENOENT") return null;
+    throw err;
+  }
+}
+async function tryReadPackageJsonVersion(cwd, rel) {
+  const p = import_path2.default.join(cwd, rel);
+  try {
+    const pkg = parsePackageJson(await (0, import_promises2.readFile)(p, "utf8"));
+    if (typeof pkg.version !== "string" || !isSemVerString(pkg.version)) {
+      throw new Error(`malformed package.json version at ${p}`);
+    }
+    return formatSemVer(parseSemVer(pkg.version));
+  } catch (err) {
+    if (err.code === "ENOENT") return null;
+    throw err;
+  }
+}
+async function readBothConfigured(cwd, versionFile, packageJson) {
+  const vf = await tryReadVersionFile(cwd, versionFile);
+  const pkg = await tryReadPackageJsonVersion(cwd, packageJson);
+  if (vf !== null && pkg !== null) {
+    assertDualSourceMatch(vf, pkg);
+    return vf;
+  }
+  if (vf !== null) return vf;
+  if (pkg !== null) return pkg;
+  throw new Error("readVersion: neither VERSION nor package.json found");
+}
 function parseVersionFile(raw, label) {
   const trimmed = raw.trim();
   if (!isSemVerString(trimmed)) {
@@ -27444,7 +27488,7 @@ function parseVersionFile(raw, label) {
   return formatSemVer(parseSemVer(trimmed));
 }
 function parsePackageVersion(raw, label) {
-  const pkg = JSON.parse(raw);
+  const pkg = parsePackageJson(raw);
   if (typeof pkg.version !== "string" || !isSemVerString(pkg.version)) {
     throw new Error(`malformed package.json version at ${label}`);
   }
@@ -27474,43 +27518,6 @@ async function readVersionAtRef(input) {
   if (pkg !== null) return pkg;
   return null;
 }
-async function tryReadVersionFile(cwd, rel) {
-  const p = import_path2.default.join(cwd, rel);
-  try {
-    const raw = (await (0, import_promises2.readFile)(p, "utf8")).trim();
-    if (!isSemVerString(raw)) {
-      throw new Error(`malformed VERSION at ${p}: ${JSON.stringify(raw)}`);
-    }
-    return formatSemVer(parseSemVer(raw));
-  } catch (err) {
-    if (err.code === "ENOENT") return null;
-    throw err;
-  }
-}
-async function tryReadPackageJsonVersion(cwd, rel) {
-  const p = import_path2.default.join(cwd, rel);
-  try {
-    const pkg = JSON.parse(await (0, import_promises2.readFile)(p, "utf8"));
-    if (typeof pkg.version !== "string" || !isSemVerString(pkg.version)) {
-      throw new Error(`malformed package.json version at ${p}`);
-    }
-    return formatSemVer(parseSemVer(pkg.version));
-  } catch (err) {
-    if (err.code === "ENOENT") return null;
-    throw err;
-  }
-}
-async function readBothConfigured(cwd, versionFile, packageJson) {
-  const vf = await tryReadVersionFile(cwd, versionFile);
-  const pkg = await tryReadPackageJsonVersion(cwd, packageJson);
-  if (vf !== null && pkg !== null) {
-    assertDualSourceMatch(vf, pkg);
-    return vf;
-  }
-  if (vf !== null) return vf;
-  if (pkg !== null) return pkg;
-  throw new Error("readVersion: neither VERSION nor package.json found");
-}
 async function writeVersionFile(cwd, rel, nextVersion) {
   await (0, import_promises3.writeFile)(import_path3.default.join(cwd, rel), `${nextVersion}
 `, "utf8");
@@ -27518,11 +27525,16 @@ async function writeVersionFile(cwd, rel, nextVersion) {
 async function writePackageJsonVersion(cwd, rel, nextVersion) {
   const p = import_path3.default.join(cwd, rel);
   const raw = await (0, import_promises3.readFile)(p, "utf8");
-  const pkg = JSON.parse(raw);
-  pkg.version = nextVersion;
-  const indent = /^[ \t]+(?=")/m.exec(raw)?.[0] ?? 2;
-  await (0, import_promises3.writeFile)(p, `${JSON.stringify(pkg, null, indent)}
-`, "utf8");
+  await (0, import_promises3.writeFile)(p, withPackageVersion(raw, nextVersion), "utf8");
+}
+function withPackageVersion(raw, nextVersion) {
+  for (const match of raw.matchAll(/("version"\s*:\s*)"[^"]*"/g)) {
+    const end = match.index + match[0].length;
+    const edited = `${raw.slice(0, match.index)}${match[1]}"${nextVersion}"${raw.slice(end)}`;
+    const pkg = parsePackageJson(edited);
+    if (pkg.version === nextVersion) return edited;
+  }
+  throw new Error('package.json has no top-level "version" string');
 }
 async function snapshotFiles(cwd, rels) {
   return Promise.all(
@@ -27533,7 +27545,7 @@ async function snapshotFiles(cwd, rels) {
   );
 }
 async function restoreFiles(cwd, prev) {
-  await Promise.all(
+  await Promise.allSettled(
     prev.map((p) => (0, import_promises3.writeFile)(import_path3.default.join(cwd, p.rel), p.content, "utf8"))
   );
 }
@@ -27669,7 +27681,7 @@ function escapeRegExp(s) {
 }
 function parseEnvMajor(name, raw) {
   if (raw === void 0 || raw === "") return null;
-  if (!/^\d+$/.test(raw)) {
+  if (!/^\d+$/.test(raw) || !Number.isSafeInteger(Number(raw))) {
     throw new Error(`invalid ${name}: expected digits only`);
   }
   return Number(raw);
@@ -27797,7 +27809,7 @@ async function writeSingleSource(cwd, nextVersion, kind, rel, extras) {
     return { nextVersion, wrote: true, reason: "written" };
   }
   const raw = await (0, import_promises4.readFile)(import_path5.default.join(cwd, rel), "utf8");
-  const pkg = JSON.parse(raw);
+  const pkg = parsePackageJson(raw);
   if (pkg.version === nextVersion && !extrasStale) {
     return { nextVersion, wrote: false, reason: "already-current" };
   }
@@ -28071,7 +28083,8 @@ async function writeChangelog(input) {
       sectionMarkdown
     };
   }
-  const next = previous === null ? DEFAULT_HEADER + sectionMarkdown : insertAfterUnreleasedOrHeader(previous, sectionMarkdown);
+  const merged = previous === null ? DEFAULT_HEADER + sectionMarkdown : insertAfterUnreleasedOrHeader(previous, sectionMarkdown);
+  const next = previous?.includes("\r\n") ? merged.replace(/\r?\n/g, "\r\n") : merged;
   if (previous !== null && /^(?:<{7}|>{7})(?: |\r?$)/m.test(previous)) {
     throw new Error(`CHANGELOG conflict markers in ${abs}`);
   }
@@ -28330,7 +28343,13 @@ async function loadCommitsSinceLastTag(cwd, tagPrefix, exec = defaultGitExec) {
     ],
     { cwd }
   );
-  return stdout.split("").map((chunk) => chunk.replace(/^\n+/, "").trimEnd()).filter(Boolean).map((chunk) => {
+  const chunks = stdout.split("");
+  if (chunks.length > MAX_COMMITS) {
+    console.warn(
+      `only the latest ${MAX_COMMITS} commits were classified; older ones may be missed`
+    );
+  }
+  return chunks.map((chunk) => chunk.replace(/^\n+/, "").trimEnd()).filter(Boolean).map((chunk) => {
     const [subjectRaw, bodyRaw = ""] = chunk.split("\0");
     const subject = (subjectRaw ?? "").trim();
     const body = bodyRaw.trim();
@@ -28507,11 +28526,13 @@ async function runHook(input) {
     if (stdout) process.stdout.write(redactSecrets(stdout));
     if (stderr) process.stderr.write(redactSecrets(stderr));
   } catch (err) {
-    const code = err.code ?? "unknown";
+    const { code, killed, stdout } = err;
+    if (stdout) process.stdout.write(redactSecrets(stdout));
     const detail = redactSecrets(
       err instanceof Error ? err.message : String(err)
     );
-    throw new Error(`hook ${input.name} failed (exit ${code}): ${detail}`);
+    const how = killed ? "timed out" : `exit ${code ?? "unknown"}`;
+    throw new Error(`hook ${input.name} failed (${how}): ${detail}`);
   }
 }
 function extractReleaseSection(changelog, version) {

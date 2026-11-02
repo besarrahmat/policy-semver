@@ -22,11 +22,16 @@ export function parseSemVer(version: string): SemVerParts {
   if (!m) {
     throw new Error(`malformed version: ${JSON.stringify(version)}`);
   }
-  return {
+  const parts = {
     major: Number(m[1]),
     minor: Number(m[2]),
     patch: Number(m[3]),
   };
+  // Past this, Number rounds the version, or prints it as `1e+21`.
+  if (!Object.values(parts).every(Number.isSafeInteger)) {
+    throw new Error(`version out of range: ${JSON.stringify(version)}`);
+  }
+  return parts;
 }
 
 /** Format parts back to `X.Y.Z`. */
