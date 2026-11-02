@@ -87,7 +87,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
 
   describe("consumer git setup", () => {
     for (const hook of ["pre-commit", "commit-msg", "pre-push"]) {
-      it.fails(`a failing ${hook} hook (husky, commitlint) does not stop the release`, async () => {
+      it(`a failing ${hook} hook (husky, commitlint) does not stop the release`, async () => {
         const remote = await makeRemote(app());
         await workspace(remote, { "core.hooksPath": await hooksDir(hook) });
         await merged();
@@ -95,7 +95,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
       });
     }
 
-    it.fails("commit.gpgsign with no usable key does not stop the release", async () => {
+    it("commit.gpgsign with no usable key does not stop the release", async () => {
       const remote = await makeRemote(app());
       await workspace(remote, {
         "commit.gpgsign": "true",
@@ -117,7 +117,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
   });
 
   describe("ref names", () => {
-    it.fails("a tag named like the prod branch does not break the push", async () => {
+    it("a tag named like the prod branch does not break the push", async () => {
       const remote = await makeRemote(app());
       await git(remote, "tag", "main", "main");
       await workspace(remote);
@@ -128,7 +128,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
       );
     });
 
-    it.fails("a branch named like the next tag does not break the push", async () => {
+    it("a branch named like the next tag does not break the push", async () => {
       const remote = await makeRemote(app());
       await git(remote, "branch", "v1.1.0", "main");
       const cwd = await workspace(remote);
@@ -247,7 +247,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
       await expect(merged()).rejects.toThrow(/changelogPath/);
     });
 
-    it.fails("a gitignored changelog fails before anything is public, and not as rerun-safe", async () => {
+    it("a gitignored changelog fails before anything is public, and not as rerun-safe", async () => {
       const remote = await makeRemote(
         app({}, { ".gitignore": "CHANGELOG.md\n" }),
       );
@@ -260,7 +260,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
   });
 
   describe("version history", () => {
-    it.fails("VERSION behind an existing tag says how to recover, not to rerun", async () => {
+    it("VERSION behind an existing tag says how to recover, not to rerun", async () => {
       const remote = await makeRemote(app());
       await git(remote, "tag", "v1.1.0", "main");
       await workspace(remote);

@@ -19,6 +19,8 @@ describe("commitBumpFiles", () => {
         "-c",
         "user.email=41898282+github-actions[bot]@users.noreply.github.com",
         "commit",
+        "--no-verify",
+        "--no-gpg-sign",
         "-m",
         "chore(release): v1.0.0 [skip version]",
       ],

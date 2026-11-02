@@ -28,6 +28,17 @@ export type CreateReleaseInput = {
   };
 };
 
+/** GitHub refuses a longer body, so a huge release could never finish on rerun. */
+const MAX_RELEASE_BODY = 125_000;
+const TRUNCATED_NOTE =
+  "\n\n…truncated. The changelog at this tag has the rest.\n";
+
+function fitReleaseBody(body: string): string {
+  if (body.length <= MAX_RELEASE_BODY) return body;
+  const room = body.slice(0, MAX_RELEASE_BODY - TRUNCATED_NOTE.length);
+  return `${room.slice(0, room.lastIndexOf("\n"))}${TRUNCATED_NOTE}`;
+}
+
 function statusOf(err: unknown): number | undefined {
   return (err as { status?: number }).status;
 }
@@ -55,7 +66,7 @@ export async function releaseExists(
 export async function createGitHubRelease(
   input: CreateReleaseInput,
 ): Promise<void> {
-  const body = redactSecrets(input.body);
+  const body = fitReleaseBody(redactSecrets(input.body));
 
   if (await releaseExists(input)) {
     throw new Error(`release already published: ${input.tag}`);
