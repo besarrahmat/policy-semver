@@ -319,6 +319,17 @@ describe("runAction", { timeout: 30_000 }, () => {
     expect(await git(remote, "show", "main:VERSION")).toBe("1.0.0");
   });
 
+  it("releases when the merged commit is on prod", async () => {
+    const remote = await makeRemote();
+    const sha = await git(remote, "rev-parse", "main");
+    setEvent("closed", pullRequest({ merged: true, merge_commit_sha: sha }));
+    await workspace(remote);
+    await runAction();
+
+    expect(mocks.core.setFailed).not.toHaveBeenCalled();
+    expect(await remoteTags(remote)).toEqual(["v1.1.0"]);
+  });
+
   it("refuses a merged commit that is not on prod", async () => {
     const remote = await makeRemote();
     setEvent(

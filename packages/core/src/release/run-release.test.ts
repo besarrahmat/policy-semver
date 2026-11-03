@@ -318,3 +318,48 @@ describe("runRelease", () => {
     expect(writeAudit).toHaveBeenCalledOnce();
   });
 });
+
+describe("runRelease failures and trailers", () => {
+  const input = () => ({
+    ...auditSeams(),
+    kind: "minor" as const,
+    cwd: "/tmp",
+    version: "1.1.0",
+    paths: ["VERSION"],
+    branch: "main",
+    sectionMarkdown: "## [1.1.0]\n",
+    owner: "o",
+    repo: "r",
+    octokit: mockOctokit(),
+    commit: vi.fn(async (_: { message: string }) => {}),
+    tag: vi.fn(async () => {}),
+    push: vi.fn(async () => {}),
+    release: vi.fn(async () => {}),
+  });
+
+  it.each(["commit", "tag", "push"] as const)(
+    "a failed %s is named, and keeps its cause (I8)",
+    async (name) => {
+      const cause = new Error("boom");
+      const seams = input();
+      seams[name].mockRejectedValueOnce(cause);
+      const failed = await runRelease(seams).catch((err) => err);
+      expect(failed.message).toBe(`${name}: boom`);
+      expect(failed.cause).toBe(cause);
+    },
+  );
+
+  it("only a PR's bump commit carries the PR trailer", async () => {
+    const withoutPr = input();
+    await runRelease(withoutPr);
+    expect(withoutPr.commit.mock.calls[0]?.[0].message).not.toContain(
+      "Policy-Semver-PR",
+    );
+
+    const withPr = input();
+    await runRelease({ ...withPr, prNumber: 7 });
+    expect(withPr.commit.mock.calls[0]?.[0].message).toContain(
+      "Policy-Semver-PR: 7",
+    );
+  });
+});

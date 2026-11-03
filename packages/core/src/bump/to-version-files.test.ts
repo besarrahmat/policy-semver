@@ -47,3 +47,17 @@ it("rejects a second VERSION file", () => {
     /one VERSION file/,
   );
 });
+
+it.each(["VERSION.bak", "package.json.bak"])(
+  "rejects %s instead of treating it as a version file",
+  (entry) => {
+    expect(() => toVersionFiles([entry])).toThrow(/unsupported versionFiles/);
+  },
+);
+
+it("leaves out what is not configured", () => {
+  expect(toVersionFiles(["VERSION"])).toStrictEqual({ versionFile: "VERSION" });
+  expect(toVersionFiles(["package.json"])).toStrictEqual({
+    packageJson: "package.json",
+  });
+});

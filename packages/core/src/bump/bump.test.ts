@@ -267,3 +267,19 @@ describe("bump write integration", () => {
     expect(guards.allowWrite).toBe(true);
   });
 });
+
+describe("applyBump edges", () => {
+  it("none returns the version without the file's newline", () => {
+    expect(applyBump({ kind: "none", currentVersion: "1.2.3\n" })).toBe(
+      "1.2.3",
+    );
+  });
+
+  it("major-reset refuses a missing or fractional envMajor", () => {
+    const reset = { kind: "major-reset", currentVersion: "1.2.3" } as const;
+    expect(() => applyBump(reset)).toThrow(/requires integer envMajor/);
+    expect(() => applyBump({ ...reset, envMajor: 2.5 })).toThrow(
+      /requires integer envMajor/,
+    );
+  });
+});

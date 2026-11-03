@@ -76,6 +76,9 @@ async function hooksDir(hook: string): Promise<string> {
   return dir;
 }
 
+const HOOK_REPORT =
+  'printf "%s %s %s" "$POLICY_SEMVER_VERSION" "$POLICY_SEMVER_KIND" "$POLICY_SEMVER_DRY_RUN"';
+
 function expectReleased(): void {
   expect(failure()).toBe("");
   expect(output("released")).toBe("true");
@@ -302,10 +305,15 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
 
   describe("reconcile", () => {
     const body = "Policy-Semver-PR: 7\nPolicy-Semver-Kind: minor";
+    const released = {
+      VERSION: "1.1.0\n",
+      "CHANGELOG.md": "## [1.1.0] - 2026-01-01\n\n- x\n",
+    };
 
     async function botCommit(
       remote: string,
       files: Record<string, string>,
+      trailers = body,
     ): Promise<void> {
       const seed = await clone(remote);
       for (const [rel, content] of Object.entries(files)) {
@@ -319,7 +327,7 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
         "commit",
         "--quiet",
         "-m",
-        `chore(release): v1.1.0 [skip version]\n\n${body}`,
+        `chore(release): v1.1.0 [skip version]\n\n${trailers}`,
       );
       await git(seed, "push", "--quiet", "origin", "main");
     }
@@ -349,6 +357,104 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
       expect(failure()).toContain("1.1.0");
       expect(mocks.octokit.rest.repos.createRelease).not.toHaveBeenCalled();
     });
+
+    it("a removed tag asks for it back, and does not recreate it", async () => {
+      const remote = await makeRemote(app());
+      await botCommit(remote, released);
+      await workspace(remote);
+      await merged();
+      expect(failure()).toContain("restore the tag");
+      expect(await remoteTags(remote)).toEqual([]);
+      expect(mocks.octokit.rest.repos.createRelease).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ["no kind", "Policy-Semver-PR: 7"],
+      ["an unknown kind", "Policy-Semver-PR: 7\nPolicy-Semver-Kind: huge"],
+    ])("a bump commit with %s fails by name", async (_name, trailers) => {
+      const remote = await makeRemote(app());
+      await botCommit(remote, released, trailers);
+      await git(remote, "tag", "v1.1.0", "main");
+      await workspace(remote);
+      await merged();
+      expect(failure()).toContain("no valid kind trailer");
+      expect(mocks.octokit.rest.repos.createRelease).not.toHaveBeenCalled();
+    });
+
+    it("a bump commit without version files fails by name", async () => {
+      const remote = await makeRemote(app());
+      const seed = await clone(remote);
+      await git(seed, "rm", "--quiet", "VERSION");
+      await git(
+        seed,
+        "-c",
+        "user.name=github-actions[bot]",
+        "commit",
+        "--quiet",
+        "-m",
+        `chore(release): v1.1.0 [skip version]\n\n${body}`,
+      );
+      await git(seed, "push", "--quiet", "origin", "main");
+      await land(remote, { VERSION: "1.1.0\n" });
+      await workspace(remote);
+      await merged();
+      expect(failure()).toContain("no version files found");
+    });
+
+    it("afterRelease gets the release's version and kind, not a dry run", async () => {
+      const out = path.join(await mkdtemp(path.join(tmpdir(), "ps-out-")), "o");
+      const remote = await makeRemote(
+        app({ hooks: { afterRelease: `${HOOK_REPORT} > ${out}` } }),
+      );
+      await botCommit(remote, released);
+      await git(remote, "tag", "v1.1.0", "main");
+      await workspace(remote);
+      await merged();
+      expect(failure()).toBe("");
+      expect(await readFile(out, "utf8")).toBe("1.1.0 minor false");
+    });
+
+    it("a rerun still reports the release in its outputs", async () => {
+      const remote = await makeRemote(app());
+      await botCommit(remote, released);
+      await git(remote, "tag", "v1.1.0", "main");
+      await workspace(remote);
+      await merged();
+      expectReleased();
+      expect(output("tag")).toBe("v1.1.0");
+      expect(output("next-version")).toBe("1.1.0");
+      expect(output("kind")).toBe("minor");
+    });
+
+    it("a failing afterRelease is named", async () => {
+      const remote = await makeRemote(
+        app({ hooks: { afterRelease: "exit 3" } }),
+      );
+      await botCommit(remote, released);
+      await git(remote, "tag", "v1.1.0", "main");
+      await workspace(remote);
+      await merged();
+      expect(failure()).toContain("afterRelease");
+    });
+  });
+
+  describe("hooks of a new release", () => {
+    it.each(["afterTag", "afterRelease"])(
+      "%s gets the version and kind, not a dry run",
+      async (hook) => {
+        const out = path.join(
+          await mkdtemp(path.join(tmpdir(), "ps-out-")),
+          "o",
+        );
+        const remote = await makeRemote(
+          app({ hooks: { [hook]: `${HOOK_REPORT} > ${out}` } }),
+        );
+        await workspace(remote);
+        await merged();
+        expectReleased();
+        expect(await readFile(out, "utf8")).toBe("1.1.0 minor false");
+      },
+    );
   });
 
   describe("text that reaches the changelog", () => {
