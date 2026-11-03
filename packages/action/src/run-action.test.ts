@@ -73,6 +73,22 @@ describe("runAction", { timeout: 30_000 }, () => {
     expect(mocks.octokit.rest.repos.createRelease).not.toHaveBeenCalled();
   });
 
+  it("treats a PR whose head repo was deleted as a fork", async () => {
+    const remote = await makeRemote();
+    await workspace(remote);
+    setEvent(
+      "closed",
+      pullRequest({ merged: true, head: { ref: "feature", repo: null } }),
+    );
+
+    await runAction();
+
+    expect(await remoteTags(remote)).toEqual([]);
+    expect(mocks.core.warning.mock.calls.flat().join("\n")).toContain(
+      "was merged but not released",
+    );
+  });
+
   it("releases an internal PR in a repo that is itself a fork", async () => {
     const remote = await makeRemote();
     await workspace(remote);

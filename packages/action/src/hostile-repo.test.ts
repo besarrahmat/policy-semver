@@ -455,6 +455,22 @@ describe("repos the release must survive", { timeout: 30_000 }, () => {
         expect(await readFile(out, "utf8")).toBe("1.1.0 minor false");
       },
     );
+
+    it("no hook runs when nothing is released", async () => {
+      const out = path.join(await mkdtemp(path.join(tmpdir(), "ps-out-")), "o");
+      const hook = `echo ran >> ${out}`;
+      const remote = await makeRemote(
+        app({
+          hooks: { beforeBump: hook, afterTag: hook, afterRelease: hook },
+        }),
+      );
+      await workspace(remote);
+      commitsAre("docs: readme");
+      await merged({ title: "docs: readme" });
+      expect(failure()).toBe("");
+      expect(output("kind")).toBe("none");
+      await expect(readFile(out, "utf8")).rejects.toThrow();
+    });
   });
 
   describe("text that reaches the changelog", () => {
