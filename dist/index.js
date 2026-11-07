@@ -28295,7 +28295,17 @@ async function commitBumpFiles(input) {
   const exec = input.exec ?? defaultGitExec;
   const cwd = { cwd: input.cwd };
   await exec(["add", "--", ...input.paths], cwd);
-  await exec([...BOT_IDENTITY_ARGS, "commit", "-m", input.message], cwd);
+  await exec(
+    [
+      ...BOT_IDENTITY_ARGS,
+      "commit",
+      "--no-verify",
+      "--no-gpg-sign",
+      "-m",
+      input.message
+    ],
+    cwd
+  );
 }
 var MAX_COMMITS = 1e3;
 async function lastTag(cwd, tagPrefix, exec) {
@@ -28333,7 +28343,9 @@ async function loadCommitsSinceLastTag(cwd, tagPrefix, exec = defaultGitExec) {
 async function pushRefs(input) {
   const exec = input.exec ?? defaultGitExec;
   const remote = input.remote ?? "origin";
-  await exec(["push", "--atomic", remote, ...input.refs], { cwd: input.cwd });
+  await exec(["push", "--atomic", "--no-verify", remote, ...input.refs], {
+    cwd: input.cwd
+  });
 }
 async function tagExists(cwd, tag, exec = defaultGitExec) {
   try {
@@ -28401,6 +28413,13 @@ async function assertRemoteTagCompatible(input) {
     `mirror tag conflict: ${input.tag} remote=${remoteSha} local HEAD=${headSha}`
   );
 }
+var MAX_RELEASE_BODY = 125e3;
+var TRUNCATED_NOTE = "\n\n\u2026truncated. The changelog at this tag has the rest.\n";
+function fitReleaseBody(body) {
+  if (body.length <= MAX_RELEASE_BODY) return body;
+  const room = body.slice(0, MAX_RELEASE_BODY - TRUNCATED_NOTE.length);
+  return `${room.slice(0, room.lastIndexOf("\n"))}${TRUNCATED_NOTE}`;
+}
 function statusOf(err) {
   return err.status;
 }
@@ -28418,7 +28437,7 @@ async function releaseExists(input) {
   }
 }
 async function createGitHubRelease(input) {
-  const body = redactSecrets(input.body);
+  const body = fitReleaseBody(redactSecrets(input.body));
   if (await releaseExists(input)) {
     throw new Error(`release already published: ${input.tag}`);
   }
@@ -28656,12 +28675,12 @@ async function runRelease(input) {
       ...input.hookExec !== void 0 ? { exec: input.hookExec } : {}
     });
   }
-  const branchRef = `HEAD:${input.branch}`;
+  const branchRef = `HEAD:refs/heads/${input.branch}`;
   await step(
     "push",
     () => push({
       cwd: input.cwd,
-      refs: [branchRef, tag],
+      refs: [branchRef, `refs/tags/${tag}`],
       ...input.remote !== void 0 ? { remote: input.remote } : {},
       ...input.exec !== void 0 ? { exec: input.exec } : {}
     })
@@ -33011,11 +33030,22 @@ ${input.body}`;
 }
 
 // src/write-failure.ts
+var VERSION_BEHIND_TAGS = /tag already exists|mirror tag conflict/;
+var NEEDS_A_FIX = /conflict markers|higher major|ignored by one of your \.gitignore|points at|has no section|is missing on the remote/;
+function nextStep(msg) {
+  if (VERSION_BEHIND_TAGS.test(msg)) {
+    return "The version files are behind the tags, often after a reverted bump commit. Raise them to the latest released version; a rerun fails the same way until then.";
+  }
+  if (NEEDS_A_FIX.test(msg)) {
+    return "A rerun fails the same way until this is fixed.";
+  }
+  return "Rerunning this job is safe: it finishes the release without a second bump.";
+}
 function writeFailureMessage(err) {
   const msg = redactSecrets(err instanceof Error ? err.message : String(err));
   const pushDenied = /protected branch|GH006|not allowed to push|permission.*denied/i.test(msg);
   const hint = pushDenied ? " If branch protection blocks github-actions, set `token` on actions/checkout to a PAT or GitHub App token with contents:write bypass (git push uses the checkout's credentials)." : "";
-  return `Write/push/release failed: ${msg}.${hint} Rerunning this job is safe: it finishes the release without a second bump.`;
+  return `Write/push/release failed: ${msg}.${hint} ${nextStep(msg)}`;
 }
 
 // src/write-release.ts

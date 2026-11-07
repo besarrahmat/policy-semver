@@ -70,3 +70,26 @@ describe("createGitHubRelease", () => {
     expect(createRelease).not.toHaveBeenCalled();
   });
 });
+
+it("cuts a body GitHub would refuse at a line end, and says so", async () => {
+  const createRelease = vi.fn(async () => ({}));
+  await createGitHubRelease({
+    owner: "o",
+    repo: "r",
+    tag: "v1.0.0",
+    body: "- a line\n".repeat(20_000),
+    octokit: {
+      repos: {
+        getReleaseByTag: async () => {
+          throw Object.assign(new Error("Not Found"), { status: 404 });
+        },
+        createRelease,
+      },
+    },
+  });
+  const [{ body }] = createRelease.mock.calls[0] as unknown as [
+    { body: string },
+  ];
+  expect(body.length).toBeLessThanOrEqual(125_000);
+  expect(body).toMatch(/- a line\n\n…truncated/);
+});

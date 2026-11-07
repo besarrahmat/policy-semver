@@ -20,5 +20,17 @@ export async function commitBumpFiles(input: CommitBumpInput): Promise<void> {
   const exec = input.exec ?? defaultGitExec;
   const cwd = { cwd: input.cwd };
   await exec(["add", "--", ...input.paths], cwd);
-  await exec([...BOT_IDENTITY_ARGS, "commit", "-m", input.message], cwd);
+  // The bot's commit is not the consumer's to lint or sign: husky, commitlint, or
+  // a signing key the runner lacks must not stop a release.
+  await exec(
+    [
+      ...BOT_IDENTITY_ARGS,
+      "commit",
+      "--no-verify",
+      "--no-gpg-sign",
+      "-m",
+      input.message,
+    ],
+    cwd,
+  );
 }

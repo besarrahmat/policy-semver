@@ -8,5 +8,7 @@ import type { PushInput } from "./types.js";
 export async function pushRefs(input: PushInput): Promise<void> {
   const exec = input.exec ?? defaultGitExec;
   const remote = input.remote ?? "origin";
-  await exec(["push", "--atomic", remote, ...input.refs], { cwd: input.cwd });
+  await exec(["push", "--atomic", "--no-verify", remote, ...input.refs], {
+    cwd: input.cwd,
+  });
 }

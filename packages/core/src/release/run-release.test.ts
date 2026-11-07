@@ -164,7 +164,9 @@ describe("runRelease", () => {
       expect.objectContaining({ tag: "v1.2.3" }),
     );
     expect(push).toHaveBeenCalledWith(
-      expect.objectContaining({ refs: ["HEAD:main", "v1.2.3"] }),
+      expect.objectContaining({
+        refs: ["HEAD:refs/heads/main", "refs/tags/v1.2.3"],
+      }),
     );
     expect(release).toHaveBeenCalledWith(
       expect.objectContaining({
