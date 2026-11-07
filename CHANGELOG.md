@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-11-07
+
+### Changed
+
+- bump pnpm/action-setup from 6.0.10 to 6.1.0
+
 ## [2.0.0] - 2026-10-30
 
 ### Added
