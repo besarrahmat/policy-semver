@@ -104,7 +104,9 @@ export async function writeChangelog(
     if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
   }
 
-  if (previous?.includes(headingFor(input.version))) {
+  // Line starts only: a commit subject quoted in a bullet may contain either text.
+  const heading = headingFor(input.version);
+  if (previous?.split(/\r?\n/).some((line) => line.startsWith(heading))) {
     return {
       wrote: false,
       reason: "already-present",
@@ -118,7 +120,7 @@ export async function writeChangelog(
       ? DEFAULT_HEADER + sectionMarkdown
       : insertAfterUnreleasedOrHeader(previous, sectionMarkdown);
 
-  if (previous?.includes("<<<<<<<") || previous?.includes(">>>>>>>")) {
+  if (previous !== null && /^(?:<{7}|>{7})(?: |\r?$)/m.test(previous)) {
     throw new Error(`CHANGELOG conflict markers in ${abs}`);
   }
 

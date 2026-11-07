@@ -7,6 +7,7 @@ export {
   assertTagAvailable,
   assertTagMatchesVersion,
   createAnnotatedTag,
+  highestTagMajor,
   tagExists,
 } from "./tag.js";
 export type { CommitBumpInput, PushInput, TagInput } from "./types.js";
