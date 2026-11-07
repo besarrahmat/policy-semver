@@ -41,8 +41,14 @@ export async function loadCommitsSinceLastTag(
     ],
     { cwd },
   );
-  return stdout
-    .split("\x1e")
+  const chunks = stdout.split("\x1e");
+  // A trailing separator leaves one extra empty chunk.
+  if (chunks.length > MAX_COMMITS) {
+    console.warn(
+      `only the latest ${MAX_COMMITS} commits were classified; older ones may be missed`,
+    );
+  }
+  return chunks
     .map((chunk) => chunk.replace(/^\n+/, "").trimEnd())
     .filter(Boolean)
     .map((chunk) => {

@@ -73,6 +73,22 @@ describe("runAction", { timeout: 30_000 }, () => {
     expect(mocks.octokit.rest.repos.createRelease).not.toHaveBeenCalled();
   });
 
+  it("treats a PR whose head repo was deleted as a fork", async () => {
+    const remote = await makeRemote();
+    await workspace(remote);
+    setEvent(
+      "closed",
+      pullRequest({ merged: true, head: { ref: "feature", repo: null } }),
+    );
+
+    await runAction();
+
+    expect(await remoteTags(remote)).toEqual([]);
+    expect(mocks.core.warning.mock.calls.flat().join("\n")).toContain(
+      "was merged but not released",
+    );
+  });
+
   it("releases an internal PR in a repo that is itself a fork", async () => {
     const remote = await makeRemote();
     await workspace(remote);
@@ -317,6 +333,17 @@ describe("runAction", { timeout: 30_000 }, () => {
     );
     await expect(access(marker)).rejects.toThrow();
     expect(await git(remote, "show", "main:VERSION")).toBe("1.0.0");
+  });
+
+  it("releases when the merged commit is on prod", async () => {
+    const remote = await makeRemote();
+    const sha = await git(remote, "rev-parse", "main");
+    setEvent("closed", pullRequest({ merged: true, merge_commit_sha: sha }));
+    await workspace(remote);
+    await runAction();
+
+    expect(mocks.core.setFailed).not.toHaveBeenCalled();
+    expect(await remoteTags(remote)).toEqual(["v1.1.0"]);
   });
 
   it("refuses a merged commit that is not on prod", async () => {

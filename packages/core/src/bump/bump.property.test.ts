@@ -29,7 +29,7 @@ function isGreater(a: string, b: string): boolean {
 }
 
 describe("version invariants", () => {
-  it.fails("parse and format round-trip, or the version is refused", () => {
+  it("parse and format round-trip, or the version is refused", () => {
     fc.assert(
       fc.property(version, (v) => {
         let parts: ReturnType<typeof parseSemVer>;
@@ -43,7 +43,7 @@ describe("version invariants", () => {
     );
   });
 
-  it.fails("a bump yields a valid, strictly greater version, or refuses", () => {
+  it("a bump yields a valid, strictly greater version, or refuses", () => {
     fc.assert(
       fc.property(
         version,
@@ -62,7 +62,7 @@ describe("version invariants", () => {
     );
   });
 
-  it.fails("the major env is a safe integer, or refused", () => {
+  it("the major env is a safe integer, or refused", () => {
     fc.assert(
       fc.property(fc.string({ maxLength: 30 }), (raw) => {
         let major: number | null;
@@ -133,7 +133,7 @@ describe("package.json write invariants (I10)", () => {
   const layout = fc.constantFrom(2, 4, "\t", 0);
   const eol = fc.constantFrom("\n", "\r\n");
 
-  it.fails("changes the version and nothing else", async () => {
+  it("changes the version and nothing else", async () => {
     await fc.assert(
       fc.asyncProperty(
         fields,

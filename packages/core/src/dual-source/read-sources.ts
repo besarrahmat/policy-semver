@@ -7,6 +7,11 @@ import {
 } from "../bump/parse-version.js";
 import { assertDualSourceMatch } from "./assert-match.js";
 
+/** JSON.parse refuses the BOM that some editors write. */
+export function parsePackageJson(raw: string): { version?: unknown } {
+  return JSON.parse(raw.replace(/^\uFEFF/, "")) as { version?: unknown };
+}
+
 export async function tryReadVersionFile(
   cwd: string,
   rel: string,
@@ -30,7 +35,7 @@ export async function tryReadPackageJsonVersion(
 ): Promise<string | null> {
   const p = path.join(cwd, rel);
   try {
-    const pkg = JSON.parse(await readFile(p, "utf8")) as { version?: unknown };
+    const pkg = parsePackageJson(await readFile(p, "utf8"));
     if (typeof pkg.version !== "string" || !isSemVerString(pkg.version)) {
       throw new Error(`malformed package.json version at ${p}`);
     }

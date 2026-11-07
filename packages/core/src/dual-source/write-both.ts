@@ -1,5 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { parsePackageJson } from "./read-sources.js";
 
 export async function writeVersionFile(
   cwd: string,
@@ -16,10 +17,22 @@ async function writePackageJsonVersion(
 ): Promise<void> {
   const p = path.join(cwd, rel);
   const raw = await readFile(p, "utf8");
-  const pkg = JSON.parse(raw) as Record<string, unknown>;
-  pkg.version = nextVersion;
-  const indent = /^[ \t]+(?=")/m.exec(raw)?.[0] ?? 2;
-  await writeFile(p, `${JSON.stringify(pkg, null, indent)}\n`, "utf8");
+  await writeFile(p, withPackageVersion(raw, nextVersion), "utf8");
+}
+
+/**
+ * Edit the text, not the parsed object: a rewrite would reorder numeric keys,
+ * decode escapes, and change line endings across the consumer's file. A nested
+ * "version" may come first, so each match is checked against the parsed result.
+ */
+function withPackageVersion(raw: string, nextVersion: string): string {
+  for (const match of raw.matchAll(/("version"\s*:\s*)"[^"]*"/g)) {
+    const end = match.index + match[0].length;
+    const edited = `${raw.slice(0, match.index)}${match[1]}"${nextVersion}"${raw.slice(end)}`;
+    const pkg = parsePackageJson(edited);
+    if (pkg.version === nextVersion) return edited;
+  }
+  throw new Error('package.json has no top-level "version" string');
 }
 
 export type WriteBothInput = {
@@ -42,7 +55,8 @@ async function snapshotFiles(cwd: string, rels: string[]): Promise<Snapshot[]> {
 }
 
 async function restoreFiles(cwd: string, prev: Snapshot[]): Promise<void> {
-  await Promise.all(
+  // allSettled: a failed restore must not replace the error that caused it.
+  await Promise.allSettled(
     prev.map((p) => writeFile(path.join(cwd, p.rel), p.content, "utf8")),
   );
 }

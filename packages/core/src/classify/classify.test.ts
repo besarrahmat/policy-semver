@@ -206,3 +206,37 @@ describe("subjects that look like a feature", () => {
     },
   );
 });
+
+describe("classify edges", () => {
+  it("reads the whole major, not its first digit", () => {
+    expect(
+      classify({
+        currentVersion: "12.3.4",
+        envMajor: 12,
+        commits: [{ subject: "feat: x" }],
+      }).kind,
+    ).toBe("minor");
+  });
+
+  it("refuses a version with no major", () => {
+    expect(() => classify({ currentVersion: "abc", commits: [] })).toThrow(
+      /invalid currentVersion/,
+    );
+  });
+
+  it("a blank subject counts for nothing", () => {
+    expect(
+      classify({ currentVersion: "1.0.0", commits: [{ subject: "  " }] }).kind,
+    ).toBe("none");
+  });
+
+  it("a title's leading blank line does not hide it", () => {
+    const result = classify({
+      currentVersion: "1.0.0",
+      prTitle: "\nfeat!: x",
+      commits: [],
+    });
+    expect(result.kind).toBe("minor");
+    expect(result.warnings).toHaveLength(1);
+  });
+});

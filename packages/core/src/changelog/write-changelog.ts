@@ -115,10 +115,14 @@ export async function writeChangelog(
     };
   }
 
-  const next =
+  const merged =
     previous === null
       ? DEFAULT_HEADER + sectionMarkdown
       : insertAfterUnreleasedOrHeader(previous, sectionMarkdown);
+  // Keep the file's line endings: mixed ones show as a whole-file diff.
+  const next = previous?.includes("\r\n")
+    ? merged.replace(/\r?\n/g, "\r\n")
+    : merged;
 
   if (previous !== null && /^(?:<{7}|>{7})(?: |\r?$)/m.test(previous)) {
     throw new Error(`CHANGELOG conflict markers in ${abs}`);

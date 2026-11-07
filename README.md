@@ -194,6 +194,10 @@ permissions:
 
 Fork PRs: comment OK, `allowWrite: false`. Sync `develop ← prod`: no write. `push` to production is skipped (avoids a double bump). If branch protection blocks `github-actions[bot]`, use a PAT / GitHub App (`POLICY_SEMVER_TOKEN`) with ruleset bypass.
 
+A tag pushed with the default `GITHUB_TOKEN` does not start `on: push: tags` workflows; this is GitHub behavior, confirmed on a test repo. To trigger them, set `token` on `actions/checkout` to a PAT or GitHub App token.
+
+Publish artifacts from `afterRelease`, not `afterTag`: `afterTag` runs before the push, which can still be rejected. `afterRelease` can run again on a rerun, so keep it idempotent.
+
 Hooks do not inherit `GITHUB_TOKEN`, `GH_TOKEN`, `POLICY_SEMVER_TOKEN`, or the runner's `ACTIONS_*_TOKEN` values; pass a token under your own variable name. A hook can still read the checkout's persisted credentials, unless you set `persist-credentials: false` and push another way.
 
 Details: [`packages/action/README.md`](./packages/action/README.md) — [Permissions](./packages/action/README.md#permissions-least-privilege), [Fork / prod / sync](./packages/action/README.md#fork--prod--sync-runtime), [Token when `GITHUB_TOKEN` cannot push](./packages/action/README.md#token-when-github_token-cannot-push).

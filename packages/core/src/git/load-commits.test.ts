@@ -3,7 +3,7 @@ import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { loadCommitsSinceLastTag } from "./load-commits.js";
 
 const execFileAsync = promisify(execFile);
@@ -72,4 +72,14 @@ describe("loadCommitsSinceLastTag", { timeout: 30_000 }, () => {
 
     await expect(loadCommitsSinceLastTag(cwd, "v")).rejects.toThrow();
   });
+});
+
+it("warns when the commit cap may have hidden older commits", async () => {
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+  await loadCommitsSinceLastTag(".", "v", async (args) => ({
+    stdout: args[0] === "log" ? "fix: x\0\x1e\n".repeat(1000) : "",
+    stderr: "",
+  }));
+  expect(warn).toHaveBeenCalledOnce();
+  warn.mockRestore();
 });

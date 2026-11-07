@@ -166,3 +166,46 @@ describe("failing beforeBump never writes / never tags", () => {
     ).rejects.toThrow("boom [REDACTED]");
   });
 });
+
+describe("hook failure report", () => {
+  it("says a killed hook timed out", async () => {
+    await expect(
+      runHook({
+        name: "beforeBump",
+        command: "x",
+        cwd: ".",
+        version: "1.0.0",
+        kind: "patch",
+        dryRun: false,
+        exec: async () => {
+          throw Object.assign(new Error("Command failed"), {
+            killed: true,
+            code: null,
+          });
+        },
+      }),
+    ).rejects.toThrow(/timed out/);
+  });
+
+  it("prints the redacted stdout of a failed hook", async () => {
+    const write = vi.spyOn(process.stdout, "write").mockReturnValue(true);
+    await expect(
+      runHook({
+        name: "beforeBump",
+        command: "x",
+        cwd: ".",
+        version: "1.0.0",
+        kind: "patch",
+        dryRun: false,
+        exec: async () => {
+          throw Object.assign(new Error("Command failed"), {
+            code: 1,
+            stdout: "why ghp_abcdefghijklmnopqrstuvwxyz012345",
+          });
+        },
+      }),
+    ).rejects.toThrow(/exit 1/);
+    expect(write).toHaveBeenCalledWith("why [REDACTED]");
+    write.mockRestore();
+  });
+});

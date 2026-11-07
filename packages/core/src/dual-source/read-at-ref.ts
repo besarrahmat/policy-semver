@@ -7,6 +7,7 @@ import type { VersionFiles } from "../bump/types.js";
 import { defaultGitExec } from "../git/exec.js";
 import type { GitExec } from "../git/types.js";
 import { assertDualSourceMatch } from "./assert-match.js";
+import { parsePackageJson } from "./read-sources.js";
 
 function parseVersionFile(raw: string, label: string): string {
   const trimmed = raw.trim();
@@ -19,7 +20,7 @@ function parseVersionFile(raw: string, label: string): string {
 }
 
 function parsePackageVersion(raw: string, label: string): string {
-  const pkg = JSON.parse(raw) as { version?: unknown };
+  const pkg = parsePackageJson(raw);
   if (typeof pkg.version !== "string" || !isSemVerString(pkg.version)) {
     throw new Error(`malformed package.json version at ${label}`);
   }

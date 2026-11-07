@@ -102,7 +102,7 @@ describe("changelog invariants", () => {
     );
   });
 
-  it.fails("an existing file's line endings survive", async () => {
+  it("an existing file's line endings survive", async () => {
     await fc.assert(
       fc.asyncProperty(eol, async (nl) => {
         const cwd = await mkdtemp(path.join(tmpdir(), "ps-cl-"));
