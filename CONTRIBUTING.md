@@ -155,3 +155,20 @@ Public v1 surface. Keep these true before calling a publishable release done. Qu
 ## Code of Conduct
 
 See [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
+
+## Release invariants
+
+Every release bug breaks one of these. A report that breaks none of them is not a bug. `release-matrix.test.ts`, `hostile-repo.test.ts`, and the `*.property.test.ts` files check them; a known violation is pinned with `it.fails` until it is fixed.
+
+| #   | Invariant                                                                         |
+| --- | --------------------------------------------------------------------------------- |
+| I1  | One PR makes at most one bump commit, however many reruns happen                  |
+| I2  | The remote branch and tag always move together                                    |
+| I3  | The major only rises through the env var, never through a commit or a manual edit |
+| I4  | Tag `{prefix}{version}` points at a commit whose version files hold that version  |
+| I5  | The Release body equals the changelog section and is not empty                    |
+| I6  | No secret reaches a log, comment, changelog, or Release                           |
+| I7  | A merged, unskipped PR is either released or leaves a visible signal              |
+| I8  | A failure names the step that failed, and says a rerun is safe only when it is    |
+| I9  | The CLI and the Action classify the same input the same way                       |
+| I10 | Writes stay inside the repo and change only the version                           |

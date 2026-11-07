@@ -10,7 +10,14 @@ const execFileAsync = promisify(execFile);
 const HOOK_TIMEOUT_MS = 10 * 60 * 1000;
 const HOOK_MAX_BUFFER_BYTES = 50 * 1024 * 1024;
 /** Hook commands come from config; they get no ambient write token. */
-const HOOK_ENV_DENYLIST = ["POLICY_SEMVER_TOKEN", "INPUT_TOKEN"];
+const HOOK_ENV_DENYLIST = [
+  "POLICY_SEMVER_TOKEN",
+  "INPUT_TOKEN",
+  "GITHUB_TOKEN",
+  "GH_TOKEN",
+  "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
+  "ACTIONS_RUNTIME_TOKEN",
+];
 
 export const defaultHookExec: HookExec = async (command, opts) => {
   const { stdout, stderr } = await execFileAsync(HOOK_SHELL, ["-c", command], {
@@ -64,10 +71,17 @@ export async function runHook(input: RunHookInput): Promise<void> {
     if (stdout) process.stdout.write(redactSecrets(stdout));
     if (stderr) process.stderr.write(redactSecrets(stderr));
   } catch (err) {
-    const code = (err as { code?: number | string }).code ?? "unknown";
+    const { code, killed, stdout } = err as {
+      code?: number | string | null;
+      killed?: boolean;
+      stdout?: string;
+    };
+    // execFile's message already holds stderr, but not stdout.
+    if (stdout) process.stdout.write(redactSecrets(stdout));
     const detail = redactSecrets(
       err instanceof Error ? err.message : String(err),
     );
-    throw new Error(`hook ${input.name} failed (exit ${code}): ${detail}`);
+    const how = killed ? "timed out" : `exit ${code ?? "unknown"}`;
+    throw new Error(`hook ${input.name} failed (${how}): ${detail}`);
   }
 }

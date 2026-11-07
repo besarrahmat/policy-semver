@@ -1,4 +1,5 @@
 import * as core from "@actions/core";
+import { redactSecrets } from "@policy-semver/core";
 import { runAction } from "./run-action.js";
 
 export {
@@ -19,6 +20,8 @@ export {
 // Bundle entry: only when GitHub Actions executes the bundle
 if (process.env.GITHUB_ACTIONS === "true") {
   runAction().catch((err) => {
-    core.setFailed(err instanceof Error ? err.message : String(err));
+    core.setFailed(
+      redactSecrets(err instanceof Error ? err.message : String(err)),
+    );
   });
 }

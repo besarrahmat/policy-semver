@@ -19153,778 +19153,6 @@ var require_undici = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/@actions+http-client@3.0.2/node_modules/@actions/http-client/lib/proxy.js
-var require_proxy = __commonJS({
-  "../../node_modules/.pnpm/@actions+http-client@3.0.2/node_modules/@actions/http-client/lib/proxy.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.getProxyUrl = getProxyUrl2;
-    exports2.checkBypass = checkBypass;
-    function getProxyUrl2(reqUrl) {
-      const usingSsl = reqUrl.protocol === "https:";
-      if (checkBypass(reqUrl)) {
-        return void 0;
-      }
-      const proxyVar = (() => {
-        if (usingSsl) {
-          return process.env["https_proxy"] || process.env["HTTPS_PROXY"];
-        } else {
-          return process.env["http_proxy"] || process.env["HTTP_PROXY"];
-        }
-      })();
-      if (proxyVar) {
-        try {
-          return new DecodedURL(proxyVar);
-        } catch (_a) {
-          if (!proxyVar.startsWith("http://") && !proxyVar.startsWith("https://"))
-            return new DecodedURL(`http://${proxyVar}`);
-        }
-      } else {
-        return void 0;
-      }
-    }
-    function checkBypass(reqUrl) {
-      if (!reqUrl.hostname) {
-        return false;
-      }
-      const reqHost = reqUrl.hostname;
-      if (isLoopbackAddress(reqHost)) {
-        return true;
-      }
-      const noProxy = process.env["no_proxy"] || process.env["NO_PROXY"] || "";
-      if (!noProxy) {
-        return false;
-      }
-      let reqPort;
-      if (reqUrl.port) {
-        reqPort = Number(reqUrl.port);
-      } else if (reqUrl.protocol === "http:") {
-        reqPort = 80;
-      } else if (reqUrl.protocol === "https:") {
-        reqPort = 443;
-      }
-      const upperReqHosts = [reqUrl.hostname.toUpperCase()];
-      if (typeof reqPort === "number") {
-        upperReqHosts.push(`${upperReqHosts[0]}:${reqPort}`);
-      }
-      for (const upperNoProxyItem of noProxy.split(",").map((x) => x.trim().toUpperCase()).filter((x) => x)) {
-        if (upperNoProxyItem === "*" || upperReqHosts.some((x) => x === upperNoProxyItem || x.endsWith(`.${upperNoProxyItem}`) || upperNoProxyItem.startsWith(".") && x.endsWith(`${upperNoProxyItem}`))) {
-          return true;
-        }
-      }
-      return false;
-    }
-    function isLoopbackAddress(host) {
-      const hostLower = host.toLowerCase();
-      return hostLower === "localhost" || hostLower.startsWith("127.") || hostLower.startsWith("[::1]") || hostLower.startsWith("[0:0:0:0:0:0:0:1]");
-    }
-    var DecodedURL = class extends URL {
-      constructor(url, base) {
-        super(url, base);
-        this._decodedUsername = decodeURIComponent(super.username);
-        this._decodedPassword = decodeURIComponent(super.password);
-      }
-      get username() {
-        return this._decodedUsername;
-      }
-      get password() {
-        return this._decodedPassword;
-      }
-    };
-  }
-});
-
-// ../../node_modules/.pnpm/@actions+http-client@3.0.2/node_modules/@actions/http-client/lib/index.js
-var require_lib = __commonJS({
-  "../../node_modules/.pnpm/@actions+http-client@3.0.2/node_modules/@actions/http-client/lib/index.js"(exports2) {
-    "use strict";
-    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
-      if (k2 === void 0) k2 = k;
-      var desc = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-        desc = { enumerable: true, get: function() {
-          return m[k];
-        } };
-      }
-      Object.defineProperty(o, k2, desc);
-    }) : (function(o, m, k, k2) {
-      if (k2 === void 0) k2 = k;
-      o[k2] = m[k];
-    }));
-    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
-      Object.defineProperty(o, "default", { enumerable: true, value: v });
-    }) : function(o, v) {
-      o["default"] = v;
-    });
-    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ (function() {
-      var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function(o2) {
-          var ar = [];
-          for (var k in o2) if (Object.prototype.hasOwnProperty.call(o2, k)) ar[ar.length] = k;
-          return ar;
-        };
-        return ownKeys(o);
-      };
-      return function(mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) {
-          for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        }
-        __setModuleDefault(result, mod);
-        return result;
-      };
-    })();
-    var __awaiter3 = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
-      function adopt(value) {
-        return value instanceof P ? value : new P(function(resolve) {
-          resolve(value);
-        });
-      }
-      return new (P || (P = Promise))(function(resolve, reject) {
-        function fulfilled(value) {
-          try {
-            step2(generator.next(value));
-          } catch (e) {
-            reject(e);
-          }
-        }
-        function rejected(value) {
-          try {
-            step2(generator["throw"](value));
-          } catch (e) {
-            reject(e);
-          }
-        }
-        function step2(result) {
-          result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-        }
-        step2((generator = generator.apply(thisArg, _arguments || [])).next());
-      });
-    };
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.HttpClient = exports2.HttpClientResponse = exports2.HttpClientError = exports2.MediaTypes = exports2.Headers = exports2.HttpCodes = void 0;
-    exports2.getProxyUrl = getProxyUrl2;
-    exports2.isHttps = isHttps;
-    var http = __importStar(require("http"));
-    var https = __importStar(require("https"));
-    var pm = __importStar(require_proxy());
-    var tunnel2 = __importStar(require_tunnel2());
-    var undici_1 = require_undici();
-    var HttpCodes2;
-    (function(HttpCodes3) {
-      HttpCodes3[HttpCodes3["OK"] = 200] = "OK";
-      HttpCodes3[HttpCodes3["MultipleChoices"] = 300] = "MultipleChoices";
-      HttpCodes3[HttpCodes3["MovedPermanently"] = 301] = "MovedPermanently";
-      HttpCodes3[HttpCodes3["ResourceMoved"] = 302] = "ResourceMoved";
-      HttpCodes3[HttpCodes3["SeeOther"] = 303] = "SeeOther";
-      HttpCodes3[HttpCodes3["NotModified"] = 304] = "NotModified";
-      HttpCodes3[HttpCodes3["UseProxy"] = 305] = "UseProxy";
-      HttpCodes3[HttpCodes3["SwitchProxy"] = 306] = "SwitchProxy";
-      HttpCodes3[HttpCodes3["TemporaryRedirect"] = 307] = "TemporaryRedirect";
-      HttpCodes3[HttpCodes3["PermanentRedirect"] = 308] = "PermanentRedirect";
-      HttpCodes3[HttpCodes3["BadRequest"] = 400] = "BadRequest";
-      HttpCodes3[HttpCodes3["Unauthorized"] = 401] = "Unauthorized";
-      HttpCodes3[HttpCodes3["PaymentRequired"] = 402] = "PaymentRequired";
-      HttpCodes3[HttpCodes3["Forbidden"] = 403] = "Forbidden";
-      HttpCodes3[HttpCodes3["NotFound"] = 404] = "NotFound";
-      HttpCodes3[HttpCodes3["MethodNotAllowed"] = 405] = "MethodNotAllowed";
-      HttpCodes3[HttpCodes3["NotAcceptable"] = 406] = "NotAcceptable";
-      HttpCodes3[HttpCodes3["ProxyAuthenticationRequired"] = 407] = "ProxyAuthenticationRequired";
-      HttpCodes3[HttpCodes3["RequestTimeout"] = 408] = "RequestTimeout";
-      HttpCodes3[HttpCodes3["Conflict"] = 409] = "Conflict";
-      HttpCodes3[HttpCodes3["Gone"] = 410] = "Gone";
-      HttpCodes3[HttpCodes3["TooManyRequests"] = 429] = "TooManyRequests";
-      HttpCodes3[HttpCodes3["InternalServerError"] = 500] = "InternalServerError";
-      HttpCodes3[HttpCodes3["NotImplemented"] = 501] = "NotImplemented";
-      HttpCodes3[HttpCodes3["BadGateway"] = 502] = "BadGateway";
-      HttpCodes3[HttpCodes3["ServiceUnavailable"] = 503] = "ServiceUnavailable";
-      HttpCodes3[HttpCodes3["GatewayTimeout"] = 504] = "GatewayTimeout";
-    })(HttpCodes2 || (exports2.HttpCodes = HttpCodes2 = {}));
-    var Headers2;
-    (function(Headers3) {
-      Headers3["Accept"] = "accept";
-      Headers3["ContentType"] = "content-type";
-    })(Headers2 || (exports2.Headers = Headers2 = {}));
-    var MediaTypes2;
-    (function(MediaTypes3) {
-      MediaTypes3["ApplicationJson"] = "application/json";
-    })(MediaTypes2 || (exports2.MediaTypes = MediaTypes2 = {}));
-    function getProxyUrl2(serverUrl) {
-      const proxyUrl = pm.getProxyUrl(new URL(serverUrl));
-      return proxyUrl ? proxyUrl.href : "";
-    }
-    var HttpRedirectCodes2 = [
-      HttpCodes2.MovedPermanently,
-      HttpCodes2.ResourceMoved,
-      HttpCodes2.SeeOther,
-      HttpCodes2.TemporaryRedirect,
-      HttpCodes2.PermanentRedirect
-    ];
-    var HttpResponseRetryCodes2 = [
-      HttpCodes2.BadGateway,
-      HttpCodes2.ServiceUnavailable,
-      HttpCodes2.GatewayTimeout
-    ];
-    var RetryableHttpVerbs = ["OPTIONS", "GET", "DELETE", "HEAD"];
-    var ExponentialBackoffCeiling = 10;
-    var ExponentialBackoffTimeSlice = 5;
-    var HttpClientError = class _HttpClientError extends Error {
-      constructor(message, statusCode) {
-        super(message);
-        this.name = "HttpClientError";
-        this.statusCode = statusCode;
-        Object.setPrototypeOf(this, _HttpClientError.prototype);
-      }
-    };
-    exports2.HttpClientError = HttpClientError;
-    var HttpClientResponse = class {
-      constructor(message) {
-        this.message = message;
-      }
-      readBody() {
-        return __awaiter3(this, void 0, void 0, function* () {
-          return new Promise((resolve) => __awaiter3(this, void 0, void 0, function* () {
-            let output = Buffer.alloc(0);
-            this.message.on("data", (chunk) => {
-              output = Buffer.concat([output, chunk]);
-            });
-            this.message.on("end", () => {
-              resolve(output.toString());
-            });
-          }));
-        });
-      }
-      readBodyBuffer() {
-        return __awaiter3(this, void 0, void 0, function* () {
-          return new Promise((resolve) => __awaiter3(this, void 0, void 0, function* () {
-            const chunks = [];
-            this.message.on("data", (chunk) => {
-              chunks.push(chunk);
-            });
-            this.message.on("end", () => {
-              resolve(Buffer.concat(chunks));
-            });
-          }));
-        });
-      }
-    };
-    exports2.HttpClientResponse = HttpClientResponse;
-    function isHttps(requestUrl) {
-      const parsedUrl = new URL(requestUrl);
-      return parsedUrl.protocol === "https:";
-    }
-    var HttpClient3 = class {
-      constructor(userAgent2, handlers, requestOptions) {
-        this._ignoreSslError = false;
-        this._allowRedirects = true;
-        this._allowRedirectDowngrade = false;
-        this._maxRedirects = 50;
-        this._allowRetries = false;
-        this._maxRetries = 1;
-        this._keepAlive = false;
-        this._disposed = false;
-        this.userAgent = this._getUserAgentWithOrchestrationId(userAgent2);
-        this.handlers = handlers || [];
-        this.requestOptions = requestOptions;
-        if (requestOptions) {
-          if (requestOptions.ignoreSslError != null) {
-            this._ignoreSslError = requestOptions.ignoreSslError;
-          }
-          this._socketTimeout = requestOptions.socketTimeout;
-          if (requestOptions.allowRedirects != null) {
-            this._allowRedirects = requestOptions.allowRedirects;
-          }
-          if (requestOptions.allowRedirectDowngrade != null) {
-            this._allowRedirectDowngrade = requestOptions.allowRedirectDowngrade;
-          }
-          if (requestOptions.maxRedirects != null) {
-            this._maxRedirects = Math.max(requestOptions.maxRedirects, 0);
-          }
-          if (requestOptions.keepAlive != null) {
-            this._keepAlive = requestOptions.keepAlive;
-          }
-          if (requestOptions.allowRetries != null) {
-            this._allowRetries = requestOptions.allowRetries;
-          }
-          if (requestOptions.maxRetries != null) {
-            this._maxRetries = requestOptions.maxRetries;
-          }
-        }
-      }
-      options(requestUrl, additionalHeaders) {
-        return __awaiter3(this, void 0, void 0, function* () {
-          return this.request("OPTIONS", requestUrl, null, additionalHeaders || {});
-        });
-      }
-      get(requestUrl, additionalHeaders) {
-        return __awaiter3(this, void 0, void 0, function* () {
-          return this.request("GET", requestUrl, null, additionalHeaders || {});
-        });
-      }
-      del(requestUrl, additionalHeaders) {
-        return __awaiter3(this, void 0, void 0, function* () {
-          return this.request("DELETE", requestUrl, null, additionalHeaders || {});
-        });
-      }
-      post(requestUrl, data, additionalHeaders) {
-        return __awaiter3(this, void 0, void 0, function* () {
-          return this.request("POST", requestUrl, data, additionalHeaders || {});
-        });
-      }
-      patch(requestUrl, data, additionalHeaders) {
-        return __awaiter3(this, void 0, void 0, function* () {
-          return this.request("PATCH", requestUrl, data, additionalHeaders || {});
-        });
-      }
-      put(requestUrl, data, additionalHeaders) {
-        return __awaiter3(this, void 0, void 0, function* () {
-          return this.request("PUT", requestUrl, data, additionalHeaders || {});
-        });
-      }
-      head(requestUrl, additionalHeaders) {
-        return __awaiter3(this, void 0, void 0, function* () {
-          return this.request("HEAD", requestUrl, null, additionalHeaders || {});
-        });
-      }
-      sendStream(verb, requestUrl, stream, additionalHeaders) {
-        return __awaiter3(this, void 0, void 0, function* () {
-          return this.request(verb, requestUrl, stream, additionalHeaders);
-        });
-      }
-      /**
-       * Gets a typed object from an endpoint
-       * Be aware that not found returns a null.  Other errors (4xx, 5xx) reject the promise
-       */
-      getJson(requestUrl_1) {
-        return __awaiter3(this, arguments, void 0, function* (requestUrl, additionalHeaders = {}) {
-          additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes2.ApplicationJson);
-          const res = yield this.get(requestUrl, additionalHeaders);
-          return this._processResponse(res, this.requestOptions);
-        });
-      }
-      postJson(requestUrl_1, obj_1) {
-        return __awaiter3(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
-          const data = JSON.stringify(obj, null, 2);
-          additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes2.ApplicationJson);
-          additionalHeaders[Headers2.ContentType] = this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes2.ApplicationJson);
-          const res = yield this.post(requestUrl, data, additionalHeaders);
-          return this._processResponse(res, this.requestOptions);
-        });
-      }
-      putJson(requestUrl_1, obj_1) {
-        return __awaiter3(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
-          const data = JSON.stringify(obj, null, 2);
-          additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes2.ApplicationJson);
-          additionalHeaders[Headers2.ContentType] = this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes2.ApplicationJson);
-          const res = yield this.put(requestUrl, data, additionalHeaders);
-          return this._processResponse(res, this.requestOptions);
-        });
-      }
-      patchJson(requestUrl_1, obj_1) {
-        return __awaiter3(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
-          const data = JSON.stringify(obj, null, 2);
-          additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes2.ApplicationJson);
-          additionalHeaders[Headers2.ContentType] = this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes2.ApplicationJson);
-          const res = yield this.patch(requestUrl, data, additionalHeaders);
-          return this._processResponse(res, this.requestOptions);
-        });
-      }
-      /**
-       * Makes a raw http request.
-       * All other methods such as get, post, patch, and request ultimately call this.
-       * Prefer get, del, post and patch
-       */
-      request(verb, requestUrl, data, headers) {
-        return __awaiter3(this, void 0, void 0, function* () {
-          if (this._disposed) {
-            throw new Error("Client has already been disposed.");
-          }
-          const parsedUrl = new URL(requestUrl);
-          let info2 = this._prepareRequest(verb, parsedUrl, headers);
-          const maxTries = this._allowRetries && RetryableHttpVerbs.includes(verb) ? this._maxRetries + 1 : 1;
-          let numTries = 0;
-          let response;
-          do {
-            response = yield this.requestRaw(info2, data);
-            if (response && response.message && response.message.statusCode === HttpCodes2.Unauthorized) {
-              let authenticationHandler;
-              for (const handler2 of this.handlers) {
-                if (handler2.canHandleAuthentication(response)) {
-                  authenticationHandler = handler2;
-                  break;
-                }
-              }
-              if (authenticationHandler) {
-                return authenticationHandler.handleAuthentication(this, info2, data);
-              } else {
-                return response;
-              }
-            }
-            let redirectsRemaining = this._maxRedirects;
-            while (response.message.statusCode && HttpRedirectCodes2.includes(response.message.statusCode) && this._allowRedirects && redirectsRemaining > 0) {
-              const redirectUrl = response.message.headers["location"];
-              if (!redirectUrl) {
-                break;
-              }
-              const parsedRedirectUrl = new URL(redirectUrl);
-              if (parsedUrl.protocol === "https:" && parsedUrl.protocol !== parsedRedirectUrl.protocol && !this._allowRedirectDowngrade) {
-                throw new Error("Redirect from HTTPS to HTTP protocol. This downgrade is not allowed for security reasons. If you want to allow this behavior, set the allowRedirectDowngrade option to true.");
-              }
-              yield response.readBody();
-              if (parsedRedirectUrl.hostname !== parsedUrl.hostname) {
-                for (const header in headers) {
-                  if (header.toLowerCase() === "authorization") {
-                    delete headers[header];
-                  }
-                }
-              }
-              info2 = this._prepareRequest(verb, parsedRedirectUrl, headers);
-              response = yield this.requestRaw(info2, data);
-              redirectsRemaining--;
-            }
-            if (!response.message.statusCode || !HttpResponseRetryCodes2.includes(response.message.statusCode)) {
-              return response;
-            }
-            numTries += 1;
-            if (numTries < maxTries) {
-              yield response.readBody();
-              yield this._performExponentialBackoff(numTries);
-            }
-          } while (numTries < maxTries);
-          return response;
-        });
-      }
-      /**
-       * Needs to be called if keepAlive is set to true in request options.
-       */
-      dispose() {
-        if (this._agent) {
-          this._agent.destroy();
-        }
-        this._disposed = true;
-      }
-      /**
-       * Raw request.
-       * @param info
-       * @param data
-       */
-      requestRaw(info2, data) {
-        return __awaiter3(this, void 0, void 0, function* () {
-          return new Promise((resolve, reject) => {
-            function callbackForResult(err, res) {
-              if (err) {
-                reject(err);
-              } else if (!res) {
-                reject(new Error("Unknown error"));
-              } else {
-                resolve(res);
-              }
-            }
-            this.requestRawWithCallback(info2, data, callbackForResult);
-          });
-        });
-      }
-      /**
-       * Raw request with callback.
-       * @param info
-       * @param data
-       * @param onResult
-       */
-      requestRawWithCallback(info2, data, onResult) {
-        if (typeof data === "string") {
-          if (!info2.options.headers) {
-            info2.options.headers = {};
-          }
-          info2.options.headers["Content-Length"] = Buffer.byteLength(data, "utf8");
-        }
-        let callbackCalled = false;
-        function handleResult(err, res) {
-          if (!callbackCalled) {
-            callbackCalled = true;
-            onResult(err, res);
-          }
-        }
-        const req = info2.httpModule.request(info2.options, (msg) => {
-          const res = new HttpClientResponse(msg);
-          handleResult(void 0, res);
-        });
-        let socket;
-        req.on("socket", (sock) => {
-          socket = sock;
-        });
-        req.setTimeout(this._socketTimeout || 3 * 6e4, () => {
-          if (socket) {
-            socket.end();
-          }
-          handleResult(new Error(`Request timeout: ${info2.options.path}`));
-        });
-        req.on("error", function(err) {
-          handleResult(err);
-        });
-        if (data && typeof data === "string") {
-          req.write(data, "utf8");
-        }
-        if (data && typeof data !== "string") {
-          data.on("close", function() {
-            req.end();
-          });
-          data.pipe(req);
-        } else {
-          req.end();
-        }
-      }
-      /**
-       * Gets an http agent. This function is useful when you need an http agent that handles
-       * routing through a proxy server - depending upon the url and proxy environment variables.
-       * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
-       */
-      getAgent(serverUrl) {
-        const parsedUrl = new URL(serverUrl);
-        return this._getAgent(parsedUrl);
-      }
-      getAgentDispatcher(serverUrl) {
-        const parsedUrl = new URL(serverUrl);
-        const proxyUrl = pm.getProxyUrl(parsedUrl);
-        const useProxy = proxyUrl && proxyUrl.hostname;
-        if (!useProxy) {
-          return;
-        }
-        return this._getProxyAgentDispatcher(parsedUrl, proxyUrl);
-      }
-      _prepareRequest(method, requestUrl, headers) {
-        const info2 = {};
-        info2.parsedUrl = requestUrl;
-        const usingSsl = info2.parsedUrl.protocol === "https:";
-        info2.httpModule = usingSsl ? https : http;
-        const defaultPort = usingSsl ? 443 : 80;
-        info2.options = {};
-        info2.options.host = info2.parsedUrl.hostname;
-        info2.options.port = info2.parsedUrl.port ? parseInt(info2.parsedUrl.port) : defaultPort;
-        info2.options.path = (info2.parsedUrl.pathname || "") + (info2.parsedUrl.search || "");
-        info2.options.method = method;
-        info2.options.headers = this._mergeHeaders(headers);
-        if (this.userAgent != null) {
-          info2.options.headers["user-agent"] = this.userAgent;
-        }
-        info2.options.agent = this._getAgent(info2.parsedUrl);
-        if (this.handlers) {
-          for (const handler2 of this.handlers) {
-            handler2.prepareRequest(info2.options);
-          }
-        }
-        return info2;
-      }
-      _mergeHeaders(headers) {
-        if (this.requestOptions && this.requestOptions.headers) {
-          return Object.assign({}, lowercaseKeys2(this.requestOptions.headers), lowercaseKeys2(headers || {}));
-        }
-        return lowercaseKeys2(headers || {});
-      }
-      /**
-       * Gets an existing header value or returns a default.
-       * Handles converting number header values to strings since HTTP headers must be strings.
-       * Note: This returns string | string[] since some headers can have multiple values.
-       * For headers that must always be a single string (like Content-Type), use the
-       * specialized _getExistingOrDefaultContentTypeHeader method instead.
-       */
-      _getExistingOrDefaultHeader(additionalHeaders, header, _default) {
-        let clientHeader;
-        if (this.requestOptions && this.requestOptions.headers) {
-          const headerValue = lowercaseKeys2(this.requestOptions.headers)[header];
-          if (headerValue) {
-            clientHeader = typeof headerValue === "number" ? headerValue.toString() : headerValue;
-          }
-        }
-        const additionalValue = additionalHeaders[header];
-        if (additionalValue !== void 0) {
-          return typeof additionalValue === "number" ? additionalValue.toString() : additionalValue;
-        }
-        if (clientHeader !== void 0) {
-          return clientHeader;
-        }
-        return _default;
-      }
-      /**
-       * Specialized version of _getExistingOrDefaultHeader for Content-Type header.
-       * Always returns a single string (not an array) since Content-Type should be a single value.
-       * Converts arrays to comma-separated strings and numbers to strings to ensure type safety.
-       * This was split from _getExistingOrDefaultHeader to provide stricter typing for callers
-       * that assign the result to places expecting a string (e.g., additionalHeaders[Headers.ContentType]).
-       */
-      _getExistingOrDefaultContentTypeHeader(additionalHeaders, _default) {
-        let clientHeader;
-        if (this.requestOptions && this.requestOptions.headers) {
-          const headerValue = lowercaseKeys2(this.requestOptions.headers)[Headers2.ContentType];
-          if (headerValue) {
-            if (typeof headerValue === "number") {
-              clientHeader = String(headerValue);
-            } else if (Array.isArray(headerValue)) {
-              clientHeader = headerValue.join(", ");
-            } else {
-              clientHeader = headerValue;
-            }
-          }
-        }
-        const additionalValue = additionalHeaders[Headers2.ContentType];
-        if (additionalValue !== void 0) {
-          if (typeof additionalValue === "number") {
-            return String(additionalValue);
-          } else if (Array.isArray(additionalValue)) {
-            return additionalValue.join(", ");
-          } else {
-            return additionalValue;
-          }
-        }
-        if (clientHeader !== void 0) {
-          return clientHeader;
-        }
-        return _default;
-      }
-      _getAgent(parsedUrl) {
-        let agent;
-        const proxyUrl = pm.getProxyUrl(parsedUrl);
-        const useProxy = proxyUrl && proxyUrl.hostname;
-        if (this._keepAlive && useProxy) {
-          agent = this._proxyAgent;
-        }
-        if (!useProxy) {
-          agent = this._agent;
-        }
-        if (agent) {
-          return agent;
-        }
-        const usingSsl = parsedUrl.protocol === "https:";
-        let maxSockets = 100;
-        if (this.requestOptions) {
-          maxSockets = this.requestOptions.maxSockets || http.globalAgent.maxSockets;
-        }
-        if (proxyUrl && proxyUrl.hostname) {
-          const agentOptions = {
-            maxSockets,
-            keepAlive: this._keepAlive,
-            proxy: Object.assign(Object.assign({}, (proxyUrl.username || proxyUrl.password) && {
-              proxyAuth: `${proxyUrl.username}:${proxyUrl.password}`
-            }), { host: proxyUrl.hostname, port: proxyUrl.port })
-          };
-          let tunnelAgent;
-          const overHttps = proxyUrl.protocol === "https:";
-          if (usingSsl) {
-            tunnelAgent = overHttps ? tunnel2.httpsOverHttps : tunnel2.httpsOverHttp;
-          } else {
-            tunnelAgent = overHttps ? tunnel2.httpOverHttps : tunnel2.httpOverHttp;
-          }
-          agent = tunnelAgent(agentOptions);
-          this._proxyAgent = agent;
-        }
-        if (!agent) {
-          const options = { keepAlive: this._keepAlive, maxSockets };
-          agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
-          this._agent = agent;
-        }
-        if (usingSsl && this._ignoreSslError) {
-          agent.options = Object.assign(agent.options || {}, {
-            rejectUnauthorized: false
-          });
-        }
-        return agent;
-      }
-      _getProxyAgentDispatcher(parsedUrl, proxyUrl) {
-        let proxyAgent;
-        if (this._keepAlive) {
-          proxyAgent = this._proxyAgentDispatcher;
-        }
-        if (proxyAgent) {
-          return proxyAgent;
-        }
-        const usingSsl = parsedUrl.protocol === "https:";
-        proxyAgent = new undici_1.ProxyAgent(Object.assign({ uri: proxyUrl.href, pipelining: !this._keepAlive ? 0 : 1 }, (proxyUrl.username || proxyUrl.password) && {
-          token: `Basic ${Buffer.from(`${proxyUrl.username}:${proxyUrl.password}`).toString("base64")}`
-        }));
-        this._proxyAgentDispatcher = proxyAgent;
-        if (usingSsl && this._ignoreSslError) {
-          proxyAgent.options = Object.assign(proxyAgent.options.requestTls || {}, {
-            rejectUnauthorized: false
-          });
-        }
-        return proxyAgent;
-      }
-      _getUserAgentWithOrchestrationId(userAgent2) {
-        const baseUserAgent = userAgent2 || "actions/http-client";
-        const orchId = process.env["ACTIONS_ORCHESTRATION_ID"];
-        if (orchId) {
-          const sanitizedId = orchId.replace(/[^a-z0-9_.-]/gi, "_");
-          return `${baseUserAgent} actions_orchestration_id/${sanitizedId}`;
-        }
-        return baseUserAgent;
-      }
-      _performExponentialBackoff(retryNumber) {
-        return __awaiter3(this, void 0, void 0, function* () {
-          retryNumber = Math.min(ExponentialBackoffCeiling, retryNumber);
-          const ms = ExponentialBackoffTimeSlice * Math.pow(2, retryNumber);
-          return new Promise((resolve) => setTimeout(() => resolve(), ms));
-        });
-      }
-      _processResponse(res, options) {
-        return __awaiter3(this, void 0, void 0, function* () {
-          return new Promise((resolve, reject) => __awaiter3(this, void 0, void 0, function* () {
-            const statusCode = res.message.statusCode || 0;
-            const response = {
-              statusCode,
-              result: null,
-              headers: {}
-            };
-            if (statusCode === HttpCodes2.NotFound) {
-              resolve(response);
-            }
-            function dateTimeDeserializer(key, value) {
-              if (typeof value === "string") {
-                const a = new Date(value);
-                if (!isNaN(a.valueOf())) {
-                  return a;
-                }
-              }
-              return value;
-            }
-            let obj;
-            let contents;
-            try {
-              contents = yield res.readBody();
-              if (contents && contents.length > 0) {
-                if (options && options.deserializeDates) {
-                  obj = JSON.parse(contents, dateTimeDeserializer);
-                } else {
-                  obj = JSON.parse(contents);
-                }
-                response.result = obj;
-              }
-              response.headers = res.message.headers;
-            } catch (err) {
-            }
-            if (statusCode > 299) {
-              let msg;
-              if (obj && obj.message) {
-                msg = obj.message;
-              } else if (contents && contents.length > 0) {
-                msg = contents;
-              } else {
-                msg = `Failed request: (${statusCode})`;
-              }
-              const err = new HttpClientError(msg, statusCode);
-              err.result = response.result;
-              reject(err);
-            } else {
-              resolve(response);
-            }
-          }));
-        });
-      }
-    };
-    exports2.HttpClient = HttpClient3;
-    var lowercaseKeys2 = (obj) => Object.keys(obj).reduce((c, k) => (c[k.toLowerCase()] = obj[k], c), {});
-  }
-});
-
 // ../../node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/codegen/code.js
 var require_code = __commonJS({
   "../../node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/codegen/code.js"(exports2) {
@@ -26830,6 +26058,778 @@ var require_ajv = __commonJS({
   }
 });
 
+// ../../node_modules/.pnpm/@actions+http-client@3.0.2/node_modules/@actions/http-client/lib/proxy.js
+var require_proxy = __commonJS({
+  "../../node_modules/.pnpm/@actions+http-client@3.0.2/node_modules/@actions/http-client/lib/proxy.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.getProxyUrl = getProxyUrl2;
+    exports2.checkBypass = checkBypass;
+    function getProxyUrl2(reqUrl) {
+      const usingSsl = reqUrl.protocol === "https:";
+      if (checkBypass(reqUrl)) {
+        return void 0;
+      }
+      const proxyVar = (() => {
+        if (usingSsl) {
+          return process.env["https_proxy"] || process.env["HTTPS_PROXY"];
+        } else {
+          return process.env["http_proxy"] || process.env["HTTP_PROXY"];
+        }
+      })();
+      if (proxyVar) {
+        try {
+          return new DecodedURL(proxyVar);
+        } catch (_a) {
+          if (!proxyVar.startsWith("http://") && !proxyVar.startsWith("https://"))
+            return new DecodedURL(`http://${proxyVar}`);
+        }
+      } else {
+        return void 0;
+      }
+    }
+    function checkBypass(reqUrl) {
+      if (!reqUrl.hostname) {
+        return false;
+      }
+      const reqHost = reqUrl.hostname;
+      if (isLoopbackAddress(reqHost)) {
+        return true;
+      }
+      const noProxy = process.env["no_proxy"] || process.env["NO_PROXY"] || "";
+      if (!noProxy) {
+        return false;
+      }
+      let reqPort;
+      if (reqUrl.port) {
+        reqPort = Number(reqUrl.port);
+      } else if (reqUrl.protocol === "http:") {
+        reqPort = 80;
+      } else if (reqUrl.protocol === "https:") {
+        reqPort = 443;
+      }
+      const upperReqHosts = [reqUrl.hostname.toUpperCase()];
+      if (typeof reqPort === "number") {
+        upperReqHosts.push(`${upperReqHosts[0]}:${reqPort}`);
+      }
+      for (const upperNoProxyItem of noProxy.split(",").map((x) => x.trim().toUpperCase()).filter((x) => x)) {
+        if (upperNoProxyItem === "*" || upperReqHosts.some((x) => x === upperNoProxyItem || x.endsWith(`.${upperNoProxyItem}`) || upperNoProxyItem.startsWith(".") && x.endsWith(`${upperNoProxyItem}`))) {
+          return true;
+        }
+      }
+      return false;
+    }
+    function isLoopbackAddress(host) {
+      const hostLower = host.toLowerCase();
+      return hostLower === "localhost" || hostLower.startsWith("127.") || hostLower.startsWith("[::1]") || hostLower.startsWith("[0:0:0:0:0:0:0:1]");
+    }
+    var DecodedURL = class extends URL {
+      constructor(url, base) {
+        super(url, base);
+        this._decodedUsername = decodeURIComponent(super.username);
+        this._decodedPassword = decodeURIComponent(super.password);
+      }
+      get username() {
+        return this._decodedUsername;
+      }
+      get password() {
+        return this._decodedPassword;
+      }
+    };
+  }
+});
+
+// ../../node_modules/.pnpm/@actions+http-client@3.0.2/node_modules/@actions/http-client/lib/index.js
+var require_lib = __commonJS({
+  "../../node_modules/.pnpm/@actions+http-client@3.0.2/node_modules/@actions/http-client/lib/index.js"(exports2) {
+    "use strict";
+    var __createBinding = exports2 && exports2.__createBinding || (Object.create ? (function(o, m, k, k2) {
+      if (k2 === void 0) k2 = k;
+      var desc = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+        desc = { enumerable: true, get: function() {
+          return m[k];
+        } };
+      }
+      Object.defineProperty(o, k2, desc);
+    }) : (function(o, m, k, k2) {
+      if (k2 === void 0) k2 = k;
+      o[k2] = m[k];
+    }));
+    var __setModuleDefault = exports2 && exports2.__setModuleDefault || (Object.create ? (function(o, v) {
+      Object.defineProperty(o, "default", { enumerable: true, value: v });
+    }) : function(o, v) {
+      o["default"] = v;
+    });
+    var __importStar = exports2 && exports2.__importStar || /* @__PURE__ */ (function() {
+      var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function(o2) {
+          var ar = [];
+          for (var k in o2) if (Object.prototype.hasOwnProperty.call(o2, k)) ar[ar.length] = k;
+          return ar;
+        };
+        return ownKeys(o);
+      };
+      return function(mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) {
+          for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        }
+        __setModuleDefault(result, mod);
+        return result;
+      };
+    })();
+    var __awaiter3 = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
+      function adopt(value) {
+        return value instanceof P ? value : new P(function(resolve) {
+          resolve(value);
+        });
+      }
+      return new (P || (P = Promise))(function(resolve, reject) {
+        function fulfilled(value) {
+          try {
+            step2(generator.next(value));
+          } catch (e) {
+            reject(e);
+          }
+        }
+        function rejected(value) {
+          try {
+            step2(generator["throw"](value));
+          } catch (e) {
+            reject(e);
+          }
+        }
+        function step2(result) {
+          result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+        }
+        step2((generator = generator.apply(thisArg, _arguments || [])).next());
+      });
+    };
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.HttpClient = exports2.HttpClientResponse = exports2.HttpClientError = exports2.MediaTypes = exports2.Headers = exports2.HttpCodes = void 0;
+    exports2.getProxyUrl = getProxyUrl2;
+    exports2.isHttps = isHttps;
+    var http = __importStar(require("http"));
+    var https = __importStar(require("https"));
+    var pm = __importStar(require_proxy());
+    var tunnel2 = __importStar(require_tunnel2());
+    var undici_1 = require_undici();
+    var HttpCodes2;
+    (function(HttpCodes3) {
+      HttpCodes3[HttpCodes3["OK"] = 200] = "OK";
+      HttpCodes3[HttpCodes3["MultipleChoices"] = 300] = "MultipleChoices";
+      HttpCodes3[HttpCodes3["MovedPermanently"] = 301] = "MovedPermanently";
+      HttpCodes3[HttpCodes3["ResourceMoved"] = 302] = "ResourceMoved";
+      HttpCodes3[HttpCodes3["SeeOther"] = 303] = "SeeOther";
+      HttpCodes3[HttpCodes3["NotModified"] = 304] = "NotModified";
+      HttpCodes3[HttpCodes3["UseProxy"] = 305] = "UseProxy";
+      HttpCodes3[HttpCodes3["SwitchProxy"] = 306] = "SwitchProxy";
+      HttpCodes3[HttpCodes3["TemporaryRedirect"] = 307] = "TemporaryRedirect";
+      HttpCodes3[HttpCodes3["PermanentRedirect"] = 308] = "PermanentRedirect";
+      HttpCodes3[HttpCodes3["BadRequest"] = 400] = "BadRequest";
+      HttpCodes3[HttpCodes3["Unauthorized"] = 401] = "Unauthorized";
+      HttpCodes3[HttpCodes3["PaymentRequired"] = 402] = "PaymentRequired";
+      HttpCodes3[HttpCodes3["Forbidden"] = 403] = "Forbidden";
+      HttpCodes3[HttpCodes3["NotFound"] = 404] = "NotFound";
+      HttpCodes3[HttpCodes3["MethodNotAllowed"] = 405] = "MethodNotAllowed";
+      HttpCodes3[HttpCodes3["NotAcceptable"] = 406] = "NotAcceptable";
+      HttpCodes3[HttpCodes3["ProxyAuthenticationRequired"] = 407] = "ProxyAuthenticationRequired";
+      HttpCodes3[HttpCodes3["RequestTimeout"] = 408] = "RequestTimeout";
+      HttpCodes3[HttpCodes3["Conflict"] = 409] = "Conflict";
+      HttpCodes3[HttpCodes3["Gone"] = 410] = "Gone";
+      HttpCodes3[HttpCodes3["TooManyRequests"] = 429] = "TooManyRequests";
+      HttpCodes3[HttpCodes3["InternalServerError"] = 500] = "InternalServerError";
+      HttpCodes3[HttpCodes3["NotImplemented"] = 501] = "NotImplemented";
+      HttpCodes3[HttpCodes3["BadGateway"] = 502] = "BadGateway";
+      HttpCodes3[HttpCodes3["ServiceUnavailable"] = 503] = "ServiceUnavailable";
+      HttpCodes3[HttpCodes3["GatewayTimeout"] = 504] = "GatewayTimeout";
+    })(HttpCodes2 || (exports2.HttpCodes = HttpCodes2 = {}));
+    var Headers2;
+    (function(Headers3) {
+      Headers3["Accept"] = "accept";
+      Headers3["ContentType"] = "content-type";
+    })(Headers2 || (exports2.Headers = Headers2 = {}));
+    var MediaTypes2;
+    (function(MediaTypes3) {
+      MediaTypes3["ApplicationJson"] = "application/json";
+    })(MediaTypes2 || (exports2.MediaTypes = MediaTypes2 = {}));
+    function getProxyUrl2(serverUrl) {
+      const proxyUrl = pm.getProxyUrl(new URL(serverUrl));
+      return proxyUrl ? proxyUrl.href : "";
+    }
+    var HttpRedirectCodes2 = [
+      HttpCodes2.MovedPermanently,
+      HttpCodes2.ResourceMoved,
+      HttpCodes2.SeeOther,
+      HttpCodes2.TemporaryRedirect,
+      HttpCodes2.PermanentRedirect
+    ];
+    var HttpResponseRetryCodes2 = [
+      HttpCodes2.BadGateway,
+      HttpCodes2.ServiceUnavailable,
+      HttpCodes2.GatewayTimeout
+    ];
+    var RetryableHttpVerbs = ["OPTIONS", "GET", "DELETE", "HEAD"];
+    var ExponentialBackoffCeiling = 10;
+    var ExponentialBackoffTimeSlice = 5;
+    var HttpClientError = class _HttpClientError extends Error {
+      constructor(message, statusCode) {
+        super(message);
+        this.name = "HttpClientError";
+        this.statusCode = statusCode;
+        Object.setPrototypeOf(this, _HttpClientError.prototype);
+      }
+    };
+    exports2.HttpClientError = HttpClientError;
+    var HttpClientResponse = class {
+      constructor(message) {
+        this.message = message;
+      }
+      readBody() {
+        return __awaiter3(this, void 0, void 0, function* () {
+          return new Promise((resolve) => __awaiter3(this, void 0, void 0, function* () {
+            let output = Buffer.alloc(0);
+            this.message.on("data", (chunk) => {
+              output = Buffer.concat([output, chunk]);
+            });
+            this.message.on("end", () => {
+              resolve(output.toString());
+            });
+          }));
+        });
+      }
+      readBodyBuffer() {
+        return __awaiter3(this, void 0, void 0, function* () {
+          return new Promise((resolve) => __awaiter3(this, void 0, void 0, function* () {
+            const chunks = [];
+            this.message.on("data", (chunk) => {
+              chunks.push(chunk);
+            });
+            this.message.on("end", () => {
+              resolve(Buffer.concat(chunks));
+            });
+          }));
+        });
+      }
+    };
+    exports2.HttpClientResponse = HttpClientResponse;
+    function isHttps(requestUrl) {
+      const parsedUrl = new URL(requestUrl);
+      return parsedUrl.protocol === "https:";
+    }
+    var HttpClient3 = class {
+      constructor(userAgent2, handlers, requestOptions) {
+        this._ignoreSslError = false;
+        this._allowRedirects = true;
+        this._allowRedirectDowngrade = false;
+        this._maxRedirects = 50;
+        this._allowRetries = false;
+        this._maxRetries = 1;
+        this._keepAlive = false;
+        this._disposed = false;
+        this.userAgent = this._getUserAgentWithOrchestrationId(userAgent2);
+        this.handlers = handlers || [];
+        this.requestOptions = requestOptions;
+        if (requestOptions) {
+          if (requestOptions.ignoreSslError != null) {
+            this._ignoreSslError = requestOptions.ignoreSslError;
+          }
+          this._socketTimeout = requestOptions.socketTimeout;
+          if (requestOptions.allowRedirects != null) {
+            this._allowRedirects = requestOptions.allowRedirects;
+          }
+          if (requestOptions.allowRedirectDowngrade != null) {
+            this._allowRedirectDowngrade = requestOptions.allowRedirectDowngrade;
+          }
+          if (requestOptions.maxRedirects != null) {
+            this._maxRedirects = Math.max(requestOptions.maxRedirects, 0);
+          }
+          if (requestOptions.keepAlive != null) {
+            this._keepAlive = requestOptions.keepAlive;
+          }
+          if (requestOptions.allowRetries != null) {
+            this._allowRetries = requestOptions.allowRetries;
+          }
+          if (requestOptions.maxRetries != null) {
+            this._maxRetries = requestOptions.maxRetries;
+          }
+        }
+      }
+      options(requestUrl, additionalHeaders) {
+        return __awaiter3(this, void 0, void 0, function* () {
+          return this.request("OPTIONS", requestUrl, null, additionalHeaders || {});
+        });
+      }
+      get(requestUrl, additionalHeaders) {
+        return __awaiter3(this, void 0, void 0, function* () {
+          return this.request("GET", requestUrl, null, additionalHeaders || {});
+        });
+      }
+      del(requestUrl, additionalHeaders) {
+        return __awaiter3(this, void 0, void 0, function* () {
+          return this.request("DELETE", requestUrl, null, additionalHeaders || {});
+        });
+      }
+      post(requestUrl, data, additionalHeaders) {
+        return __awaiter3(this, void 0, void 0, function* () {
+          return this.request("POST", requestUrl, data, additionalHeaders || {});
+        });
+      }
+      patch(requestUrl, data, additionalHeaders) {
+        return __awaiter3(this, void 0, void 0, function* () {
+          return this.request("PATCH", requestUrl, data, additionalHeaders || {});
+        });
+      }
+      put(requestUrl, data, additionalHeaders) {
+        return __awaiter3(this, void 0, void 0, function* () {
+          return this.request("PUT", requestUrl, data, additionalHeaders || {});
+        });
+      }
+      head(requestUrl, additionalHeaders) {
+        return __awaiter3(this, void 0, void 0, function* () {
+          return this.request("HEAD", requestUrl, null, additionalHeaders || {});
+        });
+      }
+      sendStream(verb, requestUrl, stream, additionalHeaders) {
+        return __awaiter3(this, void 0, void 0, function* () {
+          return this.request(verb, requestUrl, stream, additionalHeaders);
+        });
+      }
+      /**
+       * Gets a typed object from an endpoint
+       * Be aware that not found returns a null.  Other errors (4xx, 5xx) reject the promise
+       */
+      getJson(requestUrl_1) {
+        return __awaiter3(this, arguments, void 0, function* (requestUrl, additionalHeaders = {}) {
+          additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes2.ApplicationJson);
+          const res = yield this.get(requestUrl, additionalHeaders);
+          return this._processResponse(res, this.requestOptions);
+        });
+      }
+      postJson(requestUrl_1, obj_1) {
+        return __awaiter3(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
+          const data = JSON.stringify(obj, null, 2);
+          additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes2.ApplicationJson);
+          additionalHeaders[Headers2.ContentType] = this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes2.ApplicationJson);
+          const res = yield this.post(requestUrl, data, additionalHeaders);
+          return this._processResponse(res, this.requestOptions);
+        });
+      }
+      putJson(requestUrl_1, obj_1) {
+        return __awaiter3(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
+          const data = JSON.stringify(obj, null, 2);
+          additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes2.ApplicationJson);
+          additionalHeaders[Headers2.ContentType] = this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes2.ApplicationJson);
+          const res = yield this.put(requestUrl, data, additionalHeaders);
+          return this._processResponse(res, this.requestOptions);
+        });
+      }
+      patchJson(requestUrl_1, obj_1) {
+        return __awaiter3(this, arguments, void 0, function* (requestUrl, obj, additionalHeaders = {}) {
+          const data = JSON.stringify(obj, null, 2);
+          additionalHeaders[Headers2.Accept] = this._getExistingOrDefaultHeader(additionalHeaders, Headers2.Accept, MediaTypes2.ApplicationJson);
+          additionalHeaders[Headers2.ContentType] = this._getExistingOrDefaultContentTypeHeader(additionalHeaders, MediaTypes2.ApplicationJson);
+          const res = yield this.patch(requestUrl, data, additionalHeaders);
+          return this._processResponse(res, this.requestOptions);
+        });
+      }
+      /**
+       * Makes a raw http request.
+       * All other methods such as get, post, patch, and request ultimately call this.
+       * Prefer get, del, post and patch
+       */
+      request(verb, requestUrl, data, headers) {
+        return __awaiter3(this, void 0, void 0, function* () {
+          if (this._disposed) {
+            throw new Error("Client has already been disposed.");
+          }
+          const parsedUrl = new URL(requestUrl);
+          let info2 = this._prepareRequest(verb, parsedUrl, headers);
+          const maxTries = this._allowRetries && RetryableHttpVerbs.includes(verb) ? this._maxRetries + 1 : 1;
+          let numTries = 0;
+          let response;
+          do {
+            response = yield this.requestRaw(info2, data);
+            if (response && response.message && response.message.statusCode === HttpCodes2.Unauthorized) {
+              let authenticationHandler;
+              for (const handler2 of this.handlers) {
+                if (handler2.canHandleAuthentication(response)) {
+                  authenticationHandler = handler2;
+                  break;
+                }
+              }
+              if (authenticationHandler) {
+                return authenticationHandler.handleAuthentication(this, info2, data);
+              } else {
+                return response;
+              }
+            }
+            let redirectsRemaining = this._maxRedirects;
+            while (response.message.statusCode && HttpRedirectCodes2.includes(response.message.statusCode) && this._allowRedirects && redirectsRemaining > 0) {
+              const redirectUrl = response.message.headers["location"];
+              if (!redirectUrl) {
+                break;
+              }
+              const parsedRedirectUrl = new URL(redirectUrl);
+              if (parsedUrl.protocol === "https:" && parsedUrl.protocol !== parsedRedirectUrl.protocol && !this._allowRedirectDowngrade) {
+                throw new Error("Redirect from HTTPS to HTTP protocol. This downgrade is not allowed for security reasons. If you want to allow this behavior, set the allowRedirectDowngrade option to true.");
+              }
+              yield response.readBody();
+              if (parsedRedirectUrl.hostname !== parsedUrl.hostname) {
+                for (const header in headers) {
+                  if (header.toLowerCase() === "authorization") {
+                    delete headers[header];
+                  }
+                }
+              }
+              info2 = this._prepareRequest(verb, parsedRedirectUrl, headers);
+              response = yield this.requestRaw(info2, data);
+              redirectsRemaining--;
+            }
+            if (!response.message.statusCode || !HttpResponseRetryCodes2.includes(response.message.statusCode)) {
+              return response;
+            }
+            numTries += 1;
+            if (numTries < maxTries) {
+              yield response.readBody();
+              yield this._performExponentialBackoff(numTries);
+            }
+          } while (numTries < maxTries);
+          return response;
+        });
+      }
+      /**
+       * Needs to be called if keepAlive is set to true in request options.
+       */
+      dispose() {
+        if (this._agent) {
+          this._agent.destroy();
+        }
+        this._disposed = true;
+      }
+      /**
+       * Raw request.
+       * @param info
+       * @param data
+       */
+      requestRaw(info2, data) {
+        return __awaiter3(this, void 0, void 0, function* () {
+          return new Promise((resolve, reject) => {
+            function callbackForResult(err, res) {
+              if (err) {
+                reject(err);
+              } else if (!res) {
+                reject(new Error("Unknown error"));
+              } else {
+                resolve(res);
+              }
+            }
+            this.requestRawWithCallback(info2, data, callbackForResult);
+          });
+        });
+      }
+      /**
+       * Raw request with callback.
+       * @param info
+       * @param data
+       * @param onResult
+       */
+      requestRawWithCallback(info2, data, onResult) {
+        if (typeof data === "string") {
+          if (!info2.options.headers) {
+            info2.options.headers = {};
+          }
+          info2.options.headers["Content-Length"] = Buffer.byteLength(data, "utf8");
+        }
+        let callbackCalled = false;
+        function handleResult(err, res) {
+          if (!callbackCalled) {
+            callbackCalled = true;
+            onResult(err, res);
+          }
+        }
+        const req = info2.httpModule.request(info2.options, (msg) => {
+          const res = new HttpClientResponse(msg);
+          handleResult(void 0, res);
+        });
+        let socket;
+        req.on("socket", (sock) => {
+          socket = sock;
+        });
+        req.setTimeout(this._socketTimeout || 3 * 6e4, () => {
+          if (socket) {
+            socket.end();
+          }
+          handleResult(new Error(`Request timeout: ${info2.options.path}`));
+        });
+        req.on("error", function(err) {
+          handleResult(err);
+        });
+        if (data && typeof data === "string") {
+          req.write(data, "utf8");
+        }
+        if (data && typeof data !== "string") {
+          data.on("close", function() {
+            req.end();
+          });
+          data.pipe(req);
+        } else {
+          req.end();
+        }
+      }
+      /**
+       * Gets an http agent. This function is useful when you need an http agent that handles
+       * routing through a proxy server - depending upon the url and proxy environment variables.
+       * @param serverUrl  The server URL where the request will be sent. For example, https://api.github.com
+       */
+      getAgent(serverUrl) {
+        const parsedUrl = new URL(serverUrl);
+        return this._getAgent(parsedUrl);
+      }
+      getAgentDispatcher(serverUrl) {
+        const parsedUrl = new URL(serverUrl);
+        const proxyUrl = pm.getProxyUrl(parsedUrl);
+        const useProxy = proxyUrl && proxyUrl.hostname;
+        if (!useProxy) {
+          return;
+        }
+        return this._getProxyAgentDispatcher(parsedUrl, proxyUrl);
+      }
+      _prepareRequest(method, requestUrl, headers) {
+        const info2 = {};
+        info2.parsedUrl = requestUrl;
+        const usingSsl = info2.parsedUrl.protocol === "https:";
+        info2.httpModule = usingSsl ? https : http;
+        const defaultPort = usingSsl ? 443 : 80;
+        info2.options = {};
+        info2.options.host = info2.parsedUrl.hostname;
+        info2.options.port = info2.parsedUrl.port ? parseInt(info2.parsedUrl.port) : defaultPort;
+        info2.options.path = (info2.parsedUrl.pathname || "") + (info2.parsedUrl.search || "");
+        info2.options.method = method;
+        info2.options.headers = this._mergeHeaders(headers);
+        if (this.userAgent != null) {
+          info2.options.headers["user-agent"] = this.userAgent;
+        }
+        info2.options.agent = this._getAgent(info2.parsedUrl);
+        if (this.handlers) {
+          for (const handler2 of this.handlers) {
+            handler2.prepareRequest(info2.options);
+          }
+        }
+        return info2;
+      }
+      _mergeHeaders(headers) {
+        if (this.requestOptions && this.requestOptions.headers) {
+          return Object.assign({}, lowercaseKeys2(this.requestOptions.headers), lowercaseKeys2(headers || {}));
+        }
+        return lowercaseKeys2(headers || {});
+      }
+      /**
+       * Gets an existing header value or returns a default.
+       * Handles converting number header values to strings since HTTP headers must be strings.
+       * Note: This returns string | string[] since some headers can have multiple values.
+       * For headers that must always be a single string (like Content-Type), use the
+       * specialized _getExistingOrDefaultContentTypeHeader method instead.
+       */
+      _getExistingOrDefaultHeader(additionalHeaders, header, _default) {
+        let clientHeader;
+        if (this.requestOptions && this.requestOptions.headers) {
+          const headerValue = lowercaseKeys2(this.requestOptions.headers)[header];
+          if (headerValue) {
+            clientHeader = typeof headerValue === "number" ? headerValue.toString() : headerValue;
+          }
+        }
+        const additionalValue = additionalHeaders[header];
+        if (additionalValue !== void 0) {
+          return typeof additionalValue === "number" ? additionalValue.toString() : additionalValue;
+        }
+        if (clientHeader !== void 0) {
+          return clientHeader;
+        }
+        return _default;
+      }
+      /**
+       * Specialized version of _getExistingOrDefaultHeader for Content-Type header.
+       * Always returns a single string (not an array) since Content-Type should be a single value.
+       * Converts arrays to comma-separated strings and numbers to strings to ensure type safety.
+       * This was split from _getExistingOrDefaultHeader to provide stricter typing for callers
+       * that assign the result to places expecting a string (e.g., additionalHeaders[Headers.ContentType]).
+       */
+      _getExistingOrDefaultContentTypeHeader(additionalHeaders, _default) {
+        let clientHeader;
+        if (this.requestOptions && this.requestOptions.headers) {
+          const headerValue = lowercaseKeys2(this.requestOptions.headers)[Headers2.ContentType];
+          if (headerValue) {
+            if (typeof headerValue === "number") {
+              clientHeader = String(headerValue);
+            } else if (Array.isArray(headerValue)) {
+              clientHeader = headerValue.join(", ");
+            } else {
+              clientHeader = headerValue;
+            }
+          }
+        }
+        const additionalValue = additionalHeaders[Headers2.ContentType];
+        if (additionalValue !== void 0) {
+          if (typeof additionalValue === "number") {
+            return String(additionalValue);
+          } else if (Array.isArray(additionalValue)) {
+            return additionalValue.join(", ");
+          } else {
+            return additionalValue;
+          }
+        }
+        if (clientHeader !== void 0) {
+          return clientHeader;
+        }
+        return _default;
+      }
+      _getAgent(parsedUrl) {
+        let agent;
+        const proxyUrl = pm.getProxyUrl(parsedUrl);
+        const useProxy = proxyUrl && proxyUrl.hostname;
+        if (this._keepAlive && useProxy) {
+          agent = this._proxyAgent;
+        }
+        if (!useProxy) {
+          agent = this._agent;
+        }
+        if (agent) {
+          return agent;
+        }
+        const usingSsl = parsedUrl.protocol === "https:";
+        let maxSockets = 100;
+        if (this.requestOptions) {
+          maxSockets = this.requestOptions.maxSockets || http.globalAgent.maxSockets;
+        }
+        if (proxyUrl && proxyUrl.hostname) {
+          const agentOptions = {
+            maxSockets,
+            keepAlive: this._keepAlive,
+            proxy: Object.assign(Object.assign({}, (proxyUrl.username || proxyUrl.password) && {
+              proxyAuth: `${proxyUrl.username}:${proxyUrl.password}`
+            }), { host: proxyUrl.hostname, port: proxyUrl.port })
+          };
+          let tunnelAgent;
+          const overHttps = proxyUrl.protocol === "https:";
+          if (usingSsl) {
+            tunnelAgent = overHttps ? tunnel2.httpsOverHttps : tunnel2.httpsOverHttp;
+          } else {
+            tunnelAgent = overHttps ? tunnel2.httpOverHttps : tunnel2.httpOverHttp;
+          }
+          agent = tunnelAgent(agentOptions);
+          this._proxyAgent = agent;
+        }
+        if (!agent) {
+          const options = { keepAlive: this._keepAlive, maxSockets };
+          agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
+          this._agent = agent;
+        }
+        if (usingSsl && this._ignoreSslError) {
+          agent.options = Object.assign(agent.options || {}, {
+            rejectUnauthorized: false
+          });
+        }
+        return agent;
+      }
+      _getProxyAgentDispatcher(parsedUrl, proxyUrl) {
+        let proxyAgent;
+        if (this._keepAlive) {
+          proxyAgent = this._proxyAgentDispatcher;
+        }
+        if (proxyAgent) {
+          return proxyAgent;
+        }
+        const usingSsl = parsedUrl.protocol === "https:";
+        proxyAgent = new undici_1.ProxyAgent(Object.assign({ uri: proxyUrl.href, pipelining: !this._keepAlive ? 0 : 1 }, (proxyUrl.username || proxyUrl.password) && {
+          token: `Basic ${Buffer.from(`${proxyUrl.username}:${proxyUrl.password}`).toString("base64")}`
+        }));
+        this._proxyAgentDispatcher = proxyAgent;
+        if (usingSsl && this._ignoreSslError) {
+          proxyAgent.options = Object.assign(proxyAgent.options.requestTls || {}, {
+            rejectUnauthorized: false
+          });
+        }
+        return proxyAgent;
+      }
+      _getUserAgentWithOrchestrationId(userAgent2) {
+        const baseUserAgent = userAgent2 || "actions/http-client";
+        const orchId = process.env["ACTIONS_ORCHESTRATION_ID"];
+        if (orchId) {
+          const sanitizedId = orchId.replace(/[^a-z0-9_.-]/gi, "_");
+          return `${baseUserAgent} actions_orchestration_id/${sanitizedId}`;
+        }
+        return baseUserAgent;
+      }
+      _performExponentialBackoff(retryNumber) {
+        return __awaiter3(this, void 0, void 0, function* () {
+          retryNumber = Math.min(ExponentialBackoffCeiling, retryNumber);
+          const ms = ExponentialBackoffTimeSlice * Math.pow(2, retryNumber);
+          return new Promise((resolve) => setTimeout(() => resolve(), ms));
+        });
+      }
+      _processResponse(res, options) {
+        return __awaiter3(this, void 0, void 0, function* () {
+          return new Promise((resolve, reject) => __awaiter3(this, void 0, void 0, function* () {
+            const statusCode = res.message.statusCode || 0;
+            const response = {
+              statusCode,
+              result: null,
+              headers: {}
+            };
+            if (statusCode === HttpCodes2.NotFound) {
+              resolve(response);
+            }
+            function dateTimeDeserializer(key, value) {
+              if (typeof value === "string") {
+                const a = new Date(value);
+                if (!isNaN(a.valueOf())) {
+                  return a;
+                }
+              }
+              return value;
+            }
+            let obj;
+            let contents;
+            try {
+              contents = yield res.readBody();
+              if (contents && contents.length > 0) {
+                if (options && options.deserializeDates) {
+                  obj = JSON.parse(contents, dateTimeDeserializer);
+                } else {
+                  obj = JSON.parse(contents);
+                }
+                response.result = obj;
+              }
+              response.headers = res.message.headers;
+            } catch (err) {
+            }
+            if (statusCode > 299) {
+              let msg;
+              if (obj && obj.message) {
+                msg = obj.message;
+              } else if (contents && contents.length > 0) {
+                msg = contents;
+              } else {
+                msg = `Failed request: (${statusCode})`;
+              }
+              const err = new HttpClientError(msg, statusCode);
+              err.result = response.result;
+              reject(err);
+            } else {
+              resolve(response);
+            }
+          }));
+        });
+      }
+    };
+    exports2.HttpClient = HttpClient3;
+    var lowercaseKeys2 = (obj) => Object.keys(obj).reduce((c, k) => (c[k.toLowerCase()] = obj[k], c), {});
+  }
+});
+
 // src/index.ts
 var index_exports = {};
 __export(index_exports, {
@@ -27353,6 +27353,1416 @@ function warning(message, properties = {}) {
 }
 function info(message) {
   process.stdout.write(message + os4.EOL);
+}
+
+// ../core/dist/index.js
+var import_promises = require("fs/promises");
+var import_path = __toESM(require("path"), 1);
+var import_child_process = require("child_process");
+var import_util = require("util");
+var import_promises2 = require("fs/promises");
+var import_path2 = __toESM(require("path"), 1);
+var import_promises3 = require("fs/promises");
+var import_path3 = __toESM(require("path"), 1);
+var import_path4 = __toESM(require("path"), 1);
+var import_promises4 = require("fs/promises");
+var import_path5 = __toESM(require("path"), 1);
+var import_promises5 = require("fs/promises");
+var import_path6 = __toESM(require("path"), 1);
+var import_promises6 = require("fs/promises");
+var import_ajv = __toESM(require_ajv(), 1);
+var import_child_process2 = require("child_process");
+var import_util2 = require("util");
+var AUDIT_DIR = ".policy-semver";
+var AUDIT_FILE = "last-release.json";
+function lastReleaseRelPath() {
+  return `${AUDIT_DIR}/${AUDIT_FILE}`;
+}
+function lastReleasePath(cwd) {
+  return import_path.default.join(cwd, AUDIT_DIR, AUDIT_FILE);
+}
+async function writeLastRelease(input) {
+  const record = {
+    version: input.version,
+    kind: input.kind,
+    tag: input.tag,
+    at: input.at ?? (/* @__PURE__ */ new Date()).toISOString()
+  };
+  await (0, import_promises.mkdir)(import_path.default.join(input.cwd, AUDIT_DIR), { recursive: true });
+  await (0, import_promises.writeFile)(
+    lastReleasePath(input.cwd),
+    `${JSON.stringify(record, null, 2)}
+`,
+    "utf8"
+  );
+  return record;
+}
+function assertDualSourceMatch(versionFileVersion, packageJsonVersion) {
+  if (versionFileVersion !== packageJsonVersion) {
+    throw new Error(
+      `dual-source mismatch: VERSION=${JSON.stringify(versionFileVersion)} package.json=${JSON.stringify(packageJsonVersion)}`
+    );
+  }
+}
+var SEMVER_RE = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
+function isSemVerString(value) {
+  return SEMVER_RE.test(value.trim());
+}
+function parseSemVer(version) {
+  const trimmed = version.trim();
+  const m = SEMVER_RE.exec(trimmed);
+  if (!m) {
+    throw new Error(`malformed version: ${JSON.stringify(version)}`);
+  }
+  const parts = {
+    major: Number(m[1]),
+    minor: Number(m[2]),
+    patch: Number(m[3])
+  };
+  if (!Object.values(parts).every(Number.isSafeInteger)) {
+    throw new Error(`version out of range: ${JSON.stringify(version)}`);
+  }
+  return parts;
+}
+function formatSemVer(parts) {
+  return `${parts.major}.${parts.minor}.${parts.patch}`;
+}
+var execFileAsync = (0, import_util.promisify)(import_child_process.execFile);
+var GIT_TIMEOUT_MS = 5 * 60 * 1e3;
+var defaultGitExec = async (args, opts) => {
+  const { stdout, stderr } = await execFileAsync("git", args, {
+    cwd: opts?.cwd,
+    encoding: "utf8",
+    maxBuffer: 10 * 1024 * 1024,
+    timeout: GIT_TIMEOUT_MS
+  });
+  return { stdout: String(stdout), stderr: String(stderr) };
+};
+function parsePackageJson(raw) {
+  return JSON.parse(raw.replace(/^\uFEFF/, ""));
+}
+async function tryReadVersionFile(cwd, rel) {
+  const p = import_path2.default.join(cwd, rel);
+  try {
+    const raw = (await (0, import_promises2.readFile)(p, "utf8")).trim();
+    if (!isSemVerString(raw)) {
+      throw new Error(`malformed VERSION at ${p}: ${JSON.stringify(raw)}`);
+    }
+    return formatSemVer(parseSemVer(raw));
+  } catch (err) {
+    if (err.code === "ENOENT") return null;
+    throw err;
+  }
+}
+async function tryReadPackageJsonVersion(cwd, rel) {
+  const p = import_path2.default.join(cwd, rel);
+  try {
+    const pkg = parsePackageJson(await (0, import_promises2.readFile)(p, "utf8"));
+    if (typeof pkg.version !== "string" || !isSemVerString(pkg.version)) {
+      throw new Error(`malformed package.json version at ${p}`);
+    }
+    return formatSemVer(parseSemVer(pkg.version));
+  } catch (err) {
+    if (err.code === "ENOENT") return null;
+    throw err;
+  }
+}
+async function readBothConfigured(cwd, versionFile, packageJson) {
+  const vf = await tryReadVersionFile(cwd, versionFile);
+  const pkg = await tryReadPackageJsonVersion(cwd, packageJson);
+  if (vf !== null && pkg !== null) {
+    assertDualSourceMatch(vf, pkg);
+    return vf;
+  }
+  if (vf !== null) return vf;
+  if (pkg !== null) return pkg;
+  throw new Error("readVersion: neither VERSION nor package.json found");
+}
+function parseVersionFile(raw, label) {
+  const trimmed = raw.trim();
+  if (!isSemVerString(trimmed)) {
+    throw new Error(
+      `malformed VERSION at ${label}: ${JSON.stringify(trimmed)}`
+    );
+  }
+  return formatSemVer(parseSemVer(trimmed));
+}
+function parsePackageVersion(raw, label) {
+  const pkg = parsePackageJson(raw);
+  if (typeof pkg.version !== "string" || !isSemVerString(pkg.version)) {
+    throw new Error(`malformed package.json version at ${label}`);
+  }
+  return formatSemVer(parseSemVer(pkg.version));
+}
+async function showAtRef(exec, cwd, ref, rel) {
+  try {
+    const { stdout } = await exec(["show", `${ref}:${rel}`], { cwd });
+    return stdout;
+  } catch {
+    return null;
+  }
+}
+async function readVersionAtRef(input) {
+  const exec = input.exec ?? defaultGitExec;
+  const vfRel = input.files.versionFile;
+  const pkgRel = input.files.packageJson;
+  const vfRaw = vfRel !== void 0 ? await showAtRef(exec, input.cwd, input.ref, vfRel) : null;
+  const pkgRaw = pkgRel !== void 0 ? await showAtRef(exec, input.cwd, input.ref, pkgRel) : null;
+  const vf = vfRaw !== null ? parseVersionFile(vfRaw, `${input.ref}:${vfRel}`) : null;
+  const pkg = pkgRaw !== null ? parsePackageVersion(pkgRaw, `${input.ref}:${pkgRel}`) : null;
+  if (vf !== null && pkg !== null) {
+    assertDualSourceMatch(vf, pkg);
+    return vf;
+  }
+  if (vf !== null) return vf;
+  if (pkg !== null) return pkg;
+  return null;
+}
+async function writeVersionFile(cwd, rel, nextVersion) {
+  await (0, import_promises3.writeFile)(import_path3.default.join(cwd, rel), `${nextVersion}
+`, "utf8");
+}
+async function writePackageJsonVersion(cwd, rel, nextVersion) {
+  const p = import_path3.default.join(cwd, rel);
+  const raw = await (0, import_promises3.readFile)(p, "utf8");
+  await (0, import_promises3.writeFile)(p, withPackageVersion(raw, nextVersion), "utf8");
+}
+function withPackageVersion(raw, nextVersion) {
+  for (const match of raw.matchAll(/("version"\s*:\s*)"[^"]*"/g)) {
+    const end = match.index + match[0].length;
+    const edited = `${raw.slice(0, match.index)}${match[1]}"${nextVersion}"${raw.slice(end)}`;
+    const pkg = parsePackageJson(edited);
+    if (pkg.version === nextVersion) return edited;
+  }
+  throw new Error('package.json has no top-level "version" string');
+}
+async function snapshotFiles(cwd, rels) {
+  return Promise.all(
+    rels.map(async (rel) => ({
+      rel,
+      content: await (0, import_promises3.readFile)(import_path3.default.join(cwd, rel), "utf8")
+    }))
+  );
+}
+async function restoreFiles(cwd, prev) {
+  await Promise.allSettled(
+    prev.map((p) => (0, import_promises3.writeFile)(import_path3.default.join(cwd, p.rel), p.content, "utf8"))
+  );
+}
+async function writeBothAtomically(input) {
+  const extras = input.extraPackageJson ?? [];
+  const pkgRels = [input.packageJson, ...extras];
+  const prev = await snapshotFiles(input.cwd, [input.versionFile, ...pkgRels]);
+  try {
+    await writeVersionFile(input.cwd, input.versionFile, input.nextVersion);
+    for (const rel of pkgRels) {
+      await writePackageJsonVersion(input.cwd, rel, input.nextVersion);
+    }
+  } catch (err) {
+    await restoreFiles(input.cwd, prev);
+    throw err;
+  }
+}
+async function writePackageJsonFilesAtomically(input) {
+  const rels = input.packageJsonFiles;
+  if (rels.length === 0) return;
+  const prev = await snapshotFiles(input.cwd, rels);
+  try {
+    for (const rel of rels) {
+      await writePackageJsonVersion(input.cwd, rel, input.nextVersion);
+    }
+  } catch (err) {
+    await restoreFiles(input.cwd, prev);
+    throw err;
+  }
+}
+function applyBump(input) {
+  const { kind, currentVersion, envMajor } = input;
+  const cur = parseSemVer(currentVersion);
+  if (envMajor != null && envMajor < cur.major) {
+    throw new Error(`envMajor ${envMajor} is below current major ${cur.major}`);
+  }
+  switch (kind) {
+    case "none":
+      return currentVersion.trim();
+    case "major-reset": {
+      if (envMajor == null || !Number.isInteger(envMajor)) {
+        throw new Error("major-reset requires integer envMajor");
+      }
+      if (envMajor < cur.major) {
+        throw new Error(`envMajor ${envMajor} < current major ${cur.major}`);
+      }
+      return formatSemVer({ major: envMajor, minor: 0, patch: 0 });
+    }
+    case "minor":
+      return formatSemVer({
+        major: cur.major,
+        minor: cur.minor + 1,
+        patch: 0
+      });
+    case "patch":
+      return formatSemVer({
+        major: cur.major,
+        minor: cur.minor,
+        patch: cur.patch + 1
+      });
+    default: {
+      const _exhaustive = kind;
+      return _exhaustive;
+    }
+  }
+}
+var BOT_SKIP_TRAILER = "[skip version]";
+var RELEASE_PR_TRAILER = "Policy-Semver-PR";
+var RELEASE_KIND_TRAILER = "Policy-Semver-Kind";
+function formatBotBumpCommitMessage(nextVersion, tagPrefix = "v", source) {
+  const subject = `chore(release): ${tagPrefix}${nextVersion} ${BOT_SKIP_TRAILER}`;
+  if (source === void 0) return subject;
+  return `${subject}
+
+${RELEASE_PR_TRAILER}: ${source.prNumber}
+${RELEASE_KIND_TRAILER}: ${source.kind}`;
+}
+function decideBumpGuards(ctx) {
+  const reasons = [];
+  let allowWrite = true;
+  let forceKindNone = false;
+  if (ctx.isFork) {
+    allowWrite = false;
+    reasons.push("fork: allowWrite=false");
+  }
+  const hasSyncLabel = (ctx.labels ?? []).some(
+    (l) => l.toLowerCase() === "sync-from-prod"
+  );
+  const isSyncFromProd = hasSyncLabel || ctx.baseBranch === ctx.developBranch && ctx.headBranch === ctx.prodBranch;
+  if (isSyncFromProd) {
+    allowWrite = false;
+    forceKindNone = true;
+    reasons.push("sync-from-prod: force none / no write");
+  }
+  if (ctx.baseBranch !== ctx.prodBranch) {
+    allowWrite = false;
+    reasons.push("non-prod base: no write");
+  }
+  if (ctx.isMergedToProd === false) {
+    allowWrite = false;
+    reasons.push("not merged to prod: dry-run only");
+  }
+  const skipLabels = (ctx.skipLabels ?? ["skip-version"]).map(
+    (s) => s.toLowerCase()
+  );
+  if ((ctx.labels ?? []).some((l) => skipLabels.includes(l.toLowerCase()))) {
+    allowWrite = false;
+    forceKindNone = true;
+    reasons.push("skip label");
+  }
+  const trailers = ctx.skipTrailers ?? ["skip version"];
+  const skipPattern = (marker) => new RegExp(
+    `^(?!\\s*[-*+]\\s+\\[ \\]\\s).*\\[${escapeRegExp(marker)}\\](?:\\s+\\(#\\d+\\))?\\s*$`,
+    "im"
+  );
+  const patterns = trailers.map(skipPattern);
+  const trailerInner = BOT_SKIP_TRAILER.slice(1, -1);
+  if (!trailers.some((t) => t.toLowerCase() === trailerInner.toLowerCase())) {
+    patterns.push(skipPattern(trailerInner));
+  }
+  for (const text of ctx.textsForSkip ?? []) {
+    if (patterns.some((re) => re.test(text))) {
+      allowWrite = false;
+      forceKindNone = true;
+      reasons.push("skip trailer in subject/body");
+      break;
+    }
+  }
+  return { allowWrite, forceKindNone, reasons };
+}
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function parseEnvMajor(name, raw) {
+  if (raw === void 0 || raw === "") return null;
+  if (!/^\d+$/.test(raw) || !Number.isSafeInteger(Number(raw))) {
+    throw new Error(`invalid ${name}: expected digits only`);
+  }
+  return Number(raw);
+}
+async function readPrimaryVersion(input) {
+  const { cwd, files } = input;
+  const hasVf = Boolean(files.versionFile);
+  const hasPkg = Boolean(files.packageJson);
+  if (hasVf && hasPkg) {
+    return readBothConfigured(
+      cwd,
+      files.versionFile,
+      files.packageJson
+    );
+  }
+  if (hasVf) {
+    const vf = await tryReadVersionFile(cwd, files.versionFile);
+    if (vf === null) {
+      throw new Error(
+        `readVersion: VERSION not found at ${import_path4.default.join(cwd, files.versionFile)}`
+      );
+    }
+    return vf;
+  }
+  if (hasPkg) {
+    const pkg = await tryReadPackageJsonVersion(
+      cwd,
+      files.packageJson
+    );
+    if (pkg === null) {
+      throw new Error(
+        `readVersion: package.json not found at ${import_path4.default.join(cwd, files.packageJson)}`
+      );
+    }
+    return pkg;
+  }
+  throw new Error("readVersion: no versionFiles configured");
+}
+async function assertExtraPackageJsonMatch(cwd, extras, expected) {
+  if (!extras?.length) return;
+  for (const rel of extras) {
+    const got = await tryReadPackageJsonVersion(cwd, rel);
+    if (got === null) {
+      throw new Error(
+        `readVersion: package.json not found at ${import_path4.default.join(cwd, rel)}`
+      );
+    }
+    if (got !== expected) {
+      throw new Error(
+        `versionFiles mismatch: expected ${JSON.stringify(expected)} at ${rel}, got ${JSON.stringify(got)}`
+      );
+    }
+  }
+}
+async function extrasNeedWrite(cwd, extras, nextVersion) {
+  if (!extras?.length) return false;
+  for (const rel of extras) {
+    const got = await tryReadPackageJsonVersion(cwd, rel);
+    if (got !== nextVersion) return true;
+  }
+  return false;
+}
+function primaryFiles(files) {
+  return {
+    ...files.versionFile !== void 0 ? { versionFile: files.versionFile } : {},
+    ...files.packageJson !== void 0 ? { packageJson: files.packageJson } : {}
+  };
+}
+async function readVersion(input) {
+  const version = await readPrimaryVersion({
+    cwd: input.cwd,
+    files: primaryFiles(input.files)
+  });
+  await assertExtraPackageJsonMatch(
+    input.cwd,
+    input.files.extraPackageJson,
+    version
+  );
+  return version;
+}
+function toVersionFiles(versionFiles) {
+  const isVersionFile = (f) => /(^|\/)VERSION$/.test(f);
+  const isPackageJson = (f) => /(^|\/)package\.json$/.test(f);
+  const unsupported = versionFiles.find(
+    (f) => !isVersionFile(f) && !isPackageJson(f)
+  );
+  if (unsupported !== void 0) {
+    throw new Error(
+      `unsupported versionFiles entry ${JSON.stringify(unsupported)}: use a VERSION or package.json path`
+    );
+  }
+  const [versionFile, secondVersionFile] = versionFiles.filter(isVersionFile);
+  if (secondVersionFile !== void 0) {
+    throw new Error(
+      `versionFiles allows one VERSION file: ${versionFile}, ${secondVersionFile}`
+    );
+  }
+  const [packageJson, ...extraPackageJson] = versionFiles.filter(isPackageJson);
+  return {
+    ...versionFile !== void 0 ? { versionFile } : {},
+    ...packageJson !== void 0 ? { packageJson } : {},
+    ...extraPackageJson.length > 0 ? { extraPackageJson } : {}
+  };
+}
+async function writeSingleSource(cwd, nextVersion, kind, rel, extras) {
+  const extrasStale = await extrasNeedWrite(cwd, extras, nextVersion);
+  if (kind === "versionFile") {
+    let current = "";
+    try {
+      current = (await (0, import_promises4.readFile)(import_path5.default.join(cwd, rel), "utf8")).trim();
+    } catch (err) {
+      if (err.code !== "ENOENT") throw err;
+    }
+    if (current === nextVersion && !extrasStale) {
+      return { nextVersion, wrote: false, reason: "already-current" };
+    }
+    if (current !== nextVersion) {
+      await writeVersionFile(cwd, rel, nextVersion);
+    }
+    await writePackageJsonFilesAtomically({
+      cwd,
+      packageJsonFiles: extras,
+      nextVersion
+    });
+    return { nextVersion, wrote: true, reason: "written" };
+  }
+  const raw = await (0, import_promises4.readFile)(import_path5.default.join(cwd, rel), "utf8");
+  const pkg = parsePackageJson(raw);
+  if (pkg.version === nextVersion && !extrasStale) {
+    return { nextVersion, wrote: false, reason: "already-current" };
+  }
+  const pkgRels = pkg.version === nextVersion ? extras : [rel, ...extras];
+  await writePackageJsonFilesAtomically({
+    cwd,
+    packageJsonFiles: pkgRels,
+    nextVersion
+  });
+  return { nextVersion, wrote: true, reason: "written" };
+}
+async function writeVersion(input) {
+  const { cwd, nextVersion, dryRun, allowWrite, files } = input;
+  const extras = files.extraPackageJson ?? [];
+  if (dryRun) {
+    return { nextVersion, wrote: false, reason: "dry-run" };
+  }
+  if (!allowWrite) {
+    return { nextVersion, wrote: false, reason: "allow-write-false" };
+  }
+  const vfRel = files.versionFile;
+  const pkgRel = files.packageJson;
+  const bothConfigured = Boolean(vfRel) && Boolean(pkgRel);
+  if (bothConfigured) {
+    const vf = await tryReadVersionFile(cwd, vfRel);
+    const pkg = await tryReadPackageJsonVersion(cwd, pkgRel);
+    if (vf !== null && pkg !== null) {
+      const current = await readPrimaryVersion({
+        cwd,
+        files: {
+          versionFile: vfRel,
+          packageJson: pkgRel
+        }
+      });
+      const extrasStale = await extrasNeedWrite(cwd, extras, nextVersion);
+      if (current === nextVersion && !extrasStale) {
+        return { nextVersion, wrote: false, reason: "already-current" };
+      }
+      await writeBothAtomically({
+        cwd,
+        versionFile: vfRel,
+        packageJson: pkgRel,
+        extraPackageJson: extras,
+        nextVersion
+      });
+      return { nextVersion, wrote: true, reason: "written" };
+    }
+    if (vf !== null) {
+      return writeSingleSource(
+        cwd,
+        nextVersion,
+        "versionFile",
+        vfRel,
+        extras
+      );
+    }
+    if (pkg !== null) {
+      return writeSingleSource(
+        cwd,
+        nextVersion,
+        "packageJson",
+        pkgRel,
+        extras
+      );
+    }
+    throw new Error("writeVersion: neither VERSION nor package.json found");
+  }
+  if (vfRel) {
+    return writeSingleSource(cwd, nextVersion, "versionFile", vfRel, extras);
+  }
+  if (pkgRel) {
+    return writeSingleSource(cwd, nextVersion, "packageJson", pkgRel, extras);
+  }
+  throw new Error("writeVersion: no versionFiles configured");
+}
+var BUCKET_TO_SECTION = {
+  feat: "Added",
+  fix: "Fixed",
+  other: "Changed",
+  docs: null,
+  // never mutate for docs-only / kind none
+  "major-note": "Changed"
+};
+function firstLine(text) {
+  return text.split("\n")[0] ?? "";
+}
+function normalizeSubject(subject) {
+  return subject.trimStart().replace(
+    new RegExp("^(?:\\p{Extended_Pictographic}|\\p{Emoji_Modifier}|\\p{Regional_Indicator}|\\uFE0F|\\u200D)+\\s*", "u"),
+    ""
+  ).trim();
+}
+function isMergeSubject(normalized) {
+  return /^merge (?:pull request|branch|remote-tracking branch|tag)\b/i.test(
+    normalized
+  ) || /^merge [0-9a-f]{7,40} into\b/i.test(normalized) || /^merged in\b/i.test(normalized);
+}
+function subjectType(normalized) {
+  if (/^feat(?:\s*&\s*fix)?(?:\s*\([^)]*\))?!?\s*:/i.test(normalized)) {
+    return "feat";
+  }
+  if (/^docs(?:\s*\([^)]*\))?\s*:/i.test(normalized)) return "docs";
+  if (/^fix(?:\s*\([^)]*\))?!?\s*:/i.test(normalized)) return "fix";
+  return "other";
+}
+function isConventionalSubject(normalized) {
+  return /^[a-z]+(?:\s*&\s*[a-z]+)?(?:\s*\([^)]*\))?!?\s*:/i.test(normalized);
+}
+function looksLikeFeat(normalized) {
+  return !isConventionalSubject(normalized) && /(?:^|[\]:]\s*)feat\b[^:]*:/i.test(normalized);
+}
+function hasBreakingBang(normalized) {
+  return /^[a-z]+(?:\s*&\s*[a-z]+)?(?:\s*\([^)]*\))?!\s*:/i.test(normalized);
+}
+function hasBreakingFooter(text) {
+  return /^BREAKING[ -]CHANGE:/im.test(text);
+}
+function bulletFromSubject(raw) {
+  const line = normalizeSubject(firstLine(raw)).replace(
+    /[\r\u2028\u2029]+/g,
+    " "
+  );
+  const cleaned = line.replace(
+    /^(?:feat\s*&\s*fix|feat|fix|docs|chore|refactor|test|ci|build|perf|style)(\([^)]*\))?!?\s*:\s*/i,
+    ""
+  );
+  return cleaned.length > 0 ? cleaned : line;
+}
+function mapCommitsToSections(commits) {
+  const out = {};
+  const push = (section, bullet) => {
+    const list = out[section] ?? [];
+    list.push(bullet);
+    out[section] = list;
+  };
+  for (const c of commits) {
+    const normalized = normalizeSubject(firstLine(c.subject));
+    if (isMergeSubject(normalized)) continue;
+    const section = BUCKET_TO_SECTION[subjectType(normalized)];
+    if (section === null) continue;
+    push(section, bulletFromSubject(c.subject));
+  }
+  return out;
+}
+var SECTION_ORDER = [
+  "Added",
+  "Changed",
+  "Deprecated",
+  "Removed",
+  "Fixed",
+  "Security"
+];
+function renderReleaseSection(input) {
+  const buckets = { ...input.buckets };
+  if (input.majorNote) {
+    buckets.Changed = [input.majorNote, ...buckets.Changed ?? []];
+  }
+  const lines = [`## [${input.version}] - ${input.date}`, ""];
+  for (const name of SECTION_ORDER) {
+    const items = buckets[name];
+    if (!items || items.length === 0) continue;
+    lines.push(`### ${name}`, "");
+    for (const item of items) lines.push(`- ${item}`);
+    lines.push("");
+  }
+  return `${lines.join("\n").trimEnd()}
+`;
+}
+var SECRET_REDACT_PATTERNS = [
+  /\bgh[pousr]_[A-Za-z0-9]{20,}\b/g,
+  /\bgithub_pat_[A-Za-z0-9_]{20,}\b/g,
+  /\bnpm_[A-Za-z0-9]{20,}\b/g,
+  /\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/g,
+  /\bxox[abprs]-[A-Za-z0-9-]{10,}/g,
+  /\bglpat-[A-Za-z0-9_-]{20,}/g,
+  /\bsk-[A-Za-z0-9_-]{20,}/g,
+  /\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]*/g,
+  // Token-shaped only: "Bearer tokens are documented" is ordinary changelog prose.
+  /\bBearer\s+(?:[A-Za-z.]*[0-9_~+/=-][A-Za-z0-9._~+/=-]*|[A-Za-z]{20,})/gi,
+  // Any value counts as a header: "Basic authentication" alone is prose.
+  /\bAuthorization:\s*(?:Basic|Bearer|token)\s+[A-Za-z0-9._~+/=-]+/gi,
+  // Credentials in a git remote URL, as git prints them in error messages.
+  /(?<=:\/\/)[^\s/:@]+:[^\s/@]+(?=@)/g
+];
+var SECRET_REDACT_REPLACEMENT = "[REDACTED]";
+function redactSecrets(text) {
+  let out = text;
+  for (const re of SECRET_REDACT_PATTERNS) {
+    out = out.replace(re, SECRET_REDACT_REPLACEMENT);
+  }
+  return out;
+}
+var DEFAULT_HEADER = `# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+`;
+function headingFor(version) {
+  return `## [${version}]`;
+}
+function insertAfterUnreleasedOrHeader(existing, section) {
+  const unreleased = /^## \[Unreleased\][^\n]*\n/m;
+  const m = unreleased.exec(existing);
+  if (m && m.index !== void 0) {
+    const afterHeading = m.index + m[0].length;
+    const next = existing.slice(afterHeading).search(/^## \[/m);
+    const at = next === -1 ? existing.length : afterHeading + next;
+    const rest = existing.slice(at);
+    return `${existing.slice(0, at).trimEnd()}
+
+${section}${rest ? `
+${rest}` : ""}`;
+  }
+  const firstRelease = /^## \[/m.exec(existing);
+  if (firstRelease && firstRelease.index !== void 0) {
+    return `${existing.slice(0, firstRelease.index)}${section}
+${existing.slice(firstRelease.index)}`;
+  }
+  return `${existing.trimEnd()}
+
+${section}`;
+}
+function bucketsFor(input) {
+  const buckets = mapCommitsToSections(input.commits);
+  const title = normalizeSubject(firstLine(input.prTitle ?? ""));
+  const titleType = subjectType(title);
+  if (titleType === "feat" || titleType === "fix") {
+    const fromTitle = mapCommitsToSections([{ subject: title }]);
+    if (titleType === "feat") buckets.Added ??= fromTitle.Added ?? [];
+    if (titleType === "fix") buckets.Fixed ??= fromTitle.Fixed ?? [];
+  }
+  return buckets;
+}
+async function writeChangelog(input) {
+  const rel = input.changelogPath;
+  const abs = import_path6.default.join(input.cwd, rel);
+  const attempt = input.attempt ?? 1;
+  if (input.kind === "none") {
+    return { wrote: false, reason: "kind-none", path: abs };
+  }
+  const buckets = bucketsFor(input);
+  const majorNote = input.kind === "major-reset" ? `Major reset to ${input.version} via majorEnv` : void 0;
+  if (Object.keys(buckets).length === 0 && majorNote === void 0) {
+    buckets.Changed = ["Maintenance release"];
+  }
+  const sectionMarkdown = redactSecrets(
+    renderReleaseSection({
+      version: input.version,
+      date: input.date,
+      buckets,
+      ...majorNote !== void 0 ? { majorNote } : {}
+    })
+  );
+  let previous = null;
+  try {
+    previous = await (0, import_promises5.readFile)(abs, "utf8");
+  } catch (err) {
+    if (err.code !== "ENOENT") throw err;
+  }
+  const heading = headingFor(input.version);
+  if (previous?.split(/\r?\n/).some((line) => line.startsWith(heading))) {
+    return {
+      wrote: false,
+      reason: "already-present",
+      path: abs,
+      sectionMarkdown
+    };
+  }
+  const merged = previous === null ? DEFAULT_HEADER + sectionMarkdown : insertAfterUnreleasedOrHeader(previous, sectionMarkdown);
+  const next = previous?.includes("\r\n") ? merged.replace(/\r?\n/g, "\r\n") : merged;
+  if (previous !== null && /^(?:<{7}|>{7})(?: |\r?$)/m.test(previous)) {
+    throw new Error(`CHANGELOG conflict markers in ${abs}`);
+  }
+  const write = input.writeFile ?? import_promises5.writeFile;
+  try {
+    await write(abs, next, "utf8");
+  } catch (err) {
+    if (attempt >= 2) {
+      throw new Error(
+        `CHANGELOG write failed after retry: ${abs}: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+    return writeChangelog({ ...input, attempt: 2 });
+  }
+  return {
+    wrote: true,
+    reason: previous === null ? "created" : "appended",
+    path: abs,
+    sectionMarkdown
+  };
+}
+function parseMajor(version) {
+  const major = Number.parseInt(version.split(".")[0] ?? "", 10);
+  if (Number.isNaN(major)) {
+    throw new Error(`invalid currentVersion: ${version}`);
+  }
+  return major;
+}
+var BREAKING_WARNING = "Breaking change marker detected; major only via APP_VERSION_MAJOR (never auto-major)";
+function hasBreakingMarker(input) {
+  const title = input.prTitle?.trim();
+  if (title && (hasBreakingBang(normalizeSubject(firstLine(title))) || hasBreakingFooter(title))) {
+    return true;
+  }
+  return input.commits.some(
+    (c) => hasBreakingBang(normalizeSubject(firstLine(c.subject))) || // Body may carry the footer; never use body for feat buckets.
+    c.body !== void 0 && hasBreakingFooter(c.body)
+  );
+}
+function classify(input) {
+  const warnings = [];
+  if (input.skip === true) {
+    return { kind: "none", warnings };
+  }
+  const currentMajor = parseMajor(input.currentVersion);
+  const envMajor = input.envMajor;
+  if (envMajor != null && envMajor < currentMajor) {
+    throw new Error(
+      `envMajor ${envMajor} is below current major ${currentMajor}`
+    );
+  }
+  if (envMajor != null && envMajor > currentMajor) {
+    return { kind: "major-reset", warnings };
+  }
+  const subjects = input.commits.map((c) => normalizeSubject(firstLine(c.subject))).filter((s) => s.length > 0 && !isMergeSubject(s));
+  const title = normalizeSubject(firstLine(input.prTitle?.trim() ?? ""));
+  if (title.length > 0 && !isMergeSubject(title) && (subjects.length === 0 || isConventionalSubject(title))) {
+    subjects.push(title);
+  }
+  const types = subjects.map(subjectType);
+  if (hasBreakingMarker(input)) warnings.push(BREAKING_WARNING);
+  if (types.includes("feat")) return { kind: "minor", warnings };
+  for (const s of subjects.filter(looksLikeFeat)) {
+    warnings.push(
+      `"${s}" looks like a feature but is not a conventional feat: subject; it counts as a patch`
+    );
+  }
+  if (types.some((t) => t !== "docs")) return { kind: "patch", warnings };
+  return { kind: "none", warnings };
+}
+var CLASSIFY_KINDS = [
+  "major-reset",
+  "minor",
+  "patch",
+  "none"
+];
+var versioning_config_schema_default = {
+  $schema: "http://json-schema.org/draft-07/schema#",
+  $id: "https://policy-semver.dev/schemas/versioning.config.schema.json",
+  title: "PolicySemVer versioning.config",
+  type: "object",
+  additionalProperties: false,
+  required: ["schemaVersion"],
+  properties: {
+    $schema: {
+      type: "string",
+      description: "Editor hint only: points at this schema. Ignored at runtime."
+    },
+    schemaVersion: {
+      type: "string",
+      const: "1",
+      description: "Config schema major; bump only with a coordinated migration."
+    },
+    prodBranch: {
+      type: "string",
+      minLength: 1,
+      default: "main"
+    },
+    developBranch: {
+      type: "string",
+      minLength: 1,
+      default: "dev"
+    },
+    majorEnv: {
+      type: "string",
+      minLength: 1,
+      default: "APP_VERSION_MAJOR"
+    },
+    versionFiles: {
+      type: "array",
+      items: {
+        type: "string",
+        minLength: 1,
+        pattern: "^(?!/)(?!(.*/)?\\.\\.(/|$)).+$"
+      },
+      minItems: 1,
+      default: ["VERSION", "package.json"]
+    },
+    changelogPath: {
+      type: "string",
+      minLength: 1,
+      pattern: "^(?!/)(?!(.*/)?\\.\\.(/|$)).+$",
+      default: "CHANGELOG.md"
+    },
+    tagPrefix: {
+      type: "string",
+      pattern: "^([A-Za-z0-9][A-Za-z0-9._/-]*)?$",
+      default: "v"
+    },
+    skipLabels: {
+      type: "array",
+      items: {
+        type: "string",
+        minLength: 1
+      },
+      default: ["skip-version"]
+    },
+    skipTrailers: {
+      type: "array",
+      items: {
+        type: "string",
+        minLength: 1
+      },
+      default: ["skip version"]
+    },
+    hooks: {
+      type: "object",
+      additionalProperties: false,
+      default: {},
+      description: "POSIX sh -c command strings. null = skip. Non-zero exit aborts the remaining release steps.",
+      properties: {
+        beforeBump: {
+          type: ["string", "null"],
+          minLength: 1,
+          default: null,
+          description: "Run before any version/changelog write or tag. Failure \u2192 never write, no tag, no release."
+        },
+        afterTag: {
+          type: ["string", "null"],
+          minLength: 1,
+          default: null,
+          description: "Run after the local annotated tag exists, before push + GitHub Release."
+        },
+        afterRelease: {
+          type: ["string", "null"],
+          minLength: 1,
+          default: null,
+          description: "Run after GitHub Release is created."
+        }
+      }
+    }
+  }
+};
+var ajv = new import_ajv.Ajv({
+  allErrors: true,
+  useDefaults: true
+});
+var validate = ajv.compile(versioning_config_schema_default);
+async function loadConfig(path72) {
+  let raw;
+  try {
+    raw = await (0, import_promises6.readFile)(path72, "utf8");
+  } catch (err) {
+    const code = err.code;
+    if (code === "ENOENT") {
+      throw new Error(`versioning config not found: ${path72}`);
+    }
+    throw err;
+  }
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    throw new Error(`versioning config is not valid JSON: ${path72}`);
+  }
+  if (!validate(data)) {
+    const details = (validate.errors ?? []).map(
+      (e) => (
+        // Ajv's own text does not say which key is unknown.
+        e.keyword === "additionalProperties" ? `${ajv.errorsText([e])} (unknown key ${JSON.stringify(e.params.additionalProperty)})` : ajv.errorsText([e])
+      )
+    );
+    throw new Error(
+      `invalid versioning config (${path72}): ${details.join("; ")}`
+    );
+  }
+  return data;
+}
+var BOT_NAME = "github-actions[bot]";
+var BOT_EMAIL = "41898282+github-actions[bot]@users.noreply.github.com";
+var BOT_IDENTITY_ARGS = [
+  "-c",
+  `user.name=${BOT_NAME}`,
+  "-c",
+  `user.email=${BOT_EMAIL}`
+];
+async function commitBumpFiles(input) {
+  if (!input.message.includes(BOT_SKIP_TRAILER)) {
+    throw new Error(`commit message missing ${BOT_SKIP_TRAILER}`);
+  }
+  const exec = input.exec ?? defaultGitExec;
+  const cwd = { cwd: input.cwd };
+  await exec(["add", "--", ...input.paths], cwd);
+  await exec(
+    [
+      ...BOT_IDENTITY_ARGS,
+      "commit",
+      "--no-verify",
+      "--no-gpg-sign",
+      "-m",
+      input.message
+    ],
+    cwd
+  );
+}
+var MAX_COMMITS = 1e3;
+async function lastTag(cwd, tagPrefix, exec) {
+  try {
+    const { stdout } = await exec(
+      ["describe", "--tags", "--abbrev=0", `--match=${tagPrefix}[0-9]*`],
+      { cwd }
+    );
+    return stdout.trim() || null;
+  } catch {
+    return null;
+  }
+}
+async function loadCommitsSinceLastTag(cwd, tagPrefix, exec = defaultGitExec) {
+  const tag = await lastTag(cwd, tagPrefix, exec);
+  const { stdout } = await exec(
+    [
+      "log",
+      `--max-count=${MAX_COMMITS}`,
+      "--pretty=format:%s%x00%b%x1e",
+      ...tag !== null ? [`${tag}..HEAD`] : []
+    ],
+    { cwd }
+  );
+  const chunks = stdout.split("");
+  if (chunks.length > MAX_COMMITS) {
+    console.warn(
+      `only the latest ${MAX_COMMITS} commits were classified; older ones may be missed`
+    );
+  }
+  return chunks.map((chunk) => chunk.replace(/^\n+/, "").trimEnd()).filter(Boolean).map((chunk) => {
+    const [subjectRaw, bodyRaw = ""] = chunk.split("\0");
+    const subject = (subjectRaw ?? "").trim();
+    const body = bodyRaw.trim();
+    return {
+      subject,
+      ...body.length > 0 ? { body } : {}
+    };
+  }).filter((c) => c.subject.length > 0);
+}
+async function pushRefs(input) {
+  const exec = input.exec ?? defaultGitExec;
+  const remote = input.remote ?? "origin";
+  await exec(["push", "--atomic", "--no-verify", remote, ...input.refs], {
+    cwd: input.cwd
+  });
+}
+async function tagExists(cwd, tag, exec = defaultGitExec) {
+  try {
+    await exec(["rev-parse", "-q", "--verify", `refs/tags/${tag}`], {
+      cwd
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+async function highestTagMajor(input) {
+  const { stdout } = await defaultGitExec(
+    ["tag", "-l", `${input.tagPrefix}[0-9]*`],
+    { cwd: input.cwd }
+  );
+  const majors = stdout.split("\n").map((tag) => tag.trim().slice(input.tagPrefix.length)).filter(isSemVerString).map((version) => parseSemVer(version).major);
+  return majors.length > 0 ? Math.max(...majors) : null;
+}
+async function assertTagAvailable(input) {
+  const exec = input.exec ?? defaultGitExec;
+  if (await tagExists(input.cwd, input.tag, exec)) {
+    throw new Error(`tag already exists: ${input.tag}`);
+  }
+  await assertRemoteTagCompatible(input);
+}
+async function createAnnotatedTag(input) {
+  const exec = input.exec ?? defaultGitExec;
+  await assertTagAvailable(input);
+  await exec(
+    [
+      ...BOT_IDENTITY_ARGS,
+      "tag",
+      "-a",
+      "--no-sign",
+      input.tag,
+      "-m",
+      input.message
+    ],
+    { cwd: input.cwd }
+  );
+}
+async function remoteTagSha(input) {
+  const exec = input.exec ?? defaultGitExec;
+  const remote = input.remote ?? "origin";
+  const ref = `refs/tags/${input.tag}`;
+  const { stdout } = await exec(
+    ["ls-remote", "--tags", remote, ref, `${ref}^{}`],
+    { cwd: input.cwd }
+  );
+  const lines = stdout.split("\n").map((l) => l.trim()).filter(Boolean);
+  const peeled = lines.find((l) => l.endsWith(`${ref}^{}`));
+  const direct = lines.find((l) => l.endsWith(ref));
+  return (peeled ?? direct)?.split(/\s/)[0] ?? null;
+}
+async function assertRemoteTagCompatible(input) {
+  const exec = input.exec ?? defaultGitExec;
+  const remoteSha = await remoteTagSha(input);
+  if (!remoteSha) return;
+  const headSha = (await exec(["rev-parse", "HEAD"], { cwd: input.cwd })).stdout.trim();
+  if (remoteSha === headSha) {
+    throw new Error(`tag already exists: ${input.tag}`);
+  }
+  throw new Error(
+    `mirror tag conflict: ${input.tag} remote=${remoteSha} local HEAD=${headSha}`
+  );
+}
+var MAX_RELEASE_BODY = 125e3;
+var TRUNCATED_NOTE = "\n\n\u2026truncated. The changelog at this tag has the rest.\n";
+function fitReleaseBody(body) {
+  if (body.length <= MAX_RELEASE_BODY) return body;
+  const room = body.slice(0, MAX_RELEASE_BODY - TRUNCATED_NOTE.length);
+  return `${room.slice(0, room.lastIndexOf("\n"))}${TRUNCATED_NOTE}`;
+}
+function statusOf(err) {
+  return err.status;
+}
+async function releaseExists(input) {
+  try {
+    await input.octokit.repos.getReleaseByTag({
+      owner: input.owner,
+      repo: input.repo,
+      tag: input.tag
+    });
+    return true;
+  } catch (err) {
+    if (statusOf(err) !== 404) throw err;
+    return false;
+  }
+}
+async function createGitHubRelease(input) {
+  const body = fitReleaseBody(redactSecrets(input.body));
+  if (await releaseExists(input)) {
+    throw new Error(`release already published: ${input.tag}`);
+  }
+  await input.octokit.repos.createRelease({
+    owner: input.owner,
+    repo: input.repo,
+    tag_name: input.tag,
+    name: input.name ?? input.tag,
+    body,
+    ...input.targetCommitish !== void 0 ? { target_commitish: input.targetCommitish } : {}
+  });
+}
+var HOOK_ENV = {
+  version: "POLICY_SEMVER_VERSION",
+  kind: "POLICY_SEMVER_KIND",
+  dryRun: "POLICY_SEMVER_DRY_RUN"
+};
+var HOOK_SHELL = "sh";
+var execFileAsync2 = (0, import_util2.promisify)(import_child_process2.execFile);
+var HOOK_TIMEOUT_MS = 10 * 60 * 1e3;
+var HOOK_MAX_BUFFER_BYTES = 50 * 1024 * 1024;
+var HOOK_ENV_DENYLIST = [
+  "POLICY_SEMVER_TOKEN",
+  "INPUT_TOKEN",
+  "GITHUB_TOKEN",
+  "GH_TOKEN",
+  "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
+  "ACTIONS_RUNTIME_TOKEN"
+];
+var defaultHookExec = async (command, opts) => {
+  const { stdout, stderr } = await execFileAsync2(HOOK_SHELL, ["-c", command], {
+    cwd: opts.cwd,
+    env: opts.env,
+    encoding: "utf8",
+    maxBuffer: HOOK_MAX_BUFFER_BYTES,
+    timeout: HOOK_TIMEOUT_MS
+  });
+  return { stdout: String(stdout), stderr: String(stderr) };
+};
+function hookEnvVars(input) {
+  return {
+    [HOOK_ENV.version]: input.version,
+    [HOOK_ENV.kind]: input.kind,
+    [HOOK_ENV.dryRun]: input.dryRun ? "true" : "false"
+  };
+}
+async function runHook(input) {
+  if (input.command == null || input.command.trim() === "") {
+    return;
+  }
+  const exec = input.exec ?? defaultHookExec;
+  const inherited = { ...process.env };
+  for (const name of HOOK_ENV_DENYLIST) delete inherited[name];
+  const env = {
+    ...inherited,
+    ...hookEnvVars({
+      version: input.version,
+      kind: input.kind,
+      dryRun: input.dryRun
+    })
+  };
+  try {
+    const { stdout, stderr } = await exec(input.command, {
+      cwd: input.cwd,
+      env
+    });
+    if (stdout) process.stdout.write(redactSecrets(stdout));
+    if (stderr) process.stderr.write(redactSecrets(stderr));
+  } catch (err) {
+    const { code, killed, stdout } = err;
+    if (stdout) process.stdout.write(redactSecrets(stdout));
+    const detail = redactSecrets(
+      err instanceof Error ? err.message : String(err)
+    );
+    const how = killed ? "timed out" : `exit ${code ?? "unknown"}`;
+    throw new Error(`hook ${input.name} failed (${how}): ${detail}`);
+  }
+}
+function extractReleaseSection(changelog, version) {
+  const heading = `## [${version}]`;
+  const start = changelog.split("\n").findIndex((line) => line.startsWith(heading));
+  if (start === -1) return "";
+  const lines = changelog.split("\n").slice(start);
+  const next = lines.findIndex((line, i) => i > 0 && line.startsWith("## ["));
+  const section = next === -1 ? lines : lines.slice(0, next);
+  return `${section.join("\n").trimEnd()}
+`;
+}
+function escapeRegExp2(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+async function findReleaseCommit(input) {
+  const { stdout } = await defaultGitExec(
+    [
+      "log",
+      input.ref,
+      "-n",
+      "1",
+      "-E",
+      `--grep=^${RELEASE_PR_TRAILER}: ${input.prNumber}$`,
+      `--author=${escapeRegExp2(BOT_NAME)}`,
+      "--format=%H%x00%B"
+    ],
+    { cwd: input.cwd }
+  );
+  const [sha, body = ""] = stdout.trim().split("\0");
+  if (!sha) return null;
+  const kind = new RegExp(`^${RELEASE_KIND_TRAILER}: (.+)$`, "m").exec(
+    body
+  )?.[1];
+  if (kind === void 0 || !CLASSIFY_KINDS.includes(kind)) {
+    throw new Error(`release commit ${sha} has no valid kind trailer`);
+  }
+  return { sha, kind };
+}
+async function reconcileRelease(input) {
+  const { sha, kind } = input.commit;
+  const version = await readVersionAtRef({
+    cwd: input.cwd,
+    ref: sha,
+    files: input.files
+  });
+  if (version === null) {
+    throw new Error(`no version files found at release commit ${sha}`);
+  }
+  const tag = `${input.tagPrefix}${version}`;
+  const tagSha = await remoteTagSha({ cwd: input.cwd, tag });
+  if (tagSha === null) {
+    throw new Error(
+      `release commit ${sha} is on the branch but tag ${tag} is missing on the remote; restore the tag, then rerun`
+    );
+  }
+  if (tagSha !== sha) {
+    throw new Error(
+      `tag ${tag} points at ${tagSha}, not release commit ${sha}; a human must decide which is right`
+    );
+  }
+  const target = {
+    owner: input.owner,
+    repo: input.repo,
+    tag,
+    octokit: input.octokit
+  };
+  const releaseCreated = !await releaseExists(target);
+  if (releaseCreated) {
+    const { stdout: changelog } = await defaultGitExec(
+      ["show", `${sha}:${input.changelogPath}`],
+      { cwd: input.cwd }
+    );
+    const body = extractReleaseSection(changelog, version);
+    if (body === "") {
+      throw new Error(
+        `${input.changelogPath} at ${sha} has no section for ${version}; refusing an empty Release`
+      );
+    }
+    await createGitHubRelease({ ...target, body });
+  }
+  await runHook({
+    name: "afterRelease",
+    command: input.afterRelease,
+    cwd: input.cwd,
+    version,
+    kind,
+    dryRun: false
+  });
+  return { version, tag, releaseCreated };
+}
+async function step(name, run) {
+  try {
+    await run();
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    throw new Error(`${name}: ${detail}`, { cause: err });
+  }
+}
+async function isGitIgnored(cwd, rel, exec = defaultGitExec) {
+  try {
+    await exec(["check-ignore", "--quiet", rel], { cwd });
+    return true;
+  } catch {
+    return false;
+  }
+}
+async function runRelease(input) {
+  const kind = input.kind;
+  if (kind === "none") {
+    return { skipped: true, reason: "kind-none" };
+  }
+  const tagPrefix = input.tagPrefix ?? "v";
+  const tag = `${tagPrefix}${input.version}`;
+  const message = formatBotBumpCommitMessage(
+    input.version,
+    tagPrefix,
+    input.prNumber !== void 0 ? { prNumber: input.prNumber, kind } : void 0
+  );
+  const commit = input.commit ?? commitBumpFiles;
+  const tagFn = input.tag ?? createAnnotatedTag;
+  const push = input.push ?? pushRefs;
+  const release = input.release ?? createGitHubRelease;
+  const writeAudit = input.writeAudit ?? writeLastRelease;
+  await writeAudit({
+    cwd: input.cwd,
+    version: input.version,
+    kind,
+    tag,
+    at: (input.now ?? (() => /* @__PURE__ */ new Date()))().toISOString()
+  });
+  const auditPath = lastReleaseRelPath();
+  const auditIgnored = await isGitIgnored(input.cwd, auditPath, input.exec);
+  await step(
+    "commit",
+    () => commit({
+      cwd: input.cwd,
+      message,
+      paths: auditIgnored ? input.paths : [...input.paths, auditPath],
+      ...input.exec !== void 0 ? { exec: input.exec } : {}
+    })
+  );
+  await step(
+    "tag",
+    () => tagFn({
+      cwd: input.cwd,
+      tag,
+      message: tag,
+      ...input.remote !== void 0 ? { remote: input.remote } : {},
+      ...input.exec !== void 0 ? { exec: input.exec } : {}
+    })
+  );
+  if (input.hooks) {
+    await runHook({
+      name: "afterTag",
+      command: input.hooks.afterTag,
+      cwd: input.cwd,
+      version: input.version,
+      kind,
+      dryRun: false,
+      ...input.hookExec !== void 0 ? { exec: input.hookExec } : {}
+    });
+  }
+  const branchRef = `HEAD:refs/heads/${input.branch}`;
+  await step(
+    "push",
+    () => push({
+      cwd: input.cwd,
+      refs: [branchRef, `refs/tags/${tag}`],
+      ...input.remote !== void 0 ? { remote: input.remote } : {},
+      ...input.exec !== void 0 ? { exec: input.exec } : {}
+    })
+  );
+  await step(
+    "GitHub Release",
+    () => release({
+      owner: input.owner,
+      repo: input.repo,
+      tag,
+      body: input.sectionMarkdown,
+      octokit: input.octokit
+    })
+  );
+  if (input.hooks) {
+    await runHook({
+      name: "afterRelease",
+      command: input.hooks.afterRelease,
+      cwd: input.cwd,
+      version: input.version,
+      kind,
+      dryRun: false,
+      ...input.hookExec !== void 0 ? { exec: input.hookExec } : {}
+    });
+  }
+  return {
+    skipped: false,
+    tag,
+    committed: true,
+    pushed: true,
+    released: true
+  };
+}
+async function syncToRemoteBranch(input) {
+  const exec = defaultGitExec;
+  const remote = "origin";
+  const cwd = { cwd: input.cwd };
+  const remoteRef = `${remote}/${input.branch}`;
+  const shallow = await exec(["rev-parse", "--is-shallow-repository"], cwd);
+  if (shallow.stdout.trim() === "true") {
+    throw new Error(
+      "shallow checkout: set `fetch-depth: 0` on actions/checkout so reruns can find earlier releases"
+    );
+  }
+  await exec(
+    ["fetch", remote, `+refs/heads/${input.branch}:refs/remotes/${remoteRef}`],
+    cwd
+  );
+  await exec(["checkout", "--quiet", "--detach", remoteRef], cwd);
+  if (input.mustContain !== void 0) {
+    try {
+      await exec(
+        ["merge-base", "--is-ancestor", input.mustContain, remoteRef],
+        cwd
+      );
+    } catch {
+      throw new Error(
+        `merged commit ${input.mustContain} is not on ${remoteRef}`
+      );
+    }
+  }
 }
 
 // src/run-action.ts
@@ -31524,1335 +32934,6 @@ function getOctokit(token, options, ...additionalPlugins) {
   return new GitHubWithPlugins(getOctokitOptions(token, options));
 }
 
-// ../core/dist/index.js
-var import_promises = require("fs/promises");
-var import_path = __toESM(require("path"), 1);
-var import_child_process = require("child_process");
-var import_util = require("util");
-var import_promises2 = require("fs/promises");
-var import_path2 = __toESM(require("path"), 1);
-var import_promises3 = require("fs/promises");
-var import_path3 = __toESM(require("path"), 1);
-var import_path4 = __toESM(require("path"), 1);
-var import_promises4 = require("fs/promises");
-var import_path5 = __toESM(require("path"), 1);
-var import_promises5 = require("fs/promises");
-var import_path6 = __toESM(require("path"), 1);
-var import_promises6 = require("fs/promises");
-var import_ajv = __toESM(require_ajv(), 1);
-var import_child_process2 = require("child_process");
-var import_util2 = require("util");
-var AUDIT_DIR = ".policy-semver";
-var AUDIT_FILE = "last-release.json";
-function lastReleaseRelPath() {
-  return `${AUDIT_DIR}/${AUDIT_FILE}`;
-}
-function lastReleasePath(cwd) {
-  return import_path.default.join(cwd, AUDIT_DIR, AUDIT_FILE);
-}
-async function writeLastRelease(input) {
-  const record = {
-    version: input.version,
-    kind: input.kind,
-    tag: input.tag,
-    at: input.at ?? (/* @__PURE__ */ new Date()).toISOString()
-  };
-  await (0, import_promises.mkdir)(import_path.default.join(input.cwd, AUDIT_DIR), { recursive: true });
-  await (0, import_promises.writeFile)(
-    lastReleasePath(input.cwd),
-    `${JSON.stringify(record, null, 2)}
-`,
-    "utf8"
-  );
-  return record;
-}
-function assertDualSourceMatch(versionFileVersion, packageJsonVersion) {
-  if (versionFileVersion !== packageJsonVersion) {
-    throw new Error(
-      `dual-source mismatch: VERSION=${JSON.stringify(versionFileVersion)} package.json=${JSON.stringify(packageJsonVersion)}`
-    );
-  }
-}
-var SEMVER_RE = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
-function isSemVerString(value) {
-  return SEMVER_RE.test(value.trim());
-}
-function parseSemVer(version) {
-  const trimmed = version.trim();
-  const m = SEMVER_RE.exec(trimmed);
-  if (!m) {
-    throw new Error(`malformed version: ${JSON.stringify(version)}`);
-  }
-  return {
-    major: Number(m[1]),
-    minor: Number(m[2]),
-    patch: Number(m[3])
-  };
-}
-function formatSemVer(parts) {
-  return `${parts.major}.${parts.minor}.${parts.patch}`;
-}
-var execFileAsync = (0, import_util.promisify)(import_child_process.execFile);
-var GIT_TIMEOUT_MS = 5 * 60 * 1e3;
-var defaultGitExec = async (args, opts) => {
-  const { stdout, stderr } = await execFileAsync("git", args, {
-    cwd: opts?.cwd,
-    encoding: "utf8",
-    maxBuffer: 10 * 1024 * 1024,
-    timeout: GIT_TIMEOUT_MS
-  });
-  return { stdout: String(stdout), stderr: String(stderr) };
-};
-function parseVersionFile(raw, label) {
-  const trimmed = raw.trim();
-  if (!isSemVerString(trimmed)) {
-    throw new Error(
-      `malformed VERSION at ${label}: ${JSON.stringify(trimmed)}`
-    );
-  }
-  return formatSemVer(parseSemVer(trimmed));
-}
-function parsePackageVersion(raw, label) {
-  const pkg = JSON.parse(raw);
-  if (typeof pkg.version !== "string" || !isSemVerString(pkg.version)) {
-    throw new Error(`malformed package.json version at ${label}`);
-  }
-  return formatSemVer(parseSemVer(pkg.version));
-}
-async function showAtRef(exec, cwd, ref, rel) {
-  try {
-    const { stdout } = await exec(["show", `${ref}:${rel}`], { cwd });
-    return stdout;
-  } catch {
-    return null;
-  }
-}
-async function readVersionAtRef(input) {
-  const exec = input.exec ?? defaultGitExec;
-  const vfRel = input.files.versionFile;
-  const pkgRel = input.files.packageJson;
-  const vfRaw = vfRel !== void 0 ? await showAtRef(exec, input.cwd, input.ref, vfRel) : null;
-  const pkgRaw = pkgRel !== void 0 ? await showAtRef(exec, input.cwd, input.ref, pkgRel) : null;
-  const vf = vfRaw !== null ? parseVersionFile(vfRaw, `${input.ref}:${vfRel}`) : null;
-  const pkg = pkgRaw !== null ? parsePackageVersion(pkgRaw, `${input.ref}:${pkgRel}`) : null;
-  if (vf !== null && pkg !== null) {
-    assertDualSourceMatch(vf, pkg);
-    return vf;
-  }
-  if (vf !== null) return vf;
-  if (pkg !== null) return pkg;
-  return null;
-}
-async function tryReadVersionFile(cwd, rel) {
-  const p = import_path2.default.join(cwd, rel);
-  try {
-    const raw = (await (0, import_promises2.readFile)(p, "utf8")).trim();
-    if (!isSemVerString(raw)) {
-      throw new Error(`malformed VERSION at ${p}: ${JSON.stringify(raw)}`);
-    }
-    return formatSemVer(parseSemVer(raw));
-  } catch (err) {
-    if (err.code === "ENOENT") return null;
-    throw err;
-  }
-}
-async function tryReadPackageJsonVersion(cwd, rel) {
-  const p = import_path2.default.join(cwd, rel);
-  try {
-    const pkg = JSON.parse(await (0, import_promises2.readFile)(p, "utf8"));
-    if (typeof pkg.version !== "string" || !isSemVerString(pkg.version)) {
-      throw new Error(`malformed package.json version at ${p}`);
-    }
-    return formatSemVer(parseSemVer(pkg.version));
-  } catch (err) {
-    if (err.code === "ENOENT") return null;
-    throw err;
-  }
-}
-async function readBothConfigured(cwd, versionFile, packageJson) {
-  const vf = await tryReadVersionFile(cwd, versionFile);
-  const pkg = await tryReadPackageJsonVersion(cwd, packageJson);
-  if (vf !== null && pkg !== null) {
-    assertDualSourceMatch(vf, pkg);
-    return vf;
-  }
-  if (vf !== null) return vf;
-  if (pkg !== null) return pkg;
-  throw new Error("readVersion: neither VERSION nor package.json found");
-}
-async function writeVersionFile(cwd, rel, nextVersion) {
-  await (0, import_promises3.writeFile)(import_path3.default.join(cwd, rel), `${nextVersion}
-`, "utf8");
-}
-async function writePackageJsonVersion(cwd, rel, nextVersion) {
-  const p = import_path3.default.join(cwd, rel);
-  const raw = await (0, import_promises3.readFile)(p, "utf8");
-  const pkg = JSON.parse(raw);
-  pkg.version = nextVersion;
-  const indent = /^[ \t]+(?=")/m.exec(raw)?.[0] ?? 2;
-  await (0, import_promises3.writeFile)(p, `${JSON.stringify(pkg, null, indent)}
-`, "utf8");
-}
-async function snapshotFiles(cwd, rels) {
-  return Promise.all(
-    rels.map(async (rel) => ({
-      rel,
-      content: await (0, import_promises3.readFile)(import_path3.default.join(cwd, rel), "utf8")
-    }))
-  );
-}
-async function restoreFiles(cwd, prev) {
-  await Promise.all(
-    prev.map((p) => (0, import_promises3.writeFile)(import_path3.default.join(cwd, p.rel), p.content, "utf8"))
-  );
-}
-async function writeBothAtomically(input) {
-  const extras = input.extraPackageJson ?? [];
-  const pkgRels = [input.packageJson, ...extras];
-  const prev = await snapshotFiles(input.cwd, [input.versionFile, ...pkgRels]);
-  try {
-    await writeVersionFile(input.cwd, input.versionFile, input.nextVersion);
-    for (const rel of pkgRels) {
-      await writePackageJsonVersion(input.cwd, rel, input.nextVersion);
-    }
-  } catch (err) {
-    await restoreFiles(input.cwd, prev);
-    throw err;
-  }
-}
-async function writePackageJsonFilesAtomically(input) {
-  const rels = input.packageJsonFiles;
-  if (rels.length === 0) return;
-  const prev = await snapshotFiles(input.cwd, rels);
-  try {
-    for (const rel of rels) {
-      await writePackageJsonVersion(input.cwd, rel, input.nextVersion);
-    }
-  } catch (err) {
-    await restoreFiles(input.cwd, prev);
-    throw err;
-  }
-}
-function applyBump(input) {
-  const { kind, currentVersion, envMajor } = input;
-  const cur = parseSemVer(currentVersion);
-  if (envMajor != null && envMajor < cur.major) {
-    throw new Error(`envMajor ${envMajor} is below current major ${cur.major}`);
-  }
-  switch (kind) {
-    case "none":
-      return currentVersion.trim();
-    case "major-reset": {
-      if (envMajor == null || !Number.isInteger(envMajor)) {
-        throw new Error("major-reset requires integer envMajor");
-      }
-      if (envMajor < cur.major) {
-        throw new Error(`envMajor ${envMajor} < current major ${cur.major}`);
-      }
-      return formatSemVer({ major: envMajor, minor: 0, patch: 0 });
-    }
-    case "minor":
-      return formatSemVer({
-        major: cur.major,
-        minor: cur.minor + 1,
-        patch: 0
-      });
-    case "patch":
-      return formatSemVer({
-        major: cur.major,
-        minor: cur.minor,
-        patch: cur.patch + 1
-      });
-    default: {
-      const _exhaustive = kind;
-      return _exhaustive;
-    }
-  }
-}
-var BOT_SKIP_TRAILER = "[skip version]";
-var RELEASE_PR_TRAILER = "Policy-Semver-PR";
-var RELEASE_KIND_TRAILER = "Policy-Semver-Kind";
-function formatBotBumpCommitMessage(nextVersion, tagPrefix = "v", source) {
-  const subject = `chore(release): ${tagPrefix}${nextVersion} ${BOT_SKIP_TRAILER}`;
-  if (source === void 0) return subject;
-  return `${subject}
-
-${RELEASE_PR_TRAILER}: ${source.prNumber}
-${RELEASE_KIND_TRAILER}: ${source.kind}`;
-}
-function decideBumpGuards(ctx) {
-  const reasons = [];
-  let allowWrite = true;
-  let forceKindNone = false;
-  if (ctx.isFork) {
-    allowWrite = false;
-    reasons.push("fork: allowWrite=false");
-  }
-  const hasSyncLabel = (ctx.labels ?? []).some(
-    (l) => l.toLowerCase() === "sync-from-prod"
-  );
-  const isSyncFromProd = hasSyncLabel || ctx.baseBranch === ctx.developBranch && ctx.headBranch === ctx.prodBranch;
-  if (isSyncFromProd) {
-    allowWrite = false;
-    forceKindNone = true;
-    reasons.push("sync-from-prod: force none / no write");
-  }
-  if (ctx.baseBranch !== ctx.prodBranch) {
-    allowWrite = false;
-    reasons.push("non-prod base: no write");
-  }
-  if (ctx.isMergedToProd === false) {
-    allowWrite = false;
-    reasons.push("not merged to prod: dry-run only");
-  }
-  const skipLabels = (ctx.skipLabels ?? ["skip-version"]).map(
-    (s) => s.toLowerCase()
-  );
-  if ((ctx.labels ?? []).some((l) => skipLabels.includes(l.toLowerCase()))) {
-    allowWrite = false;
-    forceKindNone = true;
-    reasons.push("skip label");
-  }
-  const trailers = ctx.skipTrailers ?? ["skip version"];
-  const patterns = trailers.map(
-    (t) => new RegExp(`\\[${escapeRegExp(t)}\\]\\s*$`, "im")
-  );
-  const trailerInner = BOT_SKIP_TRAILER.slice(1, -1);
-  if (!trailers.some((t) => t.toLowerCase() === trailerInner.toLowerCase())) {
-    patterns.push(new RegExp(`\\[${escapeRegExp(trailerInner)}\\]\\s*$`, "im"));
-  }
-  for (const text of ctx.textsForSkip ?? []) {
-    if (patterns.some((re) => re.test(text))) {
-      allowWrite = false;
-      forceKindNone = true;
-      reasons.push("skip trailer in subject/body");
-      break;
-    }
-  }
-  return { allowWrite, forceKindNone, reasons };
-}
-function escapeRegExp(s) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-function parseEnvMajor(name, raw) {
-  if (raw === void 0 || raw === "") return null;
-  if (!/^\d+$/.test(raw)) {
-    throw new Error(`invalid ${name}=${JSON.stringify(raw)}`);
-  }
-  return Number(raw);
-}
-async function readPrimaryVersion(input) {
-  const { cwd, files } = input;
-  const hasVf = Boolean(files.versionFile);
-  const hasPkg = Boolean(files.packageJson);
-  if (hasVf && hasPkg) {
-    return readBothConfigured(
-      cwd,
-      files.versionFile,
-      files.packageJson
-    );
-  }
-  if (hasVf) {
-    const vf = await tryReadVersionFile(cwd, files.versionFile);
-    if (vf === null) {
-      throw new Error(
-        `readVersion: VERSION not found at ${import_path4.default.join(cwd, files.versionFile)}`
-      );
-    }
-    return vf;
-  }
-  if (hasPkg) {
-    const pkg = await tryReadPackageJsonVersion(
-      cwd,
-      files.packageJson
-    );
-    if (pkg === null) {
-      throw new Error(
-        `readVersion: package.json not found at ${import_path4.default.join(cwd, files.packageJson)}`
-      );
-    }
-    return pkg;
-  }
-  throw new Error("readVersion: no versionFiles configured");
-}
-async function assertExtraPackageJsonMatch(cwd, extras, expected) {
-  if (!extras?.length) return;
-  for (const rel of extras) {
-    const got = await tryReadPackageJsonVersion(cwd, rel);
-    if (got === null) {
-      throw new Error(
-        `readVersion: package.json not found at ${import_path4.default.join(cwd, rel)}`
-      );
-    }
-    if (got !== expected) {
-      throw new Error(
-        `versionFiles mismatch: expected ${JSON.stringify(expected)} at ${rel}, got ${JSON.stringify(got)}`
-      );
-    }
-  }
-}
-async function extrasNeedWrite(cwd, extras, nextVersion) {
-  if (!extras?.length) return false;
-  for (const rel of extras) {
-    const got = await tryReadPackageJsonVersion(cwd, rel);
-    if (got !== nextVersion) return true;
-  }
-  return false;
-}
-function primaryFiles(files) {
-  return {
-    ...files.versionFile !== void 0 ? { versionFile: files.versionFile } : {},
-    ...files.packageJson !== void 0 ? { packageJson: files.packageJson } : {}
-  };
-}
-async function readVersion(input) {
-  const version = await readPrimaryVersion({
-    cwd: input.cwd,
-    files: primaryFiles(input.files)
-  });
-  await assertExtraPackageJsonMatch(
-    input.cwd,
-    input.files.extraPackageJson,
-    version
-  );
-  return version;
-}
-function toVersionFiles(versionFiles) {
-  const isVersionFile = (f) => /(^|\/)VERSION$/.test(f);
-  const isPackageJson = (f) => /(^|\/)package\.json$/.test(f);
-  const unsupported = versionFiles.find(
-    (f) => !isVersionFile(f) && !isPackageJson(f)
-  );
-  if (unsupported !== void 0) {
-    throw new Error(
-      `unsupported versionFiles entry ${JSON.stringify(unsupported)}: use a VERSION or package.json path`
-    );
-  }
-  const [versionFile, secondVersionFile] = versionFiles.filter(isVersionFile);
-  if (secondVersionFile !== void 0) {
-    throw new Error(
-      `versionFiles allows one VERSION file: ${versionFile}, ${secondVersionFile}`
-    );
-  }
-  const [packageJson, ...extraPackageJson] = versionFiles.filter(isPackageJson);
-  return {
-    ...versionFile !== void 0 ? { versionFile } : {},
-    ...packageJson !== void 0 ? { packageJson } : {},
-    ...extraPackageJson.length > 0 ? { extraPackageJson } : {}
-  };
-}
-async function writeSingleSource(cwd, nextVersion, kind, rel, extras) {
-  const extrasStale = await extrasNeedWrite(cwd, extras, nextVersion);
-  if (kind === "versionFile") {
-    let current = "";
-    try {
-      current = (await (0, import_promises4.readFile)(import_path5.default.join(cwd, rel), "utf8")).trim();
-    } catch (err) {
-      if (err.code !== "ENOENT") throw err;
-    }
-    if (current === nextVersion && !extrasStale) {
-      return { nextVersion, wrote: false, reason: "already-current" };
-    }
-    if (current !== nextVersion) {
-      await writeVersionFile(cwd, rel, nextVersion);
-    }
-    await writePackageJsonFilesAtomically({
-      cwd,
-      packageJsonFiles: extras,
-      nextVersion
-    });
-    return { nextVersion, wrote: true, reason: "written" };
-  }
-  const raw = await (0, import_promises4.readFile)(import_path5.default.join(cwd, rel), "utf8");
-  const pkg = JSON.parse(raw);
-  if (pkg.version === nextVersion && !extrasStale) {
-    return { nextVersion, wrote: false, reason: "already-current" };
-  }
-  const pkgRels = pkg.version === nextVersion ? extras : [rel, ...extras];
-  await writePackageJsonFilesAtomically({
-    cwd,
-    packageJsonFiles: pkgRels,
-    nextVersion
-  });
-  return { nextVersion, wrote: true, reason: "written" };
-}
-async function writeVersion(input) {
-  const { cwd, nextVersion, dryRun, allowWrite, files } = input;
-  const extras = files.extraPackageJson ?? [];
-  if (dryRun) {
-    return { nextVersion, wrote: false, reason: "dry-run" };
-  }
-  if (!allowWrite) {
-    return { nextVersion, wrote: false, reason: "allow-write-false" };
-  }
-  const vfRel = files.versionFile;
-  const pkgRel = files.packageJson;
-  const bothConfigured = Boolean(vfRel) && Boolean(pkgRel);
-  if (bothConfigured) {
-    const vf = await tryReadVersionFile(cwd, vfRel);
-    const pkg = await tryReadPackageJsonVersion(cwd, pkgRel);
-    if (vf !== null && pkg !== null) {
-      const current = await readPrimaryVersion({
-        cwd,
-        files: {
-          versionFile: vfRel,
-          packageJson: pkgRel
-        }
-      });
-      const extrasStale = await extrasNeedWrite(cwd, extras, nextVersion);
-      if (current === nextVersion && !extrasStale) {
-        return { nextVersion, wrote: false, reason: "already-current" };
-      }
-      await writeBothAtomically({
-        cwd,
-        versionFile: vfRel,
-        packageJson: pkgRel,
-        extraPackageJson: extras,
-        nextVersion
-      });
-      return { nextVersion, wrote: true, reason: "written" };
-    }
-    if (vf !== null) {
-      return writeSingleSource(
-        cwd,
-        nextVersion,
-        "versionFile",
-        vfRel,
-        extras
-      );
-    }
-    if (pkg !== null) {
-      return writeSingleSource(
-        cwd,
-        nextVersion,
-        "packageJson",
-        pkgRel,
-        extras
-      );
-    }
-    throw new Error("writeVersion: neither VERSION nor package.json found");
-  }
-  if (vfRel) {
-    return writeSingleSource(cwd, nextVersion, "versionFile", vfRel, extras);
-  }
-  if (pkgRel) {
-    return writeSingleSource(cwd, nextVersion, "packageJson", pkgRel, extras);
-  }
-  throw new Error("writeVersion: no versionFiles configured");
-}
-var BUCKET_TO_SECTION = {
-  feat: "Added",
-  fix: "Fixed",
-  other: "Changed",
-  docs: null,
-  // never mutate for docs-only / kind none
-  "major-note": "Changed"
-};
-function firstLine(text) {
-  return text.split("\n")[0] ?? "";
-}
-function normalizeSubject(subject) {
-  return subject.replace(
-    new RegExp("^(?:\\p{Extended_Pictographic}|\\p{Emoji_Modifier}|\\p{Regional_Indicator}|\\uFE0F|\\u200D)+\\s*", "u"),
-    ""
-  ).trim();
-}
-function isMergeSubject(normalized) {
-  return /^merge (?:pull request|branch|remote-tracking branch|tag)\b/i.test(
-    normalized
-  ) || /^merge [0-9a-f]{7,40} into\b/i.test(normalized) || /^merged in\b/i.test(normalized);
-}
-function subjectType(normalized) {
-  if (/^feat(?:\s*&\s*fix)?(?:\s*\([^)]*\))?!?\s*:/i.test(normalized)) {
-    return "feat";
-  }
-  if (/^docs(?:\s*\([^)]*\))?\s*:/i.test(normalized)) return "docs";
-  if (/^fix(?:\s*\([^)]*\))?!?\s*:/i.test(normalized)) return "fix";
-  return "other";
-}
-function isConventionalSubject(normalized) {
-  return /^[a-z]+(?:\s*&\s*[a-z]+)?(?:\s*\([^)]*\))?!?\s*:/i.test(normalized);
-}
-function hasBreakingBang(normalized) {
-  return /^[a-z]+(?:\s*&\s*[a-z]+)?(?:\s*\([^)]*\))?!\s*:/i.test(normalized);
-}
-function hasBreakingFooter(text) {
-  return /^BREAKING[ -]CHANGE:/im.test(text);
-}
-function bulletFromSubject(raw) {
-  const line = normalizeSubject(firstLine(raw));
-  const cleaned = line.replace(
-    /^(?:feat\s*&\s*fix|feat|fix|docs|chore|refactor|test|ci|build|perf|style)(\([^)]*\))?!?\s*:\s*/i,
-    ""
-  );
-  return cleaned.length > 0 ? cleaned : line;
-}
-function mapCommitsToSections(commits) {
-  const out = {};
-  const push = (section, bullet) => {
-    const list = out[section] ?? [];
-    list.push(bullet);
-    out[section] = list;
-  };
-  for (const c of commits) {
-    const normalized = normalizeSubject(firstLine(c.subject));
-    if (isMergeSubject(normalized)) continue;
-    const section = BUCKET_TO_SECTION[subjectType(normalized)];
-    if (section === null) continue;
-    push(section, bulletFromSubject(c.subject));
-  }
-  return out;
-}
-var SECTION_ORDER = [
-  "Added",
-  "Changed",
-  "Deprecated",
-  "Removed",
-  "Fixed",
-  "Security"
-];
-function renderReleaseSection(input) {
-  const buckets = { ...input.buckets };
-  if (input.majorNote) {
-    buckets.Changed = [input.majorNote, ...buckets.Changed ?? []];
-  }
-  const lines = [`## [${input.version}] - ${input.date}`, ""];
-  for (const name of SECTION_ORDER) {
-    const items = buckets[name];
-    if (!items || items.length === 0) continue;
-    lines.push(`### ${name}`, "");
-    for (const item of items) lines.push(`- ${item}`);
-    lines.push("");
-  }
-  return `${lines.join("\n").trimEnd()}
-`;
-}
-var SECRET_REDACT_PATTERNS = [
-  /\bgh[pousr]_[A-Za-z0-9]{20,}\b/g,
-  /\bgithub_pat_[A-Za-z0-9_]{20,}\b/g,
-  /\bnpm_[A-Za-z0-9]{20,}\b/g,
-  /\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/g,
-  /\bxox[abprs]-[A-Za-z0-9-]{10,}/g,
-  /\bsk-ant-[A-Za-z0-9_-]{20,}/g,
-  /\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]*/g,
-  /\bBearer\s+[A-Za-z0-9._~+/=-]+/gi,
-  // Only as a header: "Basic authentication" is ordinary changelog prose.
-  /\bAuthorization:\s*Basic\s+[A-Za-z0-9+/=]+/gi,
-  // Credentials in a git remote URL, as git prints them in error messages.
-  /(?<=:\/\/)[^\s/:@]+:[^\s/@]+(?=@)/g
-];
-var SECRET_REDACT_REPLACEMENT = "[REDACTED]";
-function redactSecrets(text) {
-  let out = text;
-  for (const re of SECRET_REDACT_PATTERNS) {
-    out = out.replace(re, SECRET_REDACT_REPLACEMENT);
-  }
-  return out;
-}
-var DEFAULT_HEADER = `# Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-`;
-function headingFor(version) {
-  return `## [${version}]`;
-}
-function insertAfterUnreleasedOrHeader(existing, section) {
-  const unreleased = /^## \[Unreleased\][^\n]*\n/m;
-  const m = unreleased.exec(existing);
-  if (m && m.index !== void 0) {
-    const afterHeading = m.index + m[0].length;
-    const next = existing.slice(afterHeading).search(/^## \[/m);
-    const at = next === -1 ? existing.length : afterHeading + next;
-    const rest = existing.slice(at);
-    return `${existing.slice(0, at).trimEnd()}
-
-${section}${rest ? `
-${rest}` : ""}`;
-  }
-  const firstRelease = /^## \[/m.exec(existing);
-  if (firstRelease && firstRelease.index !== void 0) {
-    return `${existing.slice(0, firstRelease.index)}${section}
-${existing.slice(firstRelease.index)}`;
-  }
-  return `${existing.trimEnd()}
-
-${section}`;
-}
-function bucketsFor(input) {
-  const buckets = mapCommitsToSections(input.commits);
-  const title = normalizeSubject(firstLine(input.prTitle ?? ""));
-  const titleType = subjectType(title);
-  if (titleType === "feat" || titleType === "fix") {
-    const fromTitle = mapCommitsToSections([{ subject: title }]);
-    if (titleType === "feat") buckets.Added ??= fromTitle.Added ?? [];
-    if (titleType === "fix") buckets.Fixed ??= fromTitle.Fixed ?? [];
-  }
-  return buckets;
-}
-async function writeChangelog(input) {
-  const rel = input.changelogPath;
-  const abs = import_path6.default.join(input.cwd, rel);
-  const attempt = input.attempt ?? 1;
-  if (input.kind === "none") {
-    return { wrote: false, reason: "kind-none", path: abs };
-  }
-  const buckets = bucketsFor(input);
-  const majorNote = input.kind === "major-reset" ? `Major reset to ${input.version} via majorEnv` : void 0;
-  if (Object.keys(buckets).length === 0 && majorNote === void 0) {
-    buckets.Changed = ["Maintenance release"];
-  }
-  const sectionMarkdown = redactSecrets(
-    renderReleaseSection({
-      version: input.version,
-      date: input.date,
-      buckets,
-      ...majorNote !== void 0 ? { majorNote } : {}
-    })
-  );
-  let previous = null;
-  try {
-    previous = await (0, import_promises5.readFile)(abs, "utf8");
-  } catch (err) {
-    if (err.code !== "ENOENT") throw err;
-  }
-  if (previous?.includes(headingFor(input.version))) {
-    return {
-      wrote: false,
-      reason: "already-present",
-      path: abs,
-      sectionMarkdown
-    };
-  }
-  const next = previous === null ? DEFAULT_HEADER + sectionMarkdown : insertAfterUnreleasedOrHeader(previous, sectionMarkdown);
-  if (previous?.includes("<<<<<<<") || previous?.includes(">>>>>>>")) {
-    throw new Error(`CHANGELOG conflict markers in ${abs}`);
-  }
-  const write = input.writeFile ?? import_promises5.writeFile;
-  try {
-    await write(abs, next, "utf8");
-  } catch (err) {
-    if (attempt >= 2) {
-      throw new Error(
-        `CHANGELOG write failed after retry: ${abs}: ${err instanceof Error ? err.message : String(err)}`
-      );
-    }
-    return writeChangelog({ ...input, attempt: 2 });
-  }
-  return {
-    wrote: true,
-    reason: previous === null ? "created" : "appended",
-    path: abs,
-    sectionMarkdown
-  };
-}
-function parseMajor(version) {
-  const major = Number.parseInt(version.split(".")[0] ?? "", 10);
-  if (Number.isNaN(major)) {
-    throw new Error(`invalid currentVersion: ${version}`);
-  }
-  return major;
-}
-var BREAKING_WARNING = "Breaking change marker detected; major only via APP_VERSION_MAJOR (never auto-major)";
-function hasBreakingMarker(input) {
-  const title = input.prTitle?.trim();
-  if (title && (hasBreakingBang(normalizeSubject(firstLine(title))) || hasBreakingFooter(title))) {
-    return true;
-  }
-  return input.commits.some(
-    (c) => hasBreakingBang(normalizeSubject(firstLine(c.subject))) || // Body may carry the footer; never use body for feat buckets.
-    c.body !== void 0 && hasBreakingFooter(c.body)
-  );
-}
-function classify(input) {
-  const warnings = [];
-  if (input.skip === true) {
-    return { kind: "none", warnings };
-  }
-  const currentMajor = parseMajor(input.currentVersion);
-  const envMajor = input.envMajor;
-  if (envMajor != null && envMajor < currentMajor) {
-    throw new Error(
-      `envMajor ${envMajor} is below current major ${currentMajor}`
-    );
-  }
-  if (envMajor != null && envMajor > currentMajor) {
-    return { kind: "major-reset", warnings };
-  }
-  const subjects = input.commits.map((c) => normalizeSubject(firstLine(c.subject))).filter((s) => s.length > 0 && !isMergeSubject(s));
-  const title = normalizeSubject(firstLine(input.prTitle?.trim() ?? ""));
-  if (title.length > 0 && !isMergeSubject(title) && (subjects.length === 0 || isConventionalSubject(title))) {
-    subjects.push(title);
-  }
-  const types = subjects.map(subjectType);
-  if (hasBreakingMarker(input)) warnings.push(BREAKING_WARNING);
-  if (types.includes("feat")) return { kind: "minor", warnings };
-  if (types.some((t) => t !== "docs")) return { kind: "patch", warnings };
-  return { kind: "none", warnings };
-}
-var CLASSIFY_KINDS = [
-  "major-reset",
-  "minor",
-  "patch",
-  "none"
-];
-var versioning_config_schema_default = {
-  $schema: "http://json-schema.org/draft-07/schema#",
-  $id: "https://policy-semver.dev/schemas/versioning.config.schema.json",
-  title: "PolicySemVer versioning.config",
-  type: "object",
-  additionalProperties: false,
-  required: ["schemaVersion"],
-  properties: {
-    $schema: {
-      type: "string",
-      description: "Editor hint only: points at this schema. Ignored at runtime."
-    },
-    schemaVersion: {
-      type: "string",
-      const: "1",
-      description: "Config schema major; bump only with a coordinated migration."
-    },
-    prodBranch: {
-      type: "string",
-      minLength: 1,
-      default: "main"
-    },
-    developBranch: {
-      type: "string",
-      minLength: 1,
-      default: "dev"
-    },
-    majorEnv: {
-      type: "string",
-      minLength: 1,
-      default: "APP_VERSION_MAJOR"
-    },
-    versionFiles: {
-      type: "array",
-      items: {
-        type: "string",
-        minLength: 1
-      },
-      minItems: 1,
-      default: ["VERSION", "package.json"]
-    },
-    changelogPath: {
-      type: "string",
-      minLength: 1,
-      default: "CHANGELOG.md"
-    },
-    tagPrefix: {
-      type: "string",
-      pattern: "^([A-Za-z0-9][A-Za-z0-9._/-]*)?$",
-      default: "v"
-    },
-    skipLabels: {
-      type: "array",
-      items: {
-        type: "string",
-        minLength: 1
-      },
-      default: ["skip-version"]
-    },
-    skipTrailers: {
-      type: "array",
-      items: {
-        type: "string",
-        minLength: 1
-      },
-      default: ["skip version"]
-    },
-    hooks: {
-      type: "object",
-      additionalProperties: false,
-      default: {},
-      description: "POSIX sh -c command strings. null = skip. Non-zero exit aborts the remaining release steps.",
-      properties: {
-        beforeBump: {
-          type: ["string", "null"],
-          minLength: 1,
-          default: null,
-          description: "Run before any version/changelog write or tag. Failure \u2192 never write, no tag, no release."
-        },
-        afterTag: {
-          type: ["string", "null"],
-          minLength: 1,
-          default: null,
-          description: "Run after the local annotated tag exists, before push + GitHub Release."
-        },
-        afterRelease: {
-          type: ["string", "null"],
-          minLength: 1,
-          default: null,
-          description: "Run after GitHub Release is created."
-        }
-      }
-    }
-  }
-};
-var ajv = new import_ajv.Ajv({
-  allErrors: true,
-  useDefaults: true
-});
-var validate = ajv.compile(versioning_config_schema_default);
-async function loadConfig(path72) {
-  let raw;
-  try {
-    raw = await (0, import_promises6.readFile)(path72, "utf8");
-  } catch (err) {
-    const code = err.code;
-    if (code === "ENOENT") {
-      throw new Error(`versioning config not found: ${path72}`);
-    }
-    throw err;
-  }
-  let data;
-  try {
-    data = JSON.parse(raw);
-  } catch {
-    throw new Error(`versioning config is not valid JSON: ${path72}`);
-  }
-  if (!validate(data)) {
-    const details = (validate.errors ?? []).map(
-      (e) => (
-        // Ajv's own text does not say which key is unknown.
-        e.keyword === "additionalProperties" ? `${ajv.errorsText([e])} (unknown key ${JSON.stringify(e.params.additionalProperty)})` : ajv.errorsText([e])
-      )
-    );
-    throw new Error(
-      `invalid versioning config (${path72}): ${details.join("; ")}`
-    );
-  }
-  return data;
-}
-var BOT_NAME = "github-actions[bot]";
-var BOT_EMAIL = "41898282+github-actions[bot]@users.noreply.github.com";
-var BOT_IDENTITY_ARGS = [
-  "-c",
-  `user.name=${BOT_NAME}`,
-  "-c",
-  `user.email=${BOT_EMAIL}`
-];
-async function commitBumpFiles(input) {
-  if (!input.message.includes(BOT_SKIP_TRAILER)) {
-    throw new Error(`commit message missing ${BOT_SKIP_TRAILER}`);
-  }
-  const exec = input.exec ?? defaultGitExec;
-  const cwd = { cwd: input.cwd };
-  await exec(["add", "--", ...input.paths], cwd);
-  await exec([...BOT_IDENTITY_ARGS, "commit", "-m", input.message], cwd);
-}
-var MAX_COMMITS = 1e3;
-async function lastTag(cwd, tagPrefix, exec) {
-  try {
-    const { stdout } = await exec(
-      ["describe", "--tags", "--abbrev=0", `--match=${tagPrefix}[0-9]*`],
-      { cwd }
-    );
-    return stdout.trim() || null;
-  } catch {
-    return null;
-  }
-}
-async function loadCommitsSinceLastTag(cwd, tagPrefix, exec = defaultGitExec) {
-  const tag = await lastTag(cwd, tagPrefix, exec);
-  const { stdout } = await exec(
-    [
-      "log",
-      `--max-count=${MAX_COMMITS}`,
-      "--pretty=format:%s%x00%b%x1e",
-      ...tag !== null ? [`${tag}..HEAD`] : []
-    ],
-    { cwd }
-  );
-  return stdout.split("").map((chunk) => chunk.replace(/^\n+/, "").trimEnd()).filter(Boolean).map((chunk) => {
-    const [subjectRaw, bodyRaw = ""] = chunk.split("\0");
-    const subject = (subjectRaw ?? "").trim();
-    const body = bodyRaw.trim();
-    return {
-      subject,
-      ...body.length > 0 ? { body } : {}
-    };
-  }).filter((c) => c.subject.length > 0);
-}
-async function pushRefs(input) {
-  const exec = input.exec ?? defaultGitExec;
-  const remote = input.remote ?? "origin";
-  await exec(["push", "--atomic", remote, ...input.refs], { cwd: input.cwd });
-}
-async function tagExists(cwd, tag, exec = defaultGitExec) {
-  try {
-    await exec(["rev-parse", "-q", "--verify", `refs/tags/${tag}`], {
-      cwd
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-async function assertTagAvailable(input) {
-  const exec = input.exec ?? defaultGitExec;
-  if (await tagExists(input.cwd, input.tag, exec)) {
-    throw new Error(`tag already exists: ${input.tag}`);
-  }
-  await assertRemoteTagCompatible(input);
-}
-async function createAnnotatedTag(input) {
-  const exec = input.exec ?? defaultGitExec;
-  await assertTagAvailable(input);
-  await exec(
-    [
-      ...BOT_IDENTITY_ARGS,
-      "tag",
-      "-a",
-      "--no-sign",
-      input.tag,
-      "-m",
-      input.message
-    ],
-    { cwd: input.cwd }
-  );
-}
-async function remoteTagSha(input) {
-  const exec = input.exec ?? defaultGitExec;
-  const remote = input.remote ?? "origin";
-  const ref = `refs/tags/${input.tag}`;
-  const { stdout } = await exec(
-    ["ls-remote", "--tags", remote, ref, `${ref}^{}`],
-    { cwd: input.cwd }
-  );
-  const lines = stdout.split("\n").map((l) => l.trim()).filter(Boolean);
-  const peeled = lines.find((l) => l.endsWith(`${ref}^{}`));
-  const direct = lines.find((l) => l.endsWith(ref));
-  return (peeled ?? direct)?.split(/\s/)[0] ?? null;
-}
-async function assertRemoteTagCompatible(input) {
-  const exec = input.exec ?? defaultGitExec;
-  const remoteSha = await remoteTagSha(input);
-  if (!remoteSha) return;
-  const headSha = (await exec(["rev-parse", "HEAD"], { cwd: input.cwd })).stdout.trim();
-  if (remoteSha === headSha) {
-    throw new Error(`tag already exists: ${input.tag}`);
-  }
-  throw new Error(
-    `mirror tag conflict: ${input.tag} remote=${remoteSha} local HEAD=${headSha}`
-  );
-}
-function statusOf(err) {
-  return err.status;
-}
-async function releaseExists(input) {
-  try {
-    await input.octokit.repos.getReleaseByTag({
-      owner: input.owner,
-      repo: input.repo,
-      tag: input.tag
-    });
-    return true;
-  } catch (err) {
-    if (statusOf(err) !== 404) throw err;
-    return false;
-  }
-}
-async function createGitHubRelease(input) {
-  const body = redactSecrets(input.body);
-  if (await releaseExists(input)) {
-    throw new Error(`release already published: ${input.tag}`);
-  }
-  await input.octokit.repos.createRelease({
-    owner: input.owner,
-    repo: input.repo,
-    tag_name: input.tag,
-    name: input.name ?? input.tag,
-    body,
-    ...input.targetCommitish !== void 0 ? { target_commitish: input.targetCommitish } : {}
-  });
-}
-var HOOK_ENV = {
-  version: "POLICY_SEMVER_VERSION",
-  kind: "POLICY_SEMVER_KIND",
-  dryRun: "POLICY_SEMVER_DRY_RUN"
-};
-var HOOK_SHELL = "sh";
-var execFileAsync2 = (0, import_util2.promisify)(import_child_process2.execFile);
-var HOOK_TIMEOUT_MS = 10 * 60 * 1e3;
-var HOOK_MAX_BUFFER_BYTES = 50 * 1024 * 1024;
-var HOOK_ENV_DENYLIST = ["POLICY_SEMVER_TOKEN", "INPUT_TOKEN"];
-var defaultHookExec = async (command, opts) => {
-  const { stdout, stderr } = await execFileAsync2(HOOK_SHELL, ["-c", command], {
-    cwd: opts.cwd,
-    env: opts.env,
-    encoding: "utf8",
-    maxBuffer: HOOK_MAX_BUFFER_BYTES,
-    timeout: HOOK_TIMEOUT_MS
-  });
-  return { stdout: String(stdout), stderr: String(stderr) };
-};
-function hookEnvVars(input) {
-  return {
-    [HOOK_ENV.version]: input.version,
-    [HOOK_ENV.kind]: input.kind,
-    [HOOK_ENV.dryRun]: input.dryRun ? "true" : "false"
-  };
-}
-async function runHook(input) {
-  if (input.command == null || input.command.trim() === "") {
-    return;
-  }
-  const exec = input.exec ?? defaultHookExec;
-  const inherited = { ...process.env };
-  for (const name of HOOK_ENV_DENYLIST) delete inherited[name];
-  const env = {
-    ...inherited,
-    ...hookEnvVars({
-      version: input.version,
-      kind: input.kind,
-      dryRun: input.dryRun
-    })
-  };
-  try {
-    const { stdout, stderr } = await exec(input.command, {
-      cwd: input.cwd,
-      env
-    });
-    if (stdout) process.stdout.write(redactSecrets(stdout));
-    if (stderr) process.stderr.write(redactSecrets(stderr));
-  } catch (err) {
-    const code = err.code ?? "unknown";
-    const detail = redactSecrets(
-      err instanceof Error ? err.message : String(err)
-    );
-    throw new Error(`hook ${input.name} failed (exit ${code}): ${detail}`);
-  }
-}
-function extractReleaseSection(changelog, version) {
-  const heading = `## [${version}]`;
-  const start = changelog.split("\n").findIndex((line) => line.startsWith(heading));
-  if (start === -1) return "";
-  const lines = changelog.split("\n").slice(start);
-  const next = lines.findIndex((line, i) => i > 0 && line.startsWith("## ["));
-  const section = next === -1 ? lines : lines.slice(0, next);
-  return `${section.join("\n").trimEnd()}
-`;
-}
-function escapeRegExp2(s) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-async function findReleaseCommit(input) {
-  const { stdout } = await defaultGitExec(
-    [
-      "log",
-      input.ref,
-      "-n",
-      "1",
-      "-E",
-      `--grep=^${RELEASE_PR_TRAILER}: ${input.prNumber}$`,
-      `--author=${escapeRegExp2(BOT_NAME)}`,
-      "--format=%H%x00%B"
-    ],
-    { cwd: input.cwd }
-  );
-  const [sha, body = ""] = stdout.trim().split("\0");
-  if (!sha) return null;
-  const kind = new RegExp(`^${RELEASE_KIND_TRAILER}: (.+)$`, "m").exec(
-    body
-  )?.[1];
-  if (kind === void 0 || !CLASSIFY_KINDS.includes(kind)) {
-    throw new Error(`release commit ${sha} has no valid kind trailer`);
-  }
-  return { sha, kind };
-}
-async function reconcileRelease(input) {
-  const { sha, kind } = input.commit;
-  const version = await readVersionAtRef({
-    cwd: input.cwd,
-    ref: sha,
-    files: input.files
-  });
-  if (version === null) {
-    throw new Error(`no version files found at release commit ${sha}`);
-  }
-  const tag = `${input.tagPrefix}${version}`;
-  const tagSha = await remoteTagSha({ cwd: input.cwd, tag });
-  if (tagSha === null) {
-    throw new Error(
-      `release commit ${sha} is on the branch but tag ${tag} is missing on the remote; restore the tag, then rerun`
-    );
-  }
-  const target = {
-    owner: input.owner,
-    repo: input.repo,
-    tag,
-    octokit: input.octokit
-  };
-  const releaseCreated = !await releaseExists(target);
-  if (releaseCreated) {
-    const { stdout: changelog } = await defaultGitExec(
-      ["show", `${sha}:${input.changelogPath}`],
-      { cwd: input.cwd }
-    );
-    await createGitHubRelease({
-      ...target,
-      body: extractReleaseSection(changelog, version)
-    });
-  }
-  await runHook({
-    name: "afterRelease",
-    command: input.afterRelease,
-    cwd: input.cwd,
-    version,
-    kind,
-    dryRun: false
-  });
-  return { version, tag, releaseCreated };
-}
-async function step(name, run) {
-  try {
-    await run();
-  } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err);
-    throw new Error(`${name}: ${detail}`, { cause: err });
-  }
-}
-async function isGitIgnored(cwd, rel, exec = defaultGitExec) {
-  try {
-    await exec(["check-ignore", "--quiet", rel], { cwd });
-    return true;
-  } catch {
-    return false;
-  }
-}
-async function runRelease(input) {
-  const kind = input.kind;
-  if (kind === "none") {
-    return { skipped: true, reason: "kind-none" };
-  }
-  const tagPrefix = input.tagPrefix ?? "v";
-  const tag = `${tagPrefix}${input.version}`;
-  const message = formatBotBumpCommitMessage(
-    input.version,
-    tagPrefix,
-    input.prNumber !== void 0 ? { prNumber: input.prNumber, kind } : void 0
-  );
-  const commit = input.commit ?? commitBumpFiles;
-  const tagFn = input.tag ?? createAnnotatedTag;
-  const push = input.push ?? pushRefs;
-  const release = input.release ?? createGitHubRelease;
-  const writeAudit = input.writeAudit ?? writeLastRelease;
-  await writeAudit({
-    cwd: input.cwd,
-    version: input.version,
-    kind,
-    tag,
-    at: (input.now ?? (() => /* @__PURE__ */ new Date()))().toISOString()
-  });
-  const auditPath = lastReleaseRelPath();
-  const auditIgnored = await isGitIgnored(input.cwd, auditPath, input.exec);
-  await step(
-    "commit",
-    () => commit({
-      cwd: input.cwd,
-      message,
-      paths: auditIgnored ? input.paths : [...input.paths, auditPath],
-      ...input.exec !== void 0 ? { exec: input.exec } : {}
-    })
-  );
-  await step(
-    "tag",
-    () => tagFn({
-      cwd: input.cwd,
-      tag,
-      message: tag,
-      ...input.remote !== void 0 ? { remote: input.remote } : {},
-      ...input.exec !== void 0 ? { exec: input.exec } : {}
-    })
-  );
-  if (input.hooks) {
-    await runHook({
-      name: "afterTag",
-      command: input.hooks.afterTag,
-      cwd: input.cwd,
-      version: input.version,
-      kind,
-      dryRun: false,
-      ...input.hookExec !== void 0 ? { exec: input.hookExec } : {}
-    });
-  }
-  const branchRef = `HEAD:${input.branch}`;
-  await step(
-    "push",
-    () => push({
-      cwd: input.cwd,
-      refs: [branchRef, tag],
-      ...input.remote !== void 0 ? { remote: input.remote } : {},
-      ...input.exec !== void 0 ? { exec: input.exec } : {}
-    })
-  );
-  await step(
-    "GitHub Release",
-    () => release({
-      owner: input.owner,
-      repo: input.repo,
-      tag,
-      body: input.sectionMarkdown,
-      octokit: input.octokit
-    })
-  );
-  if (input.hooks) {
-    await runHook({
-      name: "afterRelease",
-      command: input.hooks.afterRelease,
-      cwd: input.cwd,
-      version: input.version,
-      kind,
-      dryRun: false,
-      ...input.hookExec !== void 0 ? { exec: input.hookExec } : {}
-    });
-  }
-  return {
-    skipped: false,
-    tag,
-    committed: true,
-    pushed: true,
-    released: true
-  };
-}
-async function syncToRemoteBranch(input) {
-  const exec = defaultGitExec;
-  const remote = "origin";
-  const cwd = { cwd: input.cwd };
-  const remoteRef = `${remote}/${input.branch}`;
-  const shallow = await exec(["rev-parse", "--is-shallow-repository"], cwd);
-  if (shallow.stdout.trim() === "true") {
-    throw new Error(
-      "shallow checkout: set `fetch-depth: 0` on actions/checkout so reruns can find earlier releases"
-    );
-  }
-  await exec(
-    ["fetch", remote, `+refs/heads/${input.branch}:refs/remotes/${remoteRef}`],
-    cwd
-  );
-  await exec(["checkout", "--quiet", "--detach", remoteRef], cwd);
-  if (input.mustContain !== void 0) {
-    try {
-      await exec(
-        ["merge-base", "--is-ancestor", input.mustContain, remoteRef],
-        cwd
-      );
-    } catch {
-      throw new Error(
-        `merged commit ${input.mustContain} is not on ${remoteRef}`
-      );
-    }
-  }
-}
-
 // src/locks.ts
 var ACTION_LAYOUT = {
   id: "A",
@@ -32970,11 +33051,22 @@ ${input.body}`;
 }
 
 // src/write-failure.ts
+var VERSION_BEHIND_TAGS = /tag already exists|mirror tag conflict/;
+var NEEDS_A_FIX = /conflict markers|higher major|ignored by one of your \.gitignore|points at|has no section|is missing on the remote/;
+function nextStep(msg) {
+  if (VERSION_BEHIND_TAGS.test(msg)) {
+    return "The version files are behind the tags, often after a reverted bump commit. Raise them to the latest released version; a rerun fails the same way until then.";
+  }
+  if (NEEDS_A_FIX.test(msg)) {
+    return "A rerun fails the same way until this is fixed.";
+  }
+  return "Rerunning this job is safe: it finishes the release without a second bump.";
+}
 function writeFailureMessage(err) {
   const msg = redactSecrets(err instanceof Error ? err.message : String(err));
   const pushDenied = /protected branch|GH006|not allowed to push|permission.*denied/i.test(msg);
   const hint = pushDenied ? " If branch protection blocks github-actions, set `token` on actions/checkout to a PAT or GitHub App token with contents:write bypass (git push uses the checkout's credentials)." : "";
-  return `Write/push/release failed: ${msg}.${hint} Rerunning this job is safe: it finishes the release without a second bump.`;
+  return `Write/push/release failed: ${msg}.${hint} ${nextStep(msg)}`;
 }
 
 // src/write-release.ts
@@ -33057,6 +33149,11 @@ async function runAction() {
   });
   setOutput("tag", "");
   setOutput("released", "false");
+  if (isFork && pr?.merged === true) {
+    warning(
+      `Fork PR #${pr.number} was merged but not released: a fork PR run has read-only access, and later releases will not include its commits. Follow up with a PR from this repository.`
+    );
+  }
   if (decision.mode === "skip") {
     setOutput("kind", "none");
     setOutput("next-version", "");
@@ -33210,6 +33307,16 @@ ${summary2}
     return;
   }
   try {
+    const tagMajor = await highestTagMajor({
+      cwd,
+      tagPrefix: config.tagPrefix
+    });
+    const currentMajor = parseSemVer(currentVersion).major;
+    if (envMajor === null && tagMajor !== null && currentMajor > tagMajor) {
+      throw new Error(
+        `version ${currentVersion} is a higher major than the latest tags (${tagMajor}.x), and a major only rises through ${config.majorEnv}. Set ${config.majorEnv}=${currentMajor} to accept it, or restore the version files`
+      );
+    }
     await assertTagAvailable({
       cwd,
       tag: `${config.tagPrefix}${nextVersion}`
@@ -33281,7 +33388,9 @@ failed: ${errorText(err)}`);
 // src/index.ts
 if (process.env.GITHUB_ACTIONS === "true") {
   runAction().catch((err) => {
-    setFailed(err instanceof Error ? err.message : String(err));
+    setFailed(
+      redactSecrets(err instanceof Error ? err.message : String(err))
+    );
   });
 }
 // Annotate the CommonJS export names for ESM import in node:

@@ -9,7 +9,11 @@ import { BUCKET_TO_SECTION } from "./locks.js";
 import type { ChangelogCommit, SectionBuckets } from "./types.js";
 
 function bulletFromSubject(raw: string): string {
-  const line = normalizeSubject(firstLine(raw));
+  // A lone CR would start a new line in the file and let a subject forge a heading.
+  const line = normalizeSubject(firstLine(raw)).replace(
+    /[\r\u2028\u2029]+/g,
+    " ",
+  );
   const cleaned = line.replace(
     /^(?:feat\s*&\s*fix|feat|fix|docs|chore|refactor|test|ci|build|perf|style)(\([^)]*\))?!?\s*:\s*/i,
     "",

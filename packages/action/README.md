@@ -154,15 +154,15 @@ That write token is **not** the checkout PAT used to `uses:` a private Action re
 
 ## Fork / prod / sync (runtime)
 
-| Case                                          | Behavior                                |
-| --------------------------------------------- | --------------------------------------- |
-| Fork PR                                       | Sticky comment OK · `allowWrite: false` |
-| `base !== prodBranch`                         | Skip write                              |
-| Sync `develop ← prod`                         | `kind: none` · no write                 |
-| `opened` / `synchronize` / `reopened` on prod | Dry-run + sticky comment                |
-| `closed` + `merged` on prod                   | Write → tag → release                   |
-| `merge_group`                                 | Dry-run only · no write                 |
-| `push` to prod                                | **Skip** (avoids a double bump)         |
+| Case                                          | Behavior                                                                                                               |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Fork PR                                       | Sticky comment OK · `allowWrite: false` · merged: warning, not released, and later releases do not include its commits |
+| `base !== prodBranch`                         | Skip write                                                                                                             |
+| Sync `develop ← prod`                         | `kind: none` · no write                                                                                                |
+| `opened` / `synchronize` / `reopened` on prod | Dry-run + sticky comment                                                                                               |
+| `closed` + `merged` on prod                   | Write → tag → release                                                                                                  |
+| `merge_group`                                 | Dry-run only · no write                                                                                                |
+| `push` to prod                                | **Skip** (avoids a double bump)                                                                                        |
 
 ## Merge methods
 

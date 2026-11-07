@@ -160,12 +160,13 @@ export async function runRelease(
 
   // HEAD:branch — PR checkout is often detached; pushing the local
   // branch name would miss the bump commit.
-  const branchRef = `HEAD:${input.branch}`;
+  // Full refs: a tag named like the branch, or the reverse, would be ambiguous.
+  const branchRef = `HEAD:refs/heads/${input.branch}`;
 
   await step("push", () =>
     push({
       cwd: input.cwd,
-      refs: [branchRef, tag],
+      refs: [branchRef, `refs/tags/${tag}`],
       ...(input.remote !== undefined ? { remote: input.remote } : {}),
       ...(input.exec !== undefined ? { exec: input.exec } : {}),
     }),

@@ -11,5 +11,9 @@ it("reads digits", () => {
 });
 
 it.each(["2abc", "abc", "-1", "1.5", " 2"])("rejects %j", (raw) => {
-  expect(() => parseEnvMajor("M", raw)).toThrow(/invalid M=/);
+  expect(() => parseEnvMajor("M", raw)).toThrow(/invalid M: /);
+});
+
+it("reads more than one digit", () => {
+  expect(parseEnvMajor("M", "12")).toBe(12);
 });

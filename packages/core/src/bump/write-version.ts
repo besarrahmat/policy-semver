@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import {
+  parsePackageJson,
   tryReadPackageJsonVersion,
   tryReadVersionFile,
   writeBothAtomically,
@@ -41,7 +42,7 @@ async function writeSingleSource(
   }
 
   const raw = await readFile(path.join(cwd, rel), "utf8");
-  const pkg = JSON.parse(raw) as Record<string, unknown>;
+  const pkg = parsePackageJson(raw);
   if (pkg.version === nextVersion && !extrasStale) {
     return { nextVersion, wrote: false, reason: "already-current" };
   }

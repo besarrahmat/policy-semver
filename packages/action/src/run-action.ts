@@ -8,9 +8,11 @@ import {
   classify,
   decideBumpGuards,
   findReleaseCommit,
+  highestTagMajor,
   loadCommitsSinceLastTag,
   loadConfig,
   parseEnvMajor,
+  parseSemVer,
   readVersion,
   readVersionAtRef,
   reconcileRelease,
@@ -128,6 +130,13 @@ export async function runAction(): Promise<void> {
 
   core.setOutput("tag", "");
   core.setOutput("released", "false");
+
+  // Later PRs classify only their own commits, so nothing else will ship these.
+  if (isFork && pr?.merged === true) {
+    core.warning(
+      `Fork PR #${pr.number} was merged but not released: a fork PR run has read-only access, and later releases will not include its commits. Follow up with a PR from this repository.`,
+    );
+  }
 
   if (decision.mode === "skip") {
     core.setOutput("kind", "none");
@@ -304,6 +313,16 @@ export async function runAction(): Promise<void> {
   }
 
   try {
+    const tagMajor = await highestTagMajor({
+      cwd,
+      tagPrefix: config.tagPrefix,
+    });
+    const currentMajor = parseSemVer(currentVersion).major;
+    if (envMajor === null && tagMajor !== null && currentMajor > tagMajor) {
+      throw new Error(
+        `version ${currentVersion} is a higher major than the latest tags (${tagMajor}.x), and a major only rises through ${config.majorEnv}. Set ${config.majorEnv}=${currentMajor} to accept it, or restore the version files`,
+      );
+    }
     await assertTagAvailable({
       cwd,
       tag: `${config.tagPrefix}${nextVersion}`,

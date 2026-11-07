@@ -1,3 +1,4 @@
+import { isSemVerString, parseSemVer } from "../bump/parse-version.js";
 import { BOT_IDENTITY_ARGS } from "./commit.js";
 import { defaultGitExec } from "./exec.js";
 import type { TagInput } from "./types.js";
@@ -15,6 +16,23 @@ export async function tagExists(
   } catch {
     return false;
   }
+}
+
+/** Highest major among `{tagPrefix}X.Y.Z` tags, or null before the first release. */
+export async function highestTagMajor(input: {
+  cwd: string;
+  tagPrefix: string;
+}): Promise<number | null> {
+  const { stdout } = await defaultGitExec(
+    ["tag", "-l", `${input.tagPrefix}[0-9]*`],
+    { cwd: input.cwd },
+  );
+  const majors = stdout
+    .split("\n")
+    .map((tag) => tag.trim().slice(input.tagPrefix.length))
+    .filter(isSemVerString)
+    .map((version) => parseSemVer(version).major);
+  return majors.length > 0 ? Math.max(...majors) : null;
 }
 
 /** Fail while nothing is written yet if the tag is taken locally or remotely. */

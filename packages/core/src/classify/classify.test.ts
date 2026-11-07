@@ -179,3 +179,64 @@ describe("classify", () => {
     ).toThrow(/envMajor 0 is below current major 1/);
   });
 });
+
+describe("subjects that look like a feature", () => {
+  it.each([":sparkles: feat: x", "[JIRA-1] feat: x", "feat(a)(b): x"])(
+    "warns about %j and keeps it a patch",
+    (subject) => {
+      const result = classify({
+        commits: [{ subject }],
+        currentVersion: "1.0.0",
+        envMajor: null,
+      });
+      expect(result.kind).toBe("patch");
+      expect(result.warnings.join()).toContain("looks like a feature");
+    },
+  );
+
+  it.each(["chore: feat: x", 'Revert "feat: x"', "defeat: x", "wip"])(
+    "does not warn about %j",
+    (subject) => {
+      const { warnings } = classify({
+        commits: [{ subject }],
+        currentVersion: "1.0.0",
+        envMajor: null,
+      });
+      expect(warnings).toEqual([]);
+    },
+  );
+});
+
+describe("classify edges", () => {
+  it("reads the whole major, not its first digit", () => {
+    expect(
+      classify({
+        currentVersion: "12.3.4",
+        envMajor: 12,
+        commits: [{ subject: "feat: x" }],
+      }).kind,
+    ).toBe("minor");
+  });
+
+  it("refuses a version with no major", () => {
+    expect(() => classify({ currentVersion: "abc", commits: [] })).toThrow(
+      /invalid currentVersion/,
+    );
+  });
+
+  it("a blank subject counts for nothing", () => {
+    expect(
+      classify({ currentVersion: "1.0.0", commits: [{ subject: "  " }] }).kind,
+    ).toBe("none");
+  });
+
+  it("a title's leading blank line does not hide it", () => {
+    const result = classify({
+      currentVersion: "1.0.0",
+      prTitle: "\nfeat!: x",
+      commits: [],
+    });
+    expect(result.kind).toBe("minor");
+    expect(result.warnings).toHaveLength(1);
+  });
+});
