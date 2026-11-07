@@ -11,5 +11,5 @@ it("reads digits", () => {
 });
 
 it.each(["2abc", "abc", "-1", "1.5", " 2"])("rejects %j", (raw) => {
-  expect(() => parseEnvMajor("M", raw)).toThrow(/invalid M=/);
+  expect(() => parseEnvMajor("M", raw)).toThrow(/invalid M: /);
 });

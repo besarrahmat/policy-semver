@@ -10,7 +10,14 @@ const execFileAsync = promisify(execFile);
 const HOOK_TIMEOUT_MS = 10 * 60 * 1000;
 const HOOK_MAX_BUFFER_BYTES = 50 * 1024 * 1024;
 /** Hook commands come from config; they get no ambient write token. */
-const HOOK_ENV_DENYLIST = ["POLICY_SEMVER_TOKEN", "INPUT_TOKEN"];
+const HOOK_ENV_DENYLIST = [
+  "POLICY_SEMVER_TOKEN",
+  "INPUT_TOKEN",
+  "GITHUB_TOKEN",
+  "GH_TOKEN",
+  "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
+  "ACTIONS_RUNTIME_TOKEN",
+];
 
 export const defaultHookExec: HookExec = async (command, opts) => {
   const { stdout, stderr } = await execFileAsync(HOOK_SHELL, ["-c", command], {

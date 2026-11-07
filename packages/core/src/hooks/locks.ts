@@ -9,8 +9,9 @@
  * | `afterRelease` | `repos.createRelease` | end of the run |
  *
  * `null` / omitted → skip. `kind === "none"` or dry-run → do not run hooks.
- * Runtime: `sh -c <command>` with inherited `process.env` minus the Action's
- * token, plus POLICY_SEMVER_*. Killed after a fixed timeout.
+ * Runtime: `sh -c <command>` with inherited `process.env` minus ambient tokens
+ * (the denylist in `run-hook.ts`), plus POLICY_SEMVER_*. Killed after a fixed
+ * timeout. A hook that needs a token takes it under its own variable name.
  *
  * ## Transactional expectation
  * | Failure | VERSION / changelog | Annotated tag | GitHub Release |
