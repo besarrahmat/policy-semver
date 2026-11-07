@@ -23,6 +23,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.6.4",
     "@types/node": "^26.6.6",
+    "fast-check": "^4.10.2",
     "only-allow": "^1.2.2",
     "tsup": "^9.0.0",
     "tsx": "^4.23.15",

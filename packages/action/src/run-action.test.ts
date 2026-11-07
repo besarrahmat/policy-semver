@@ -1,143 +1,32 @@
-import { execFile } from "node:child_process";
 import { access, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { promisify } from "node:util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { runAction } from "./run-action.js";
+import {
+  clone,
+  git,
+  makeRemote,
+  mocks,
+  output,
+  pullRequest,
+  remoteTags,
+  resetActionMocks,
+  setEvent,
+  workspace,
+} from "./test-harness.js";
 
-const mocks = vi.hoisted(() => ({
-  core: {
-    getInput: vi.fn(),
-    getBooleanInput: vi.fn(),
-    setOutput: vi.fn(),
-    setFailed: vi.fn(),
-    info: vi.fn(),
-    warning: vi.fn(),
-    setSecret: vi.fn(),
-    summary: {
-      addHeading: vi.fn().mockReturnThis(),
-      addCodeBlock: vi.fn().mockReturnThis(),
-      write: vi.fn(),
-    },
-  },
-  context: {
-    eventName: "pull_request",
-    ref: "refs/pull/7/merge",
-    repo: { owner: "o", repo: "r" },
-    payload: {} as Record<string, unknown>,
-  },
-  octokit: {
-    paginate: vi.fn(),
-    rest: {
-      pulls: { listCommits: {} },
-      issues: {
-        listComments: vi.fn(),
-        createComment: vi.fn(),
-        updateComment: vi.fn(),
-      },
-      repos: { getReleaseByTag: vi.fn(), createRelease: vi.fn() },
-    },
-  },
-}));
-
-vi.mock("@actions/core", () => mocks.core);
-vi.mock("@actions/github", () => ({
-  context: mocks.context,
-  getOctokit: () => mocks.octokit,
-}));
-
-const execFileAsync = promisify(execFile);
-
-async function git(cwd: string, ...args: string[]): Promise<string> {
-  const { stdout } = await execFileAsync("git", args, { cwd });
-  return stdout.trim();
-}
-
-async function clone(remote: string): Promise<string> {
-  const cwd = await mkdtemp(path.join(tmpdir(), "ps-action-work-"));
-  await git(cwd, "clone", "--quiet", remote, ".");
-  await git(cwd, "config", "user.name", "t");
-  await git(cwd, "config", "user.email", "t@t.test");
-  await git(cwd, "config", "commit.gpgsign", "false");
-  await git(cwd, "config", "tag.gpgsign", "false");
-  // A developer's global hooks must not slow down or fail these repos.
-  await git(cwd, "config", "core.hooksPath", "/dev/null");
-  return cwd;
-}
-
-async function makeRemote(): Promise<string> {
-  const remote = await mkdtemp(path.join(tmpdir(), "ps-action-remote-"));
-  await git(remote, "init", "--quiet", "--bare", "-b", "main");
-  const seed = await clone(remote);
-  await git(seed, "checkout", "--quiet", "-B", "main");
-  await writeFile(path.join(seed, "VERSION"), "1.0.0\n");
-  await writeFile(
-    path.join(seed, "versioning.config.json"),
-    JSON.stringify({ schemaVersion: "1", versionFiles: ["VERSION"] }),
-  );
-  await git(seed, "add", "-A");
-  await git(seed, "commit", "--quiet", "-m", "init");
-  await git(seed, "push", "--quiet", "origin", "main");
-  return remote;
-}
-
-function pullRequest(
-  overrides: Record<string, unknown> = {},
-): Record<string, unknown> {
-  return {
-    number: 7,
-    title: "feat: add thing",
-    body: "",
-    labels: [],
-    base: { ref: "main", repo: { full_name: "o/r" } },
-    head: { ref: "feature", repo: { full_name: "o/r" } },
-    ...overrides,
-  };
-}
-
-function setEvent(action: string, pr: Record<string, unknown>): void {
-  mocks.context.payload = { action, pull_request: pr };
-}
-
-function output(name: string): unknown {
-  return mocks.core.setOutput.mock.calls
-    .filter((c) => c[0] === name)
-    .at(-1)?.[1];
-}
-
-async function remoteTags(remote: string): Promise<string[]> {
-  return (await git(remote, "tag", "-l")).split("\n").filter(Boolean);
-}
+vi.mock(
+  "@actions/core",
+  async () => (await import("./test-harness.js")).mocks.core,
+);
+vi.mock("@actions/github", async () =>
+  (await import("./test-harness.js")).actionsGithub(),
+);
 
 // Real git subprocesses: a full release spawns dozens of them.
 describe("runAction", { timeout: 30_000 }, () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mocks.core.summary.addHeading.mockReturnThis();
-    mocks.core.summary.addCodeBlock.mockReturnThis();
-    delete process.env.POLICY_SEMVER_TOKEN;
-    delete process.env.APP_VERSION_MAJOR;
-    delete process.env.MARKER;
-    mocks.core.getInput.mockImplementation((name: string) =>
-      name === "token" ? "test-token" : "",
-    );
-    mocks.core.getBooleanInput.mockReturnValue(false);
-    mocks.octokit.paginate.mockResolvedValue([
-      { commit: { message: "feat: add thing" } },
-    ]);
-    mocks.octokit.rest.issues.listComments.mockResolvedValue({ data: [] });
-    mocks.octokit.rest.repos.getReleaseByTag.mockRejectedValue(
-      Object.assign(new Error("Not Found"), { status: 404 }),
-    );
-    mocks.octokit.rest.repos.createRelease.mockResolvedValue({});
-  });
-
-  async function workspace(remote: string): Promise<string> {
-    const cwd = await clone(remote);
-    process.env.GITHUB_WORKSPACE = cwd;
-    return cwd;
-  }
+  beforeEach(resetActionMocks);
 
   it("skips a PR that does not target prod", async () => {
     const remote = await makeRemote();
