@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-11-07
+
+### Changed
+
+- add edge-case nets for the release invariants
+- kill surviving mutants in bump, classify and release
+- pin the two code-comment claims that had no test
+
+### Fixed
+
+- stop silent wrong or cancelled releases
+- close secret leaks and paths that leave the repo
+- unblock releases that could never finish
+- keep consumer files intact and failures readable
+
 ## [2.0.1] - 2026-11-07
 
 ### Changed
