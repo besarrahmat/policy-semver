@@ -21,7 +21,7 @@
     "prebuild": "pnpm sync:schema"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.4",
+    "@biomejs/biome": "^2.6.6",
     "@types/node": "^26.6.6",
     "fast-check": "^4.10.2",
     "only-allow": "^1.2.2",
