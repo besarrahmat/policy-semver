@@ -22,7 +22,7 @@ The Action must push the bump commit onto protected `main`. `GITHUB_TOKEN` (`git
 ## Tooling
 
 - Node **24+** (see `.node-version`).
-- pnpm via root `"packageManager": "pnpm@12.16.1"`.
+- pnpm via root `"packageManager": "pnpm@12.21.0"`.
 - Prefer Corepack when available: `corepack enable` then `corepack prepare`.
 - On Homebrew Node without Corepack: install pnpm globally and match that version.
 

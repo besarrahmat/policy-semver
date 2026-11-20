@@ -42,7 +42,7 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --config ../../vitest.config.ts",
+    "test": "vitest run --config ../../vitest.config.mts",
     "policy-semver": "node ./dist/bin.js",
     "prebuild": "pnpm -w run sync:schema",
     "build": "tsup && tsc -p tsconfig.build.json",

@@ -34,7 +34,7 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run --config ../../vitest.config.ts",
+    "test": "vitest run --config ../../vitest.config.mts",
     "prebuild": "pnpm -w run sync:schema",
     "build": "tsup && tsc -p tsconfig.build.json",
     "pack:dry": "pnpm build && npm pack --dry-run"
